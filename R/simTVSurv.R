@@ -1,58 +1,52 @@
-permalgorithm3 <- function (numSubjects, maxTime, Xmat, XmatNames = NULL, eventRandom = NULL, 
-                            censorRandom = NULL, etaMat, groupByD = FALSE) 
+#' Simulate time-varying survival data
+#' 
+#' 
+
+simTVSurv <- function (Xdat, etaMat, timeIndex=NULL,
+                       eventRandom=NULL, censorRandom=NULL, groupByD=FALSE)
 {
-  
-  if (is.matrix(betas)) {
-    if (nrow(betas)==1) {
-      Xmat <- matrix(Xmat, ncol=1)
-    }
-  } else if (length(betas)==1) {
-    Xmat = matrix(Xmat, ncol = 1)
+  if (!is.data.frame(Xdat) & !is.matrix(Xdat)) {
+    stop("Xdat must be a data frame or matrix")
+  } else if (!is.data.frame(Xdat)) {
+    Xdat <- as.data.frame(Xdat)
   }
-  if (dim(Xmat)[1] != numSubjects * maxTime) 
-    stop("length of Xmat does not equal numSubjects*maxTime")
-  nc <- dim(Xmat)[2]
-  I <- rep(seq(numSubjects), each = maxTime, times = nc)
-  J <- rep(seq(maxTime), times = nc * numSubjects)
-  K <- rep(seq(nc), each = maxTime * numSubjects)
-  covArray <- array(0, dim = c(numSubjects, maxTime, nc))
-  covArray[cbind(I, J, K)] <- Xmat
+  
+  numSubjects <- nrow(Xdat)
+  if (is.null(timeIndex)) {
+    timeIndex <- 1:ncol(etaMat)
+  } else if (length(timeIndex) != ncol(etaMat))
+    stop("length of timeIndex does not match the number of columns of etaMat")
+  maxTime <- timeIndex[length(timeIndex)]
+  
+  # Generate survival and censoring times
   if (is(eventRandom, "NULL")) 
-    eventRandom <- function(n) sample(maxTime, numSubjects, 
-                                      replace = TRUE)
+    eventRandom <- function(n) sample(maxTime, numSubjects, replace = TRUE)
   if (is(eventRandom, "function")) {
     survivalTime <- as.integer(eventRandom(numSubjects))
-  }
-  else if (is(eventRandom, "numeric")) {
+  } else if (is(eventRandom, "numeric")) {
     if (length(eventRandom) != numSubjects) 
-      stop("length of eventRandom is not equal to length of first dimension of Xmat")
+      stop("length of eventRandom is not equal to number of subjects")
     survivalTime <- as.integer(eventRandom)
-  }
-  else stop("eventRandom is neither numeric nor function")
+  } else stop("eventRandom is neither numeric nor function")
+  
   if (is(censorRandom, "NULL")) 
     censorRandom <- function(n) sample(maxTime, n, replace = TRUE)
   if (is(censorRandom, "function")) {
     censorTime <- as.integer(censorRandom(numSubjects))
-  }
-  else if (is(censorRandom, "numeric")) {
+  } else if (is(censorRandom, "numeric")) {
     if (length(censorRandom) != numSubjects) 
-      stop("length of censorRandom is not equal to length of first dimension of Xmat")
+      stop("length of censorRandom is not equal to number of subjects")
     censorTime <- as.integer(censorRandom)
-  }
-  else stop("censorRandom is neither numeric nor function")
+  } else stop("censorRandom is neither numeric nor function")
+  
   if (min(survivalTime) <= 0) 
     stop("Not all event times are positive")
-  if (!is(covArray, "array") || length(dim(covArray)) != 3) 
-    stop("covArray is not a 3-dimensional array")
-  if (is.matrix(betas)) {
-    if (nrow(betas)!=dim(covArray)[3])
-      stop("nrow of betas is not equal to length of third dimension of Xmat")
-  } else if (length(betas) != dim(covArray)[3]) 
-    stop("length of betas is not equal to length of third dimension of Xmat")
   notCensored <- ifelse(survivalTime <= apply(cbind(censorTime, 
                                                     maxTime), MARGIN = 1, FUN = min), 1, 0)
   observedTime <- apply(cbind(survivalTime, censorTime, maxTime), 
                         MARGIN = 1, FUN = min)
+  
+  # Permutation Step
   I <- count <- integer(0)
   if (groupByD) {
     h <- 2 * observedTime + notCensored
@@ -61,30 +55,30 @@ permalgorithm3 <- function (numSubjects, maxTime, Xmat, XmatNames = NULL, eventR
     I[h] <- seq(along.with = h)
     I <- I[I > 0]
     count[I] <- hBins[h[I]]
-  }
-  else {
+  } else {
     I <- order(observedTime)
     count = rep(1, times = length(I))
   }
-  p = .PermuteCovariateVectors3(observedTime, notCensored, count, 
-                                I, covArray, betas)
+  p = .PermuteCovs(observedTime, notCensored, count, 
+                                I, etaMat)
+  
+  # Format output
   if (groupByD) {
     p[order(order(observedTime), sample(numSubjects))]
     J = order(h)
-    tuples = cbind(obs.t = observedTime[J], d = notCensored[J], 
+    tuples = cbind(event = notCensored[J], time = observedTime[J], 
                    id.tuples = J)
-  }
-  else {
-    tuples = cbind(obs.t = observedTime[I], d = notCensored[I], 
+  } else {
+    tuples = cbind(event = notCensored[I], time = observedTime[I],
                    id.tuples = I)
   }
   info = data.frame(cbind(tuples, cov.id = p))
   ordered.info = info[order(info$cov.id), ]
-  return(.form.data(ordered.info, maxTime, numSubjects, Xmat, 
-                    XmatNames))
+  rownames(ordered.info) <- NULL
+  return(.formData(ordered.info, maxTime, numSubjects, Xdat))
 }
 
-.PermuteCovariateVectors3 <- function (t, d, count, I, covArray, betas) 
+.PermuteCovs <- function (t, d, count, I, etaMat) 
 {
   n = sum(count[I])
   p <- integer(n)
@@ -94,7 +88,8 @@ permalgorithm3 <- function (numSubjects, maxTime, Xmat, XmatNames = NULL, eventR
     if (d[k]) {
       # Not censored
       J = sample(length(v), size = count[k], replace = FALSE, 
-                 prob = .partialHazards3(t[k], v, covArray, betas))
+      #           prob = .partialHazards3(t[k], v, etaMat))
+      prob = exp(etaMat[v,t[k]]))
     }
     else {
       # Censored
@@ -108,19 +103,17 @@ permalgorithm3 <- function (numSubjects, maxTime, Xmat, XmatNames = NULL, eventR
   return(p)
 }
 
-.partialHazards3 <- function (t, v, covArray, betas) 
+
+.formData <- function (ordered.info, m, n, Xdat) 
 {
-  if (is.matrix(betas)) {
-    return(exp(covArray[v, t, ] %*% betas[, t, drop=FALSE]))
-  } else {
-    if (length(betas) > 1) {
-      return(exp(covArray[v, t, ] %*% betas))
-    }
-    else {
-      return(exp(covArray[v, t, ] * betas))
-    }
-  }
+  Xdat <- as.data.frame(sapply(Xdat, function(x) {
+    if (is.matrix(x)) {
+      return(t(sapply(1:n, function(i) {
+        t.i <- ordered.info$time
+        c(x[i,1:t.i], rep(NA, m-t.i))
+      })))
+    } else return(x)
+  }, simplify=FALSE))
+  data <- cbind(ordered.info[,c("event","time")], Xdat)
+  return(data)
 }
-
-
-
