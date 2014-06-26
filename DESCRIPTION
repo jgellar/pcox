@@ -1,0 +1,19 @@
+Package: pcox
+Type: Package
+Title: Penalized Cox Models
+Version: 1.0
+Date: 2014-06-25
+Author: Jonathan Gellar <jgellar1@jhu.edu>
+Maintainer: Jonathan Gellar <jgellar1@jhu.edu>
+Description: This package fits Cox regression models with penalized
+    model terms. It is essentially an interface between a number of
+    widely used R packages. Covariate terms are modeled using either
+    mgcv (for scalar predictors), or a combination of mgcv and refund
+    (for functional predictors). Models are fit using either the survival
+    or coxme packages, depending on the fitting method.
+License: GPL-2
+Imports:
+    mgcv,
+    survival,
+    refund,
+    coxme
