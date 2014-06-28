@@ -2,18 +2,28 @@
 # Generate random survival data based on a PH model with
 # TVCs or TVEs
 
+genX <- function(N, s=NULL) {
+  if (is.null(s)) {
+    s  <- (0:100)
+  }
+  u  <- rnorm(N, sd=1)
+  v1 <- sapply(1:10, function(k) rnorm(N, sd=2/k))
+  v2 <- sapply(1:10, function(k) rnorm(N, sd=2/k))
+  X <- sapply(s, function(x) {
+    u + rowSums(sapply(1:10, function(k) {
+      v1[,k]*sin(2*pi*k*x/100) + v2[,k]*cos(2*pi*k*x/100)
+    }))
+  })
+  X
+}
 
-Y <- ceiling(rweibull(N, .75, 600/gamma(1+1/.75)))
-C <- rep(365*2, N)
-delta <- Y<C
-Y[!delta] <- C[!delta]
-
-
-# \eta_i(t) = 5 * x_i(t)
-
+# Y <- ceiling(rweibull(N, .75, 600/gamma(1+1/.75)))
+# C <- rep(365*2, N)
+# delta <- Y<C
+# Y[!delta] <- C[!delta]
 
 # PermAlgo
-n=500
+n=N=500
 m=365
 Xmat=matrix(ncol=3, nrow=n*m)
 TDhist <- function(m){
@@ -56,9 +66,18 @@ fit <- coxph(Surv(Start,Stop,Event) ~ sex + SOFA, data)
 
 
 # permalgorithm2: TVE
+Xmat <- cbind(rbinom(N,1,.5), rnorm(N))
+
+Xdat <- data.frame(Xmat)
+
 t.ind <- 1:J
+eta.mat <- t(apply(Xmat, 1, function(x) {
+  x[1]*log(2) + x[2]*3*sin(2*pi*t.ind/J)
+}))
+
+
+
 betas <- rbind(log(2), 3*sin(2*pi*t.ind/J))
-Xmat[,2] <- rep(rnorm(N), each=J)
 data <- permalgorithm2(N, J, Xmat, XmatNames=c("sex", "SOFA"),
                        eventRandom=eventRandom, censorRandom=censorRandom,
                        betas=betas)
