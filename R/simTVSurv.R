@@ -11,15 +11,16 @@
 #' @param etaMat an \code{N x J} matrix contining the linear predictor
 #' for each subject at each time index, where \code{N} is the number
 #' of subjects and \code{J} is the number of time points.
-#' @param Xdat an \code{N x p} data frame or matrix, containing the
+#' @param Xdat an option \code{N x p} data frame or matrix, containing the
 #' covariates used in the model, where \code{p} is the number of
-#' covariates. Time-varying covariates are included as an
+#' covariates. Any covariates supplied will be included in the output
+#' dataset. Time-varying covariates are specified as an
 #' \code{N x J} matrix using the \code{\link{I}} ("AsIs") function;
 #' see Details.
 #' @param timeIndex A vector of length \code{J} containing the time
 #' indices corresponding to the columns of \code{etaMat}; defaults
 #' to \code{1:J}. THIS IS NOT YET TESTED FOR TIME INDICES OTHER THAN
-#' \code{1:J}.
+#' \code{1:J} - BEST LEFT AS \code{NULL} FOR NOW.
 #' @param eventRandom individual event times. Can either be a vector
 #' non-negative integer values, or a random generating function
 #' with argument \code{n}. See Details.
@@ -48,18 +49,15 @@
 #' specify time-varying effects for both time-fixed and time-varying
 #' covariates, and non-concurrent effects of time-varying covariates.
 #' 
-#' \code{Xdat} is only required as an argument so that the covariates
-#' will be included in the output dataset.
-#' Any time-varying predictors must first be organized into an
+#' Any covariates included in \code{Xdat} will be added to the output
+#' dataset. Any time-varying predictors must first be organized into an
 #' \code{N x J} matrix, indicating a value for the covariate for
 #' each subject at each \code{timeIndex}. The matrix is then included
 #' as a "column" of \code{Xdat} (which must be a data frame), by
-#' specifying it as an "AsIs" term with \code{I()}. The dataset that
-#' is outputed by \code{simTVSurv} will modify the matrices for any
-#' time-varying predictors so that any time points after an event or
-#' censoring with be replaced with \code{NA}.
-#' 
-#' 
+#' specifying it as an "AsIs" term with \code{I()} (see examples).
+#' When survival/censoring times are generated, time-varying covariates
+#' will be "trimmed" into a "time-varying matrix," by replacing
+#' any values after the event/censoring time with \code{NA}.
 #' 
 #' \code{eventRandom} and \code{censorRandom} can each be specified as
 #' either a vector of non-negative integer values, or as a random
@@ -104,8 +102,6 @@ simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,
       stop("etaMat and Xdat must have the same number of rows")
   }
   
-  
-  
   # Generate survival and censoring times
   if (is(eventRandom, "NULL")) 
     eventRandom <- function(n) sample(J, N, replace = TRUE)
@@ -133,6 +129,7 @@ simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,
                                               MARGIN = 1, FUN = min), 1, 0)
   observedTime <- apply(cbind(survivalTime, censorTime, J), 
                         MARGIN = 1, FUN = min)
+  J <- max(observedTime)
   
   # Permutation Step
   I <- count <- integer(0)
@@ -152,9 +149,9 @@ simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,
   # Format output
   if (groupByD) {
     p[order(order(observedTime), sample(N))]
-    J = order(h)
-    tuples = cbind(event = notCensored[J], time = observedTime[J], 
-                   id.tuples = J)
+    ord = order(h)
+    tuples = cbind(event = notCensored[ord], time = observedTime[ord], 
+                   id.tuples = ord)
   } else {
     tuples = cbind(event = notCensored[I], time = observedTime[I],
                    id.tuples = I)
@@ -196,8 +193,8 @@ permuteCovs <- function (t, d, count, I, etaMat)
 addCovData <- function (data, J, n, Xdat) {
   Xdat <- as.data.frame(sapply(Xdat, function(x) {
     if (is.matrix(x)) {
-      if (ncol(x)!=J)
-        stop("Time-varying covariates must have J columns")
+      if (ncol(x)<J)
+        stop("Time-varying covariates must have at least J columns")
       return(I(t(sapply(1:n, function(i) {
         t.i <- data$time
         c(x[i,1:t.i], rep(NA, J-t.i))
@@ -207,3 +204,8 @@ addCovData <- function (data, J, n, Xdat) {
   data <- cbind(data, Xdat)
   return(data)
 }
+
+
+
+
+

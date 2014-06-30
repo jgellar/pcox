@@ -3,7 +3,7 @@
 \alias{simTVSurv}
 \title{Simulate time-varying survival data}
 \usage{
-simTVSurv(etaMat, Xdat, timeIndex = NULL, eventRandom = NULL,
+simTVSurv(etaMat, Xdat = NULL, timeIndex = NULL, eventRandom = NULL,
   censorRandom = NULL, groupByD = FALSE)
 }
 \arguments{
@@ -11,15 +11,17 @@ simTVSurv(etaMat, Xdat, timeIndex = NULL, eventRandom = NULL,
 for each subject at each time index, where \code{N} is the number
 of subjects and \code{J} is the number of time points.}
 
-\item{Xdat}{an \code{N x p} data frame or matrix, containing the
+\item{Xdat}{an option \code{N x p} data frame or matrix, containing the
 covariates used in the model, where \code{p} is the number of
-covariates. Time-varying covariates are included as an
+covariates. Any covariates supplied will be included in the output
+dataset. Time-varying covariates are specified as an
 \code{N x J} matrix using the \code{\link{I}} ("AsIs") function;
 see Details.}
 
 \item{timeIndex}{A vector of length \code{J} containing the time
 indices corresponding to the columns of \code{etaMat}; defaults
-to \code{1:J}.}
+to \code{1:J}. THIS IS NOT YET TESTED FOR TIME INDICES OTHER THAN
+\code{1:J} - BEST LEFT AS \code{NULL} FOR NOW.}
 
 \item{eventRandom}{individual event times. Can either be a vector
 non-negative integer values, or a random generating function
@@ -34,7 +36,8 @@ censoring times be replaced with group assignments? Defaults to
 }
 \value{
 A data frame containing the simulated data, as well as
-any predictors supplied in \code{Xdat}
+any predictors supplied in \code{Xdat}. Time-varying covariates
+will be returned as a "time-varying matrix" in "AsIs" format.
 }
 \description{
 This is a modification of the \code{PermAlgo::permalgorithm()}
@@ -65,16 +68,15 @@ model they prefer. In particular, this allows the user to
 specify time-varying effects for both time-fixed and time-varying
 covariates, and non-concurrent effects of time-varying covariates.
 
-\code{Xdat} is only required as an argument so that the covariates
-will be included in the output dataset.
-Any time-varying predictors must first be organized into an
+Any covariates included in \code{Xdat} will be added to the output
+dataset. Any time-varying predictors must first be organized into an
 \code{N x J} matrix, indicating a value for the covariate for
 each subject at each \code{timeIndex}. The matrix is then included
 as a "column" of \code{Xdat} (which must be a data frame), by
-specifying it as an "AsIs" term with \code{I()}. The dataset that
-is outputed by \code{simTVSurv} will modify the matrices for any
-time-varying predictors so that any time points after an event or
-censoring with be replaced with \code{NA}.
+specifying it as an "AsIs" term with \code{I()} (see examples).
+When survival/censoring times are generated, time-varying covariates
+will be "trimmed" into a "time-varying matrix," by replacing
+any values after the event/censoring time with \code{NA}.
 
 \code{eventRandom} and \code{censorRandom} can each be specified as
 either a vector of non-negative integer values, or as a random
@@ -90,8 +92,6 @@ with the model described by \code{etaMat} than those generated when
 \code{groupByD=FALSE}. Still, \code{groupByD=TRUE} may be useful
 to generate large datasets where \code{J<<N} so that many ties
 are expected.
-
-This is my link to \code{\link{pcox}}.
 }
 \author{
 Jonathan Gellar <jgellar1@jhu.edu>
