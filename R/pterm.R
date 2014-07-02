@@ -1,4 +1,4 @@
-acTerm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=.001) {
+pterm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=.001) {
   method <- match.arg(method)
   W <- sm$X
   D <- sm$S[[1]] * sm$S.scale

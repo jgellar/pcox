@@ -13,8 +13,10 @@ getL <- function(tind, integration, n.int=NULL) {
       if (length(diffs)>1) {
         0.5 * c(diffs[1], filter(diffs, filter=c(1,1))[-(nt.i-1)],
                 diffs[(nt.i-1)])
-      } else {
+      } else if (length(diffs)==1) {
         rep(0.5*diffs,2)
+      } else {
+        1
       }
     }, riemann = {
       diffs <- diff(tind.i)
