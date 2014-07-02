@@ -157,8 +157,8 @@ simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,
                    id.tuples = I)
   }
   info = data.frame(cbind(tuples, cov.id = p))
-  data = info[order(info$cov.id), "event", "time"]
-  rownames(ordered.info) <- NULL
+  data = info[order(info$cov.id), c("event", "time")]
+  rownames(data) <- NULL
   if (!is.null(Xdat))
     data <- addCovData(data, J, N, Xdat)
   return(data)
@@ -196,7 +196,7 @@ addCovData <- function (data, J, n, Xdat) {
       if (ncol(x)<J)
         stop("Time-varying covariates must have at least J columns")
       return(I(t(sapply(1:n, function(i) {
-        t.i <- data$time
+        t.i <- data$time[i]
         c(x[i,1:t.i], rep(NA, J-t.i))
       }))))
     } else return(x)

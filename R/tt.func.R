@@ -11,7 +11,7 @@ tt.func <- function(x.var,t.var,...) {
                                                         smat=I(smat),
                                                         LX=I(LX)),
                   knots=NULL, absorb.cons=TRUE)[[1]]
-  acTerm(sm, method="aic", eps=.001)
+  pterm(sm, method="aic", eps=.001)
 }
 
 # fit <- coxph(Surv(Y,delta) ~ tt(X), tt=tt.func)

@@ -2,20 +2,98 @@
 # Generate random survival data based on a PH model with
 # TVCs or TVEs
 
-genX <- function(N, s=NULL) {
-  if (is.null(s)) {
-    s  <- (0:100)
-  }
-  u  <- rnorm(N, sd=1)
-  v1 <- sapply(1:10, function(k) rnorm(N, sd=2/k))
-  v2 <- sapply(1:10, function(k) rnorm(N, sd=2/k))
-  X <- sapply(s, function(x) {
-    u + rowSums(sapply(1:10, function(k) {
-      v1[,k]*sin(2*pi*k*x/100) + v2[,k]*cos(2*pi*k*x/100)
-    }))
-  })
-  X
-}
+# SCENARIO 1: time-varying effects of scalar covariates
+N <- 500
+Xdat <- data.frame(X1=rbinom(N,1,.5), X2=rnorm(N))
+tms  <- seq(0, 2*pi, length=100)
+beta <- 3*sin(tms)
+eta  <- t(apply(Xdat, 1, function(x) {
+  -2 + 4*x[1] + beta*x[2]
+}))
+data1 <- simTVSurv(eta, Xdat)
+
+# Model 1:  timecox
+fit1.tc <- timecox(Surv(time,event) ~ const(X1) + X2, data)
+tmp.t <- fit1.tc$cum[,1]
+tmp.x <- fit1.tc$cum[,3]
+est1.tc <- diff(predict(gam(tmp.x~s(tmp.t))))/diff(tmp.t)
+plot(est1.tc ~ tmp.t[-length(tmp.t)], type="l", ylim=c(-4,4))
+lines(beta ~ c(1:100), col="red")
+
+# Model 2:  coxph+tt()
+fit1.tt <- coxph(Surv(time,event) ~ X1 + tt(X2), data=data,
+                 tt=function(x,t,...) x*s.cox(t))
+sm <- smoothCon(s(tvec), data=data.frame(tvec=fit1.tt$y[,1]),
+                knots=NULL, absorb.cons=TRUE)[[1]]
+pmat <- PredictMat(sm, data=data.frame(tvec=1:100))
+est1.tt <- as.vector(pmat %*% coef(fit1.tt)[-1])
+lines(as.vector(est1.tt) ~ c(1:100), col="blue")
+
+
+# SCENARIO 2: Time-Varying Covariates - concurrent effect
+Xdat <- data.frame(X1=I(genX(N)), X2=rnorm(N))
+eta  <- t(apply(Xdat, 1, function(x) {
+  0.5*x[-length(x)] + x[length(x)]
+}))
+data2 <- simTVSurv(eta, Xdat)
+fit2 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data2,
+              na.action=na.pass,
+              tt=function(x,t,...) {sapply(1:length(t), function(i)
+                x[i,t[i]])
+                })
+
+
+# SCENARIO 3: Historical Functional Terms for TVC's
+N <- 500
+J <- 101
+Xdat <- data.frame(X1=I(genX(N, s=seq(0,1,length=J))), X2=rnorm(N))
+beta1 <- makeBetaMat(J, genBeta1)
+eta <- sapply(1:J, function(i) {
+  1.3*Xdat[[2]] + Xdat[[1]][,1:i,drop=F] %*% beta1[i,1:i] / i
+})
+data3 <- simTVSurv(eta, Xdat=Xdat)
+fit3 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data3, na.action=na.pass,
+              tt=function(x,t,...) )
+
+
+out.a <- aalen(  Surv(time,status==9)~const(age)+const(sex)+
+                   const(diabetes)+chf+vf,
+                 data=sTRACE,max.time=7,n.sim=100)
+out.c <- timecox(Surv(time,status==9)~const(age)+const(sex)+
+                   const(diabetes)+chf+vf,
+                 data=sTRACE,max.time=7,n.sim=100)
+out.s <- coxph(Surv(time,status==9) ~ age+sex+diabetes+
+                 tt(chf) + tt(vf), data=sTRACE,
+               tt=function(x,t,...) x*s.cox(t))
+sm <- smoothCon(s(tvec), data=data.frame(tvec=tvec.cc),
+                knots=NULL, absorb.cons=TRUE)[[1]]
+pmat <- PredictMat(sm, data=data.frame(tvec=seq(min(sTRACE$time),
+                                                max(sTRACE$time),
+                                                length=200)))
+est.s1 <- pmat %*% coef(out.s)[4:12]
+est.s2 <- pmat %*% coef(out.s)[13:21]
+
+tmp.t <- out.a$cum[,1]
+est.a1 <- diff(predict(gam(c(out.a$cum[,3])~s(tmp.t))))/diff(tmp.t)
+est.a2 <- diff(predict(gam(c(out.a$cum[,4])~s(tmp.t))))/diff(tmp.t)
+
+tmp.t <- out.c$cum[,1]
+est.c1 <- diff(predict(gam(c(out.c$cum[,3])~s(tmp.t))))/diff(tmp.t)
+est.c2 <- diff(predict(gam(c(out.c$cum[,4])~s(tmp.t))))/diff(tmp.t)
+
+plot(est.a1 ~ out.a$cum[-1,1], type="l", ylim=range(est.c1))
+lines(est.c1 ~ out.c$cum[-1,1], col=2)
+lines(est.s1 ~ seq(min(sTRACE$time), max(sTRACE$time), length=200), col=3)
+
+plot(est.a2 ~ out.a$cum[-1,1], type="l", ylim=c(-2,3))
+lines(est.c2 ~ out.c$cum[-1,1], col=2)
+lines(est.s2 ~ seq(min(sTRACE$time), max(sTRACE$time), length=200), col=3)
+
+
+
+
+
+
 
 # Y <- ceiling(rweibull(N, .75, 600/gamma(1+1/.75)))
 # C <- rep(365*2, N)
