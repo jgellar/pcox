@@ -6,4 +6,6 @@
 #' @docType package
 #' @name pcoxp
 #' @aliases pcoxp
+#' @import survival mgcv
+#' 
 NULL

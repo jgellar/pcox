@@ -6,11 +6,13 @@ tt.func <- function(x.var,t.var,...) {
   L <- getL(smat, integration="trapezoidal", n.int=tmat[,1])
   x.var[is.na(x.var)] <- 0
   rownames(x.var) <- NULL
+  #LX <- L*x.var/tmat
   LX <- L*x.var
   sm <- smoothCon(s(tmat, smat, by=LX), data=data.frame(tmat=I(tmat),
                                                         smat=I(smat),
                                                         LX=I(LX)),
                   knots=NULL, absorb.cons=TRUE)[[1]]
+  sm.out <<- sm
   pterm(sm, method="aic", eps=.001)
 }
 

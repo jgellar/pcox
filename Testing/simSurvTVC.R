@@ -48,12 +48,42 @@ N <- 500
 J <- 101
 Xdat <- data.frame(X1=I(genX(N, s=seq(0,1,length=J))), X2=rnorm(N))
 beta1 <- makeBetaMat(J, genBeta1)
-eta <- sapply(1:J, function(i) {
-  1.3*Xdat[[2]] + Xdat[[1]][,1:i,drop=F] %*% beta1[i,1:i] / i
+eta <- sapply(1:J, function(j) {
+  1.3*Xdat[[2]] + Xdat[[1]][,1:j,drop=F] %*% beta1[j,1:j] / j
 })
 data3 <- simTVSurv(eta, Xdat=Xdat)
 fit3 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data3, na.action=na.pass,
-              tt=function(x,t,...) )
+              tt=tt.func)
+# nt <- length(fit3$y[,1])
+#sm2 <- smoothCon(s(tmat,smat),
+#                data=data.frame(tmat=I(matrix(fit3$y[,1], nrow=nt, ncol=99)),
+#                                smat=I(matrix(1:99, nrow=nt, ncol=99, byrow=TRUE))),
+#                knots=NULL, absorb.cons=TRUE)[[1]]
+tmat.pre <- matrix(1:101, nrow=101, ncol=101)
+smat.pre <- matrix(1:101, nrow=101, ncol=101, byrow=TRUE)
+tmat.pre <- as.vector(tmat.pre[lower.tri(tmat.pre, diag=TRUE)])
+smat.pre <- as.vector(smat.pre[lower.tri(smat.pre, diag=TRUE)])
+pmat <- PredictMat(sm.out, data=data.frame(tmat=tmat.pre, smat=smat.pre, LX=1))
+est3m <- matrix(nrow=101, ncol=101, byrow=FALSE)
+est3m[lower.tri(est3m,diag=TRUE)] <- as.vector(pmat %*% coef(fit3)[-31])
+
+setwd("/Users/jonathangellar/Documents/Projects/FDA - Survival/")
+pdf(paste("Plots/tvcEst1",N,"pdf",sep="."), width=10, height=5)
+par(mfrow=c(1,3))
+image(t(beta1), zlim=c(-30,30), col=jet.colors(64), xaxt="n", yaxt="n", main="True Beta")
+axis(1, seq(0,1,length=5), seq(0,100,length=5))
+axis(2, seq(0,1,length=5), seq(0,100,length=5))
+abline(0,1)
+image(t(est3m), zlim=c(-30,30), col=jet.colors(64), xaxt="n", yaxt="n", main="Estimate")
+axis(1, seq(0,1,length=5), seq(0,100,length=5))
+axis(2, seq(0,1,length=5), seq(0,100,length=5))
+abline(0,1)
+dev.off()
+
+
+# SOFA DATA!!!!
+
+
 
 
 out.a <- aalen(  Surv(time,status==9)~const(age)+const(sex)+
