@@ -1,0 +1,213 @@
+\documentclass[12pt]{article}
+%\documentclass[landscape, 10pt]{article}
+\usepackage{geometry}        % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}          % ... or a4paper or a5paper or ... 
+%\geometry{landscape}        % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}  % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{bigstrut}
+\usepackage{fullpage}
+\usepackage{multirow}
+\usepackage{authblk}
+\usepackage[table]{xcolor}
+\usepackage{arydshln}
+\usepackage{setspace}
+\usepackage[font={footnotesize}]{caption}
+\usepackage[hang,flushmargin]{footmisc}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+%\setlength{\bibsep}{0pt plus 0.3ex}
+\usepackage{natbib}
+\bibpunct{(}{)}{;}{a}{,}{,}
+
+
+
+\newcommand{\bphi}{\mbox{\boldmath $\phi$}}
+\newcommand{\bpsi}{\mbox{\boldmath $\psi$}}
+\newcommand{\bgamma}{\mbox{\boldmath $\gamma$}}
+\newcommand{\btheta}{\mbox{\boldmath $\theta$}}
+\newcommand{\btau}{\mbox{\boldmath $\tau$}}
+\newcommand{\bc}{\mbox{\boldmath $c$}}
+\newcommand{\bJ}{\mbox{\boldmath $J$}}
+\newcommand{\bb}{\mbox{\boldmath $b$}}
+\newcommand{\bg}{\mbox{\boldmath $g$}}
+\newcommand{\bW}{\mbox{\boldmath $W$}}
+\newcommand{\bZ}{\mbox{\boldmath $Z$}}
+\newcommand{\bD}{\mbox{\boldmath $D$}}
+\newcommand{\bU}{\mbox{\boldmath $U$}}
+\newcommand{\bH}{\mbox{\boldmath $H$}}
+\newcommand{\bV}{\mbox{\boldmath $V$}}
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\beqa}{\begin{eqnarray*}}
+\newcommand{\eeqa}{\end{eqnarray*}}
+\newcommand{\bdm}{\begin{displaymath}}
+\newcommand{\edm}{\end{displaymath}}
+\newcommand{\nn}{\nonumber}
+
+
+\linespread{1.6}
+\renewcommand{\familydefault}{cmss}
+
+
+\begin{document}
+
+\title{\texttt{pcox} Package}
+\author{Jonathan Gellar}
+\date{}
+\maketitle
+
+\section{Introduction}
+
+\texttt{pcox} is an R program to fit penalized Cox models with smooth effects of covariates, using a penalized
+spline basis. These effects can either be smooth over the domain of the covariate, smooth over the time domain,
+or both. Both scalar and functional predictors are supported. Functional predictors can either be
+measured along their own domain, or along the same time domain as the hazard function. We refer to the former
+type of predictor as a static functional covariate, and the latter as a time-varying covariate.
+
+%
+%Additionally, the functional predictors
+%can either be measured along their own domain, or along the same time domain as the hazard function. We call
+%the former a non-concurrent or baseline functional predictor, and the latter a concurrent functional predictor. Another
+%way to view a concurrent functional predictor is as a densely-measured time-varying covariate. 
+
+These definitions result in the following general model:
+\begin{equation} \label{eqn:model}
+	\log \lambda_i(t) = \log \lambda_0(t) + f(x_i, t) + g(X_i, t) + h(Z_i, t)
+\end{equation}
+In this notation $\lambda_i(t)$ is the hazard function for subject $i$ and $\lambda_0(t)$ is the baseline hazard function;
+$x_i$, $X_i$, and $Z_i$ are scalar, static functional, and time-varying functional covariates, respectively; and
+$f$, $g$, and $h$ are unknown functions we want to estimate. As proposed above this model is very general, but in practice we
+will likely want to parameterize the way in which each covariate affects the hazard function. Table
+\ref{tab:terms} summarizes the different parameterizations for $f$, $g$, and $h$, and the corresponding
+syntax for the \texttt{pcox} formula. These terms will be discussed further in Section \ref{sec:covariate}.
+
+%\begin{singlespace}
+\begin{table}[t]
+\centering
+\caption{Summary of the types of terms allowed in an \texttt{pcox} formula.\label{tab:terms}}
+\begin{tabular}{llll}
+\bf Covariate Effect & \bf Time Effect & \bf Term Formula & \bf Implementation in \texttt{pcox}  \\[1ex]
+\hline \\[-1.5ex]
+\multicolumn{4}{l}{\bf Scalar Covariate Terms:} \\
+Linear	& Static	& $\beta x$	& \texttt{x} \\
+Linear	& Varying	& $\beta(t) x$	& \texttt{tt(x)} \\
+Nonlinear	& Static	& $\beta(x)$	& \texttt{s(x)} \\
+Nonlinear	& Varying	& $\beta(x,t)$	& \texttt{tt(s(x))} \\[2ex]
+\multicolumn{4}{l}{\bf Time-Static Functional Covariate Terms:} \\
+Linear	& Static	& $\int_{\mathcal{S}} \beta(s)X_i(s)\,ds$		& \texttt{lf(X)}, \texttt{lf.vd(X)} \\
+Linear	& Varying	& $\int_{\mathcal{S}} \beta(s,t)X_i(s)\,ds$	& \texttt{tt(lf(X))}, \texttt{tt(lf.vd(X))} \\
+Nonlinear	& Static	& $\int_{\mathcal{S}} \beta[s,X_i(s)]\,ds$		& \texttt{af(X)}\\
+Nonlinear	& Varying	& $\int_{\mathcal{S}} \beta[s,t,X_i(s)]\, ds$	& \texttt{tt(af(X))} \\[2ex]
+\multicolumn{4}{l}{\bf Time-Varying Functional Covariates as Concurrent Terms:} \\
+Linear	& Static	& $\beta Z_i(t)$		& \texttt{Z} \\
+Linear	& Varying	& $\beta(t) Z_i(t)$	& \texttt{tt(Z)} \\
+Nonlinear	& Static	& $\beta[Z_i(t)]$		& \texttt{s(Z)} \\
+Nonlinear	& Varying	& $\beta[Z_i(t), t]$		& \texttt{tt(s(Z))} \\[2ex]
+\multicolumn{4}{l}{\bf Time-Varying Functional Covariates as Historical Terms:} \\
+Linear	& Static	& $\int_{\delta(t)}^t \beta(s)Z_i(s)\,ds$	& \texttt{hlf(Z)} \\
+Linear	& Varying	& $\int_{\delta(t)}^t \beta(s,t)Z_i(s)\,ds$	& \texttt{tt(hlf(Z))} \\
+Nonlinear	& Static	& $\int_{\delta(t)}^t \beta[s, Z_i(s)]\,ds$	& \texttt{haf(Z)} \\
+Nonlinear	& Varying	& $\int_{\delta(t)}^t \beta[s, t, Z_i(s)]\,ds$	& \texttt{tt(haf(Z))} \\[2ex]
+\multicolumn{4}{l}{\bf Random Effects:} \\
+\end{tabular}
+\end{table}
+
+The basic mechanism for modeling the nonparametric effects is to apply a penalized spline
+basis to the functions $f$, $g$, and $h$ in \eqref{eqn:model}. The model is then estimated by
+maximizing the penalized partial likelihood (PPL), 
+
+\beq
+	\ell^{(p)}_{\rho}(\btheta) = \sum_{i:\delta_i=1}\left\{ \eta_i(\btheta,t) -
+		\log\left(\sum_{j: Y_j\geq Y_i}e^{\eta_j\left(\btheta,t\right)}\right)\right\} - \rho P(\btheta)
+\eeq
+where $\btheta$ are the model parameters (e.g., spline coefficients), $\eta_i(\btheta,t) = f(x_i,t) + g(X_i,t) + h(Z_i,t)$
+is the linear predictor for subject $i$ at time $t$, $\rho$ is a smoothing parameter (possibly a vector),
+and $P(\btheta)$ is an appropriate penalty on the parameters. For a given $\rho$, the PPL is maximized
+by Newton-Raphson. The smoothing parameter(s) $\rho$ may be optimized by a number of different criteria: 
+the cross-validated likelihood (CVL), a likelihood-based information criterion (AIC, AIC$_c$, or EPIC), maximum
+likelihood (ML), or restricted maximum likelihood (REML). We intend to make each of these optimization criteria
+available in \texttt{pcox}, except for the CVL, which is quite computationally intensive.
+
+\texttt{pcox} is essentially a wrapper for four other \texttt{R} packages: \texttt{survival} and \texttt{coxme} for
+fitting penalized Cox models, and \texttt{mgcv} and \texttt{refund} for processing the covariates. Section
+\ref{sec:fitting} describes how the models are fit, and Section \ref{sec:covariate} describes how the
+covariates are processed.
+
+%\beqa
+%	L^{(p)}(\btheta) &=& \prod_{i:\delta_i=1}\left\{ \frac{e^{\log \lambda_0(t_i) + \eta_i(\btheta,t)}}{\sum_{j: Y_j\geq Y_i}e^{\log h_0(t_i) + \eta_j(\btheta,t)}}\right\}
+%		= \prod_{i:\delta_i=1} \left\{ \frac{e^{\eta_i(\btheta,t)}}{\sum_{j: Y_j\geq Y_i}e^{\eta_j(\btheta,t)}}\right\} \\
+%\eeqa
+%where $\btheta$ are the parameters (e.g., spline coefficients), and $\eta_i(\btheta,t) = $
+
+\section{Model Fitting} \label{sec:fitting}
+
+\subsection{Basic structure}
+
+We take advantage of existing implementations of penalized Cox models in \texttt{R}. Two functions that fit these
+models are the \texttt{coxph()} function from the \texttt{survival} package, and the \texttt{coxme()} function from the package
+of the same name. The former optimizes the smoothing parameter using a user-defined control function, whereas
+the latter is optimized specifically through ML or REML. \texttt{pcox} is essentially a wrapper for these two functions.
+If the user chooses to optimize the model via ML or REML, \texttt{coxme()} is called, otherwise \texttt{coxph()} is
+called.
+
+\subsection{Specifying penalized terms in a \texttt{coxph} formula}
+
+Instructions for defining penalized terms in a \texttt{coxph} formula are found in \citet{Grambsch1998}. The idea
+is to create a \texttt{coxph.penalty} object, which is the model matrix corresponding to the term, with a number
+of attributes defining the penalization. These attributes include a function to compute the first and second derivatives
+of the penalty, the control function for the ``outer" loop to optimize the smoothing parameter, and parameters for these
+functions. I have created the function \texttt{acTerm()} to convert an \texttt{mgcv} smooth term (created by calling
+\texttt{smoothCon()} into a \texttt{coxph.penalty} object.
+
+\subsection{Specifying penalized terms in a \texttt{coxme} formula}
+
+\texttt{coxme} was designed to fit Gaussian frailty models, where the user enters the distribution of the random effects
+by supplying a variance matrix. This variance corresponds to the inverse of the penalty matrix from a penalized
+Cox model. Unfortunately, many of the common penalty matrices that we use are non-invertible. I am currently working
+with the developer of \texttt{coxme}, Terry Therneau, to allow \texttt{coxme()} to accept the penalty matrix instead
+of the variance matrix.
+
+
+\section{Covariate Processing} \label{sec:covariate}
+
+Penalized spline bases are implemented for generalized additive models very flexibly by the \texttt{mgcv} package; we
+take advantage of this flexibility by allowing for \texttt{mgcv}-style model terms. This allows the choice of basis,
+number of knots, and form of the penalty to be selected by the user.
+
+Terms involving functional predictors can
+be specified using certain terms from the \texttt{refund} package, which creates the appropriate \texttt{mgcv}-style
+regression term.
+
+Time varying covariates
+can either be included as concurrent terms or historical terms. Concurrent terms allow only the value of the covariate
+at time $t$ to impact the hazard at time $t$; this is the traditional way of handling time-varying covariates in a Cox
+model. Historical terms allow the hazard at time $t$ to depend on the entire history of the covariate up to and including
+time $t$.
+
+\subsection{Time-varying effects}
+Time varying effects can be specified as a \texttt{tt()} term.
+
+\section{Examples}
+
+
+\begin{singlespace}
+\bibliographystyle{Chicago}
+\scriptsize
+\bibliography{/Users/jonathangellar/Documents/Bibtex/FunctionalRegression}
+\end{singlespace}
+
+
+
+\end{document} 
