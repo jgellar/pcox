@@ -97,6 +97,6 @@ are expected.
 Jonathan Gellar <jgellar1@jhu.edu>
 }
 \seealso{
-\code{\link{permalgorithm}}
+\code{\link[PermAlgo]{permalgorithm}}
 }
 

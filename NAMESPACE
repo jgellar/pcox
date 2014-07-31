@@ -3,3 +3,8 @@
 export(genX)
 export(pcox)
 export(simTVSurv)
+import(coxme)
+import(coxph)
+import(mgcv)
+import(refund)
+import(survival)
