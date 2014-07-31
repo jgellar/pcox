@@ -1,3 +1,4 @@
+#' @export
 tt.func <- function(x.var,t.var,...) {
   n <- nrow(x.var)
   J <- ncol(x.var)
