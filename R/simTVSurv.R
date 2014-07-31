@@ -79,7 +79,7 @@
 #' @return A data frame containing the simulated data, as well as
 #' any predictors supplied in \code{Xdat}. Time-varying covariates
 #' will be returned as a "time-varying matrix" in "AsIs" format.
-#' @seealso \code{\link{permalgorithm}}
+#' @seealso \code{\link[PermAlgo]{permalgorithm}}
 #' 
 
 simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,

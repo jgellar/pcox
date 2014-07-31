@@ -1,11 +1,11 @@
 #' Penalized Cox regression models
 #' 
-#' pcox fits penalized Cox regression models using penalized splines
+#' \code{\link{pcox}()} fits penalized Cox regression models using penalized splines
 #' to model the smooth coefficients.
 #' 
 #' @docType package
 #' @name pcoxp
-#' @aliases pcoxp
+#' @aliases pcox-package
 #' @import survival mgcv
 #' 
 NULL
