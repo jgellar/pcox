@@ -1,3 +1,7 @@
+#' Functions for simulating beta coefficient matrices
+#' 
+#' @export
+
 makeBetaMat <- function(J=101, bfunc=genBeta1, ...) {
   grid <- do.call("rbind", sapply(0:(J-1), function(t) {
     s <- 0:t
