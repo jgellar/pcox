@@ -16,29 +16,34 @@ makeBetaMat <- function(J=101, bfunc=genBeta1, ...) {
   bmat
 }
 
+#' @export
 genBeta1 <- function(t,Ti,scale=NULL) {
   # Proportion-based, no interaction
   10*ifelse(Ti==0, 0, (t/Ti)-.5)
 }
 
+#' @export
 genBeta2 <- function(t,Ti,scale=NULL) {
   # Proportion-based, linear interaction
   if (is.null(scale)) {scale <- max(Ti)}
   10*ifelse(Ti==0, 0, (1-2*Ti/scale)*(0.5-4*(t/Ti-.5)^2))
 }
 
+#' @export
 genBeta3 <- function(t,Ti,scale=NULL) {
   # Lag-based, logistic function
   u <- (Ti-t)
   5 - u/10
 }
 
+#' @export
 genBeta4 <- function(t,Ti,scale=NULL) {
   # Lag-based, logistic function
   u <- (Ti-t)
   sin(2*pi*Ti/scale)*(5 - u/10)
 }
 
+#' @export
 genBeta5 <- function(s,t,lag=3) {
   ifelse((t-s)==lag, 5, 0)
 }
