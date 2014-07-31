@@ -1,0 +1,67 @@
+Notes 2014-07-31
+========================================================
+
+## IDEAS/SUGGESTIONS
+
+#### non-invertible penalties into `coxme`
+Two possible approaches that might work with `coxme` _as it is_ come to mind: 
+
+1. replace the zero eigenvalues of the penalties with very small non-zeroes $\rightarrow$ that instantly gives you positive definiteness, at the cost of changing the pen. slightly. E.g. for a first-differences penalty, this adds a **small** ridge penalty. This is also the idea behind `mgcv`'s `cs` and `ts` bases (c.f. Marra/Wood "Practical variable selection for GAMs") and the `pss`-constructor defined in `refund()` for `ff` -terms. Those should work with `coxme`. If you make the replacement eigenvalues just barely large enough to ensure numerical full rank (i.e., very very large variance versus infinite variance on the unpenalized function space), the change shouldn't really affect the fits for non-pathological cases.
+* do the classic mixed model decomposition as in Section 6.6.1 of Wood (2006) and split off the unpenalized parts. 
+    * messier implementation because you now have a single smooth term that has both     parametric/fixed effects and penalized/random effects, and for visualization/testing    etc you have to put them back together.
+    * for tensor product splines this involves some additional design choices: do you do this split for each marginal basis (--> `t2()` in `mgcv`, c.f. Wood/Scheipl/Faraway(2013)) or do you do this after merging the marginal bases & penalties (c.f. Section 6 in Currie/Durban/Eilers (2006))
+     
+#### use `tv(...)` to indicate time-varying terms in the `pcox`-formula 
+* no name clash/confusion with `survival::tt()`
+* more intuitive naming
+
+
+#### don't repeat all my pffr()-mistakes
+some things I would do differently if I were to start over:
+* coding style: consistent naming schemes, no use of periods as separators in names, more functional encapsulation especially for the pre- and post-processing, ...
+* write more & better comments: explain how & why, not what. Right now you have way too much code that is not commented or documented at all, IMO. 
+* stronger modification of the return object instead of simply adding more stuff to
+the object returned by `mgcv`: easier to write methods, more memory efficient (`pffr` objects are often huge because of lots of duplication)
+* debatable: doing most pre-processing etc. yourself and calling the low-level fitting functions (`mgcv:::gam.fit`, in yor case: `survival:::coxpenal.fit`) directly instead of calling `gam` or `coxph`. Advantages: not limited to functionality envisioned by package creator as long as you can define suitable design matrices etc., more control, less workarounds/jumping through hoops. Disadvantages: more code to maintain, partially re-inventing the wheel, calling a non-exported function (not sure if that is even still admissible on CRAN these days)  
+
+## ISSUES
+* `lf.vd.cox.R` defines the same function twice -- I guess the first one should be 
+`lf.vd()` and the 2nd one `lf.vd.cox()`?
+* `s.cox()` is defined twice as well: in `pterm.R` and `s.cox.R`
+* there isn't a single example of using `pcox()` in the whole package 
+ (or in Testing, for that matter)...
+* deal with R CMD check errors/warnings
+    * make folder structure of pcox more standard R-package like (move `Document` to `inst/doc` and `Testing` to `inst/tests` (for proper tests) or `inst/misc` for "sandbox"-scripts, e.g.)
+    * don't use "<<-" !!
+    * NAMESPACE imports and other Rd issues fixed (see pull request #??)
+* turn `Document/pcox.tex` into a proper vignette (Rnw file) so examples etc can be included easily?
+
+#### `simSurvTVC.R`
+* `predict(fit2)` gives a 17254-vector for a 500 row dataset?!? more generally, all fits with `tt` terms return weird predictions in looong vectors -- is that a (`coxph`) bug or am I misunderstanding something?
+
+
+#### time varying terms via `pcox()`:
+1. `pcox(Surv(time,event) ~ X1 + tt(X2), data=data1)` gives a time constant term for
+`X2` unless you also specify `tt=function(x,t,...) x*s.cox(t)`, but then why have
+the pcox wrapper at all -- that's the same syntax as for coxph?
+(also see 2nd idea above)
+* `lf.vd()` & `af.vd()` don't exist (yet?) in refund or refundDevel, AFAICS.
+* special term type names don't correspond to those in `pcox.tex`
+* for the formula interface to work like the spec in `pcox.tex`, I think we'll
+need two steps following l. 87: one to get all the time-varying terms and to check
+what kind they are (linear/nonlinear scalar, linear/nonlinear concurrent, linear
+/nonlinear functional (vd yes/no), linear/nonlinear historical functional 
+(vd yes/no)), and then a second one to gather all of them and the time-constant
+special terms for further processing (`where.ttlf`, `where.lf` etc.). ATM, 
+`tt(x)` and a `tt(s(x))` terms would be processed the same way before being sent 
+on to the fitter, so that's probably not going to work. What we would want for the
+time-varying terms is to be replaced by `tt`-terms that `coxph` understands with the appropriate `tt`-function calling `s.cox` & friends ... right? Alternatively, you
+could allow special terms `tts(x)` (for `tt(s(x))`)  `ttlf.vd(x)` etc. in the
+formula. I think the first approach as given in `pcox.tex` is cleaner.
+
+
+  
+## QUESTIONS 
+
+* l.14 in `s.cox.R`: `lambda <- ifelse(theta<=0, 0, theta/(1-theta))`: why is `theta` guaranteed to be in $[-\infty, 1)$ -- what kind of weird transform of `lambda` is this?
+* do we really want all the simulation code in the package itself? maybe put the `genBeta` stuff into the `demo` folder or similar?

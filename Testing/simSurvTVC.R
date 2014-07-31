@@ -1,3 +1,5 @@
+library(timereg)
+library(mgcv)
 
 # Generate random survival data based on a PH model with
 # TVCs or TVEs
@@ -13,7 +15,7 @@ eta  <- t(apply(Xdat, 1, function(x) {
 data1 <- simTVSurv(eta, Xdat)
 
 # Model 1:  timecox
-fit1.tc <- timecox(Surv(time,event) ~ const(X1) + X2, data)
+fit1.tc <- timecox(Surv(time,event) ~ const(X1) + X2, data1)
 tmp.t <- fit1.tc$cum[,1]
 tmp.x <- fit1.tc$cum[,3]
 est1.tc <- diff(predict(gam(tmp.x~s(tmp.t))))/diff(tmp.t)
@@ -21,7 +23,7 @@ plot(est1.tc ~ tmp.t[-length(tmp.t)], type="l", ylim=c(-4,4))
 lines(beta ~ c(1:100), col="red")
 
 # Model 2:  coxph+tt()
-fit1.tt <- coxph(Surv(time,event) ~ X1 + tt(X2), data=data,
+fit1.tt <- coxph(Surv(time,event) ~ X1 + tt(X2), data=data1,
                  tt=function(x,t,...) x*s.cox(t))
 sm <- smoothCon(s(tvec), data=data.frame(tvec=fit1.tt$y[,1]),
                 knots=NULL, absorb.cons=TRUE)[[1]]
