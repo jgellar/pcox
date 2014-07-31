@@ -16,48 +16,25 @@ genBeta1 <- function(t,Ti,scale=NULL) {
   # Proportion-based, no interaction
   10*ifelse(Ti==0, 0, (t/Ti)-.5)
 }
-<<<<<<< HEAD
-=======
 
-genBeta2 <- function(t,Ti,scale=NULL) {
-  # Proportion-based, sinusoidal interaction
-  if (is.null(scale)) {scale <- max(Ti)}
-  10*ifelse(Ti==0, 0, (1-2*Ti/scale)*(0.5-4*(t/Ti-.5)^2)+.5)
-}
-genBeta3 <- function(t,Ti,scale=NULL) {
-  # Lag-based, no interaction
-  u <- (Ti-t)*.13-3
-  10*(1 - exp(u)/(1+exp(u)))
-}
-genBeta4 <- function(t,Ti,scale=NULL) {
-  # Lag-based, sinusoidal interaction
-  if (is.null(scale)) {scale <- max(Ti)}
-  u <- (Ti-t)*.13-3
-  10*sin(2*pi*Ti/scale)*(0.5 - exp(u)/(1+exp(u)))
-}
-
-
-
-genBeta1 <- function(t,Ti,scale=NULL) {
-  # Proportion-based, no interaction
-  10*ifelse(Ti==0, 0, (t/Ti)-.5)
-}
->>>>>>> 86238d7b1f88fd4aae2c2a84f18506e80dab44c1
 genBeta2 <- function(t,Ti,scale=NULL) {
   # Proportion-based, linear interaction
   if (is.null(scale)) {scale <- max(Ti)}
   10*ifelse(Ti==0, 0, (1-2*Ti/scale)*(0.5-4*(t/Ti-.5)^2))
 }
+
 genBeta3 <- function(t,Ti,scale=NULL) {
   # Lag-based, logistic function
   u <- (Ti-t)
   5 - u/10
 }
+
 genBeta4 <- function(t,Ti,scale=NULL) {
   # Lag-based, logistic function
   u <- (Ti-t)
   sin(2*pi*Ti/scale)*(5 - u/10)
 }
+
 genBeta5 <- function(s,t,lag=3) {
   ifelse((t-s)==lag, 5, 0)
 }
