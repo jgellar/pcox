@@ -52,7 +52,7 @@
 #'   densely-measured time-varying covariate. These types of covariates require
 #'   special attention....
 #'   
-#' @import mgcv refund coxme coxph
+#' @import mgcv refund coxme survival
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
 #' @return a fitted \code{pcox} object. This is either a \code{coxph} or 
