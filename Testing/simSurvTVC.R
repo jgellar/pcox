@@ -55,7 +55,7 @@ eta <- sapply(1:J, function(j) {
 })
 data3 <- simTVSurv(eta, Xdat=Xdat)
 fit3 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data3, na.action=na.pass,
-              tt=tt.funcD)
+              tt=create.tt.func(divide = TRUE))
 est3 <- getHCEst(sm.out, 1:101, coefs = coef(fit3)[-31])
 
 par(mfrow=c(1,2))

@@ -14,31 +14,6 @@ create.tt.func <- function(divide=FALSE, limits=NULL) {
     rownames(x.var) <- NULL
     LX <- L*x.var
     if (divide) LX <- LX/tmat
-    
-    
-    
-    if (!is.null(limits)) {
-      if (!is.function(limits)) {
-        if (!(limits %in% c("s<t", "s<=t"))) {
-          stop("supplied <limits> argument unknown")
-        }
-        if (limits == "s<t") {
-          limits <- function(s, t) {
-            s < t
-          }
-        }
-        else {
-          if (limits == "s<=t") {
-            limits <- function(s, t) {
-              (s < t) | (s == t)
-            }
-          }
-        }
-      }
-    }    
-    
-    
-    
     sm <- smoothCon(s(tmat, smat, by=LX), data=data.frame(tmat=I(tmat),
                                                           smat=I(smat),
                                                           LX=I(LX)),
