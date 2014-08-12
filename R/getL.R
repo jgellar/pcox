@@ -62,30 +62,28 @@ getL3 <- function(tind, integration, mask=NULL) {
   nt <- ncol(tind)
   if (!is.null(mask))
     tind <- tind*mask
-#   if (is.null(mask))
-#     mask <- matrix(TRUE, nrow=nrow(tind), ncol=ncol(tind))
-  
-  L <- t(sapply(1:nrow(tind), function(i) {
-    nt.i <- n.int[i]
-    tind.i <- tind[i,1:nt.i]
+  t(apply(tind, 1, function(tind.i) {
+    tvec <- tind.i[!is.na(tind.i)]
+    nt <- length(tvec)
     L.i <- switch(integration, simpson = {
-      ((tind.i[nt.i] - tind.i[1])/nt.i)/3 * c(1, rep(c(4, 
-                                                       2), length = nt.i - 2), 1)
+      ((tind[nt]-tind[1])/nt)/3 * matrix(c(1, rep(c(4,2), length=nt-2), 1),
+                                         nrow=n, ncol=nt, byrow=TRUE)
     }, trapezoidal = {
-      diffs <- diff(tind.i)
+      diffs <- diff(tvec)
       if (length(diffs)>1) {
-        0.5 * c(diffs[1], filter(diffs, filter=c(1,1))[-(nt.i-1)],
-                diffs[(nt.i-1)])
+        0.5 * c(diffs[1], filter(diffs, filter=c(1,1))[-(nt-1)],
+                diffs[(nt-1)])
       } else if (length(diffs)==1) {
         rep(0.5*diffs,2)
       } else {
         1
       }
     }, riemann = {
-      diffs <- diff(tind.i)
+      diffs <- diff(tvec)
       c(mean(diffs), diffs)
     })
-    L.i <- c(L.i, rep(0,nt-nt.i))
+    tind.i[!is.na(tind.i)] <- L.i
+    tind.i[is.na(tind.i)] <- 0
+    tind.i
   }))
-  L
 }

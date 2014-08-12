@@ -69,5 +69,42 @@ axis(2, seq(0,1,length=5), seq(0,100,length=5))
 abline(0,1)
 
 
+# SCENARIO 4: Partial-Domain Effects for Historical Cox Terms
+genBeta6 <- function(s,t,lag=5) {
+  ifelse((t-s)>=lag, 0, (5-(t-s)*5/lag))
+}
+beta6 <- makeBetaMat(J, genBeta6)
+eta4 <- sapply(1:J, function(j) {
+  1.3*Xdat[[2]] + Xdat[[1]][,1:j,drop=F] %*% beta6[j,1:j]
+}) # Note: no 1/j!
+data4 <- simTVSurv(eta6, Xdat=Xdat)
+fit4 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data4, na.action=na.pass,
+              tt=tt.func)
+est4 <- getHCEst(sm.out, 1:101, coefs = coef(fit4)[-31])
 
+par(mfrow=c(1,2))
+image(t(beta6), zlim=c(-6,6), col=jet.colors(64), xaxt="n", yaxt="n", main="True Beta")
+axis(1, seq(0,1,length=5), seq(0,100,length=5))
+axis(2, seq(0,1,length=5), seq(0,100,length=5))
+abline(0,1)
+image(t(est4), zlim=c(-6,6), col=jet.colors(64), xaxt="n", yaxt="n", main="Estimate")
+axis(1, seq(0,1,length=5), seq(0,100,length=5))
+axis(2, seq(0,1,length=5), seq(0,100,length=5))
+abline(0,1)
 
+matplot(t(est4[c(seq(1,51,by=10)),]), type="l", xlim=c(0,51))
+
+# Model 2: Domain limits
+fit5 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data4, na.action=na.pass,
+              tt=create.tt.func(divide = FALSE, limits=limits))
+est5 <- getHCEst(sm.out, 1:101, coefs = coef(fit5)[-31])
+mask5 <- t(outer(1:J, 1:J, limits))
+est5[!mask5] <- NA
+
+est5b <- getHCEst(sm.out, 1:101, coefs=coef(fit5)[-31], mask = mask5)
+
+image.plot(t(est5))
+est5b.R <- t(apply(est5b, 1, function(x) {
+  tmp <- x[!is.na(x)]
+  c(rep(NA,(6-length(tmp))), tmp)
+}))

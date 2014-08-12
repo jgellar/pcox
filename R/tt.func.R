@@ -42,7 +42,9 @@ tt.func.lims <- function(x.var,t.var,...) {
   tmat <- matrix(t.var, nrow=n, ncol=J)
   smat <- matrix(1:J, nrow=n, ncol=J, byrow=TRUE)
   mask <- t(outer(smat[1,], tmat[,1], limits))
-  L <- getL(smat, integration="trapezoidal", n.int=tmat[,1])
+  mask[!mask] <- NA
+  L <- getL3(smat, integration="trapezoidal", mask=mask)
+  
   x.var[is.na(x.var)] <- 0
   rownames(x.var) <- NULL
   #LX <- L*x.var/tmat
@@ -54,5 +56,7 @@ tt.func.lims <- function(x.var,t.var,...) {
   sm.out <<- sm
   pterm(sm, method="aic", eps=.001)
 }
+
+
 
 # fit <- coxph(Surv(Y,delta) ~ tt(X), tt=tt.func)
