@@ -67,7 +67,7 @@
 #'   \code{\link[refund]{pffr}} and \code{\link[refund]{fgam}} from 
 #'   \code{refund}.
 #'   
-pcox <- function(formula, method=c("aic","caic","epic","reml", "ml", "fixed", "df"),
+pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixed", "df"),
                 eps=0.001, knots=NULL, ...) {
   # Preliminaries...
   call <- match.call()
@@ -84,15 +84,15 @@ pcox <- function(formula, method=c("aic","caic","epic","reml", "ml", "fixed", "d
   }  
   
   # Organize terms
-  tf <- terms.formula(formula, specials = c("s", "te", "t2", 
-                                            "lf", "af", "lf.vd", "lf.tvc",
-                                            "ff", "tt2",
-                                            "strata", "cluster", "tt"))
+  tf <- terms.formula(formula, specials = c("tv", "s", "te", "t2", 
+                                            "lf", "af", "lf.vd", "hlf", "haf",
+                                            "strata", "cluster"))
   trmstrings <- attr(tf, "term.labels")
   terms <- sapply(trmstrings, function(trm) as.call(parse(text = trm))[[1]], 
                   simplify = FALSE)
   frmlenv <- environment(formula)
   specials <- attr(tf, "specials")
+  where.tv <- specials$tv - 1
   where.s  <- specials$s - 1
   where.te <- specials$te - 1
   where.t2 <- specials$t2 - 1
@@ -100,11 +100,12 @@ pcox <- function(formula, method=c("aic","caic","epic","reml", "ml", "fixed", "d
   where.af <- specials$af - 1
   where.lf <- specials$lf - 1
   where.lf.vd  <- specials$lf.vd - 1
-  where.lf.tvc <- specials$lf.tvc - 1
-  where.sm  <- c(where.s, where.te, where.t2, where.af, where.lf, where.lf.vd, where.lf.tvc)
+  where.hlf <- specials$hlf - 1
+  where.haf <- specials$haf - 1
+  where.sm  <- c(where.tv, where.s, where.te, where.t2, where.af, where.lf,
+                 where.lf.vd, where.hlf, where.haf)
   where.par <- if (length(trmstrings)) {
-    which(!(1:length(trmstrings) %in% c(where.s, where.te, where.t2, where.tt,
-                                        where.af, where.lf, where.lf.vd, where.lf.tvc)))
+    which(!(1:length(trmstrings) %in% where.sm))
   } else {
     numeric(0)
   }
@@ -129,6 +130,37 @@ pcox <- function(formula, method=c("aic","caic","epic","reml", "ml", "fixed", "d
   #  newfrml <- paste(newfrml, "0", sep = "")
   # }
   smooth = specs <- vector("list", length=length(newtrmstrings))
+  
+  
+
+  ##############################
+  # Process time-varying terms #
+  ##############################
+  
+  tt_funcs <- vector("list", length=length(newtrmstrings))
+  if (length(where.tv)) {
+    tt_funcs[[where.tv]] <- lapply(terms[where.tv], function(x) {
+      
+      
+      formals(x)$env <- newttenv
+      formals(x)$label <- somelabel
+      eval(x, envir=evalenv, encolos=frmlenv)
+    })
+  }
+  
+  # Historical terms
+  where.h <- c(where.hlf, where.haf)
+  if (length(where.h)) {
+    stop("Historical terms not yet supported!")
+    tt_funcs[[where.h]] <- lapply(terms[where.h], function(x) {
+      x
+    })
+  }
+  
+  
+  ############################
+  # Process time-fixed terms #
+  ############################
   
   # Parametric terms
   if (length(where.par)) {
@@ -169,7 +201,7 @@ pcox <- function(formula, method=c("aic","caic","epic","reml", "ml", "fixed", "d
     })
   } else sterms <- NULL  
   
-  # Functional terms (af, lf, and lf.vd)
+  # Functional terms (af, lf, lf.vd)
   where.f <- c(where.af, where.lf, where.lf.vd)
   if (length(where.f)) {
     fterms <- lapply(terms[where.f], function(x) {

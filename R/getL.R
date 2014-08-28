@@ -1,5 +1,7 @@
-
-
+#' Get the weight matrix for a linear functional term
+#' 
+#' @keywords internal
+#' 
 
 getL <- function(tind, integration, n.int=NULL) {
   nt <- ncol(tind)

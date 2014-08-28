@@ -43,7 +43,12 @@ fit2 <- coxph(Surv(time,event) ~ tt(X1) + X2, data=data2,
               tt=function(x,t,...) {sapply(1:length(t), function(i)
                 x[i,t[i]])
                 })
-
+fit <- coxph(Surv(time,event) ~ tt(X1b), na.action=na.pass,
+             tt=function(x,t,...) {sapply(1:length(t), function(i)
+               x[i,t[i]])}, data=data2)
+fit <- coxph(Surv(time,event) ~ tt(X), na.action=na.pass,
+             tt=function(x,t,...) {sapply(1:length(t), function(i)
+               x[i,t[i]])}, data=data)
 
 # SCENARIO 3: Historical Functional Terms for TVC's
 N <- 500

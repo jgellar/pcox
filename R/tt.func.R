@@ -59,4 +59,5 @@ tt.func.lims <- function(x.var,t.var,...) {
 
 
 
+
 # fit <- coxph(Surv(Y,delta) ~ tt(X), tt=tt.func)
