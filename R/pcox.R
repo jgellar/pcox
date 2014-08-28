@@ -121,9 +121,20 @@ pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixe
   nobs <- nrow(eval(responsename, envir = evalenv, enclos = frmlenv))
   fitter <- as.symbol(fitter)
   # Need to be modified for survival object?
-  assign(x = deparse(responsename),
-         value = eval(responsename, envir = evalenv, enclos = frmlenv),
-         envir = newfrmlenv)
+  if (is.call(responsename)) {
+    # responsename is a call to Surv, assign its arguments to newfrmlenv
+    sapply(as.list(responsename[-1]), function(x) {
+      assign(x = deparse(x),
+             value = eval(x, envir=evalenv, enclos=frmlenv),
+             envir = newfrmlenv)
+      invisible(NULL)
+    })
+  } else {
+    # assign responsename directly to newfrmlenv
+    assign(x = deparse(responsename),
+           value = eval(responsename, envir = evalenv, enclos = frmlenv),
+           envir = newfrmlenv)
+  }
   newtrmstrings <- attr(tf, "term.labels")
   # Remove intercept ALWAYS? or never necessary?
   # if (!attr(tf, "intercept")) {
