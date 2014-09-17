@@ -68,7 +68,7 @@
 #'   \code{refund}.
 #'   
 pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixed", "df"),
-                eps=0.001, knots=NULL, ...) {
+                eps=1e-6, knots=NULL, ...) {
   # Preliminaries...
   call <- match.call()
   method <- match.arg(method)

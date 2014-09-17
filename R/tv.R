@@ -5,11 +5,16 @@
 
 tv <- function(term, env=NULL, label=NULL, method="aic", eps=.001,
                basistype="s", bs="tp", ...) {
-  # Create and return a "tt" function based on the term
-  function(x,t,...) {
+  # Processing for time-varying functions
+  
+  
+  # Create the appropriate "tt" function to pass to coxph
+  tt.func <- function(x,t,...) {
     # Start with code to create the smooth object here
     # Then:
     assign(label, sm, env)
     pterm(sm, method=method, eps=eps)
   }
+  
+  
 }

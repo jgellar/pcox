@@ -1,7 +1,8 @@
-pterm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=.001) {
+pterm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=1e-6) {
   method <- match.arg(method)
   W <- sm$X
-  D <- sm$S[[1]] * sm$S.scale
+  #D <- sm$S[[1]] * sm$S.scale
+  D <- sm$S[[1]]
   
   # Penalty functions
   pfun.lFunc <- function(coef, theta, nevent, D) {
@@ -15,7 +16,6 @@ pterm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=.001) 
                  fixed = list(pfun=pfun.lFunc, cfun=function(parms, ...) {list(theta=parms$theta, done=TRUE)},
                               diag=FALSE, pparm=D, cparm=list(theta=theta)),
                  df    = list(pfun=pfun.lFunc, cfun=survival:::frailty.controldf,
-                              
                               diag=FALSE, pparm=D),
                  aic   = list(pfun=pfun.lFunc, cfun=control.aic,
                               cparm = list(eps=eps, init=c(0.5, 0.95), lower=0, upper=1, type="aic"),
