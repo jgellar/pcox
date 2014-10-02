@@ -62,10 +62,9 @@ getL2 <- function(tind, integration, n.int=NULL) {
 
 getL3 <- function(tind, integration, mask=NULL) {
   nt <- ncol(tind)
-  if (!is.null(mask)) {
-    mask[!mask] <- NA
-    tind <- tind*mask
-  }
+  if (!is.null(mask))
+    #mask[!mask] <- NA
+    tind <- tind * ifelse(mask, 1, NA)
   t(apply(tind, 1, function(tind.i) {
     tvec <- tind.i[!is.na(tind.i)]
     nt <- length(tvec)

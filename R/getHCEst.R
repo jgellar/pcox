@@ -11,8 +11,10 @@ getHCEst <- function(sm, idx, coefs, trim=NULL, mask=NULL) {
   smat <- matrix(idx, nrow=J, ncol=J, byrow=TRUE)
   
   tmat <- if (is.null(mask)) {
+    # Default is the lower triangle
     as.vector(tmat[lower.tri(tmat, diag=TRUE)])
   } else {
+    # If mask is supplied, use the mask
     as.vector(tmat[mask])
   }
   
