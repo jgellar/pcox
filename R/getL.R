@@ -82,8 +82,12 @@ getL3 <- function(tind, integration, mask=NULL) {
         1
       }
     }, riemann = {
-      diffs <- diff(tvec)
-      c(mean(diffs), diffs)
+      if (length(tvec)==1) {
+        tvec
+      } else {
+        diffs <- diff(tvec)
+        c(mean(diffs), diffs)
+      }
     })
     tind.i[!is.na(tind.i)] <- L.i
     tind.i[is.na(tind.i)] <- 0
