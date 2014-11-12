@@ -136,36 +136,37 @@ pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixe
            envir = newfrmlenv)
   }
   newtrmstrings <- attr(tf, "term.labels")
-  # Remove intercept ALWAYS? or never necessary?
-  # if (!attr(tf, "intercept")) {
-  #  newfrml <- paste(newfrml, "0", sep = "")
-  # }
+  tt_funcs <- vector(mode = "list", length = length(trmstrings))
   smooth = specs <- vector("list", length=length(newtrmstrings))
   
   
-
+  
   ##############################
   # Process time-varying terms #
   ##############################
   
-  tt_funcs <- vector("list", length=length(newtrmstrings))
   if (length(where.tv)) {
     tt_funcs[[where.tv]] <- lapply(terms[where.tv], function(x) {
-      
-      
-      formals(x)$env <- newttenv
-      formals(x)$label <- somelabel
-      eval(x, envir=evalenv, encolos=frmlenv)
+      #formals(x)$env <- newttenv
+      #formals(x)$label <- somelabel
+      tt <- eval(x, envir=evalenv, encolos=frmlenv)
+      environment(tt)$env <- newttenv
+      environment(tt)$index <- someindex
     })
   }
   
   # Historical terms
   where.h <- c(where.hlf, where.haf)
   if (length(where.h)) {
-    stop("Historical terms not yet supported!")
-    tt_funcs[[where.h]] <- lapply(terms[where.h], function(x) {
-      x
+    hterms <- lapply(terms[where.h], function(x) {
+      eval(x, envir = evalenv, enclos = frmlenv)
     })
+    tt_funcs[[where.h]] <- lapply(hterms, function(x) attr(x, "tt"))
+#     
+#     stop("Historical terms not yet supported!")
+#     tt_funcs[[where.h]] <- lapply(terms[where.h], function(x) {
+#       x
+#     })
   }
   
   
@@ -183,14 +184,13 @@ pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixe
       }
       else all.vars(x)
       sapply(nms, function(nm) {
-        stopifnot(length(get(nm, envir = frmlenv)) == 
-                    nobs)
-        assign(x = nm, value = get(nm, envir = frmlenv), 
-               envir = newfrmlenv)
+        stopifnot(length(get(nm, envir = frmlenv)) == nobs)
+        assign(x = nm, value = get(nm, envir = frmlenv), envir = newfrmlenv)
         invisible(NULL)
       })
       invisible(NULL)
     })
+    tt_funcs[[where.par]] <- tt.identity
   }
   
   # Smooth scalar terms
@@ -201,15 +201,11 @@ pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixe
     })
     specs[where.ss]  <- sterms
     smooth[where.ss] <- lapply(sterms, function(x) {
-      # vars <- x$term
-      # if (x$by != "NA")
-      #   vars <- append(vars, x$by)
-      # dat <- lapply(vars, function(x) eval(x,envir=frmlenv))
       smoothCon(x, data=as.list(frmlenv),
-                # data=as.list(newfrmlenv),
                 knots=knots,
                 absorb.cons=TRUE, n=nobs)[[1]]
     })
+    tt_funcs[[where.ss]] <- tt.identity
   } else sterms <- NULL  
   
   # Functional terms (af, lf, lf.vd)
@@ -218,16 +214,12 @@ pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixe
     fterms <- lapply(terms[where.f], function(x) {
       eval(x, envir = evalenv, enclos = frmlenv)
     })
-    # specs.f <- lapply(fterms, function(x) eval(x$call))
-    # smooth[where.f] <- lapply(1:length(fterms), function(i) {
-    #   smoothCon(specs.f[i], fterms[[i]]$data,
-    #             knots=knots, absorb.cons=TRUE, n=nobs)[[1]]
-    # })
     specs[where.f]  <- lapply(fterms, function(x) eval(x$call))
     smooth[where.f] <- lapply(fterms, function(x) {
       smoothCon(eval(x$call), data=x$data,
                 knots=knots, absorb.cons=TRUE, n=nobs)[[1]]
     })
+    tt_funcs[[where.f]] <- tt.identity
   }
   else fterms <- NULL
   
@@ -256,6 +248,8 @@ pcox <- function(formula, data, method=c("aic","caic","epic","reml", "ml", "fixe
   }
   
   # Fit Model
+  c(where.tv, where.h)
+  fit.tt <- 
   newfrml <- formula(paste(c(newfrml, paste(newtrmstrings, collapse="+"))))
   environment(newfrml) <- newfrmlenv
   pcoxdata <- list2df(as.list(newfrmlenv))

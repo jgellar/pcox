@@ -33,3 +33,32 @@ getHCEst <- function(sm, idx, coefs, trim=NULL, mask=NULL) {
   }
   est
 }
+
+
+getHCEst.smt <- function(sm, idx, lag, coefs, trim=NULL, mask=NULL, rescale=TRUE) {
+  if (!is.null(trim))
+    coefs <- coefs[grepl(trim, names(coefs))]
+  
+  # Set up matrices
+  J <- length(idx)
+  smt.idx <- seq(-lag,0,by=.5)
+  K <- length(smt.idx)
+  tmat <- matrix(idx, nrow=J, ncol=K)
+  smtmat <- matrix(smt.idx, nrow=J, ncol=K, byrow=TRUE)
+  
+  # Mask out the lower right corner
+  if (is.null(mask))
+    mask <- -1*smtmat <= tmat
+  tmat <- as.vector(tmat[mask])
+  smtmat <- as.vector(smtmat[mask])
+  if (rescale) {
+    smtmat <- (smtmat-min(smtmat))/(max(smtmat)-min(smtmat))
+    tmat <- (tmat-min(tmat))/(max(tmat)-min(tmat))
+  }
+  
+  # Make predictions and organize as matrix
+  pmat <- PredictMat(sm, data=data.frame(tmat=tmat, smtmat=smtmat, LX=1))
+  est  <- matrix(nrow=J, ncol=K, byrow=FALSE)
+  est[mask] <- as.vector(pmat %*% coefs)
+  est
+}

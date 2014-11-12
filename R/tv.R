@@ -1,4 +1,4 @@
-#' Process a time-varying term in a \coe{pcox} formula
+#' Process a time-varying term in a \code{pcox} formula
 #' 
 #' 
 #' 
@@ -6,6 +6,11 @@
 tv <- function(term, env=NULL, label=NULL, method="aic", eps=.001,
                basistype="s", bs="tp", ...) {
   # Processing for time-varying functions
+  
+  
+  
+  # existing smooth... 
+  
   
   
   # Create the appropriate "tt" function to pass to coxph

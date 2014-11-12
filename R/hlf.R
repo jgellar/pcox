@@ -28,6 +28,38 @@
 #' @author Jonathan E. Gellar <jgellar1@@jhu.edu>
 #' 
 
-hlf <- function(X, tind=NULL, limits=NULL, ...) {
-  
+hf <- function(X, tind=NULL, basistype = c("s", "te", "t2"),
+               additive=FALSE, concurrent=FALSE,
+               integration = c("simpson", "trapezoidal", "riemann"),
+               limits=NULL, splinepars=NULL) {
+  tt.func <- create.tt.hf(X, tind=tind, basistype = basistype,
+                          additive=additive, concurrent=concurrent,
+                          integration = integration,
+                          limits=limits, splinepars=splinepars)
+  attr(X, "tt") <- tt.func
+  X
+}
+
+hf <- function(X, ...) {
+  tt.func <- create.tt.hf(X, ...)
+  attr(X, "tt") <- tt.func
+  X
+}
+
+
+
+hlf <- function(X, tind=NULL, basistype = c("s", "te", "t2"),
+                integration = c("simpson", "trapezoidal", "riemann"),
+                limits=NULL, splinepars=NULL) {
+  tt.func <- create.tt.hlf()
+  attr(X, "tt") <- tt.func
+  X
+}
+
+haf <- function(X, sind=NULL, basistype = c("s", "te", "t2"), integration = c("simpson", "trapezoidal", "riemann"),
+                limits=NULL, splinepars=NULL) {
+  tt.func <- create.tt.haf()
+  attr(X, "tt") <- tt.func
+  X
+  #   list(X=X, opts=list(sind=sind, basistype=basistype, integration=integration, limits=limits, splinepars=splinepars))
 }

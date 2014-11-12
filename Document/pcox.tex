@@ -98,28 +98,28 @@ syntax for the \texttt{pcox} formula. These terms will be discussed further in S
 \centering
 \caption{Summary of the types of terms allowed in an \texttt{pcox} formula.\label{tab:terms}}
 \begin{tabular}{llll}
-\bf Covariate Effect & \bf Time Effect & \bf Term Formula & \bf Implementation in \texttt{pcox}  \\[1ex]
+\bf Time Effect & \bf Covariate Effect & \bf Term Formula & \bf Implementation in \texttt{pcox}  \\[1ex]
 \hline \\[-1.5ex]
-\multicolumn{4}{l}{\bf Scalar Covariate Terms:} \\
-Linear	& Static	& $\beta x$	& \texttt{x} \\
-Linear	& Varying	& $\beta(t) x$	& \texttt{tv(x)} \\
-Nonlinear	& Static	& $\beta(x)$	& \texttt{s(x)} \\
-Nonlinear	& Varying	& $\beta(x,t)$	& \texttt{tv(s(x))} \\[2ex]
-\multicolumn{4}{l}{\bf Time-Static Functional Covariate Terms:} \\
-Linear	& Static	& $\int_{\mathcal{S}} \beta(s)X_i(s)\,ds$		& \texttt{lf(X)}, \texttt{lf.vd(X)} \\
-Linear	& Varying	& $\int_{\mathcal{S}} \beta(s,t)X_i(s)\,ds$	& \texttt{tv(lf(X))}, \texttt{tv(lf.vd(X))} \\
-Nonlinear	& Static	& $\int_{\mathcal{S}} \beta[s,X_i(s)]\,ds$		& \texttt{af(X)}\\
-Nonlinear	& Varying	& $\int_{\mathcal{S}} \beta[s,t,X_i(s)]\, ds$	& \texttt{tv(af(X))} \\[2ex]
-\multicolumn{4}{l}{\bf Time-Varying Functional Covariates as Concurrent Terms:} \\
-Linear	& Static	& $\beta Z_i(t)$		& \texttt{Z} \\
-Linear	& Varying	& $\beta(t) Z_i(t)$	& \texttt{tv(Z)} \\
-Nonlinear	& Static	& $\beta[Z_i(t)]$		& \texttt{s(Z)} \\
-Nonlinear	& Varying	& $\beta[Z_i(t), t]$		& \texttt{tv(s(Z))} \\[2ex]
-\multicolumn{4}{l}{\bf Time-Varying Functional Covariates as Historical Terms:} \\
-Linear	& Static	& $\int_{\delta(t)}^t \beta(s)Z_i(s)\,ds$	& \texttt{hlf(Z)} \\
-Linear	& Varying	& $\int_{\delta(t)}^t \beta(s,t)Z_i(s)\,ds$	& \texttt{tv(hlf(Z))} \\
-Nonlinear	& Static	& $\int_{\delta(t)}^t \beta[s, Z_i(s)]\,ds$	& \texttt{haf(Z)} \\
-Nonlinear	& Varying	& $\int_{\delta(t)}^t \beta[s, t, Z_i(s)]\,ds$	& \texttt{tv(haf(Z))} \\[2ex]
+\multicolumn{4}{l}{\bf Scalar Predictors:} \\
+Static	& Linear	& $\beta x$	& \texttt{x} \\
+Static	& Nonlinear	& $\beta(x)$	& \texttt{s(x)} \\
+Varying	& Linear	& $\beta(t) x$	& \texttt{tv(x)} \\
+Varying	& Nonlinear	& $\beta(x,t)$	& \texttt{tv(s(x))} \\[2ex]
+\multicolumn{4}{l}{\bf Baseline Functional Predictors:} \\
+Static	& Linear	& $\int_{\mathcal{S}} \beta(s)X_i(s)\,ds$		& \texttt{lf(X)}, \texttt{lf.vd(X)} \\
+Static	& Nonlinear	& $\int_{\mathcal{S}} \beta[s,X_i(s)]\,ds$		& \texttt{af(X)}\\
+Varying	& Linear	& $\int_{\mathcal{S}} \beta(s,t)X_i(s)\,ds$	& \texttt{tv(lf(X))}, \texttt{tv(lf.vd(X))} \\
+Varying	& Nonlinear	& $\int_{\mathcal{S}} \beta[s,t,X_i(s)]\, ds$	& \texttt{tv(af(X))} \\[2ex]
+\multicolumn{4}{l}{\bf Concurrent Functional Predictors:} \\
+Static	& Linear	& $\beta Z_i(t)$		& \texttt{Z} or \texttt{clf(Z)} \\
+Static	& Nonlinear	& $\beta[Z_i(t)]$		& \texttt{s(Z)} or \texttt{caf(Z)} \\
+Varying	& Linear	& $\beta(t) Z_i(t)$	& \texttt{tv(Z)} or \texttt{tv(clf(Z))} or \texttt{clf(Z, tv=TRUE)} \\
+Varying	& Nonlinear	& $\beta[Z_i(t), t]$		& \texttt{tv(caf(Z))} or \texttt{caf(Z, tv=TRUE)}\\[2ex]
+\multicolumn{4}{l}{\bf Historical Functional Predictors:} \\
+Static	& Linear	& $\int_{\delta(t)}^t \beta(s)Z_i(s)\,ds$	& \texttt{hlf(Z)} \\
+Static	& Nonlinear	& $\int_{\delta(t)}^t \beta[s, Z_i(s)]\,ds$	& \texttt{haf(Z)} \\
+Varying	& Linear	& $\int_{\delta(t)}^t \beta(s,t)Z_i(s)\,ds$	& \texttt{tv(hlf(Z))} or \texttt{hlf(Z, tv=TRUE)} \\
+Varying	& Nonlinear	& $\int_{\delta(t)}^t \beta[s, t, Z_i(s)]\,ds$	& \texttt{tv(haf(Z))} or \texttt{haf(Z, tv=TRUE)} \\[2ex]
 \multicolumn{4}{l}{\bf Random Effects:} \\
 \end{tabular}
 \end{table}
@@ -201,6 +201,14 @@ Time varying effects can be specified as a \texttt{tv()} term.
 
 \section{Examples}
 
+
+
+
+I was just getting down to implementing the code for concurrent functional predictors. Recall that my plan was to have these terms indicated just as a matrix in the model formula, i.e. `Surv(time,event) ~ Z` for a matrix `Z`. However, this doesn't let us specify the time points that correspond to the columns of `Z` - it requires making an assumption on how these columns relate to the `time` variable (i.e., there needs to be one column for each time point). It also doesn't allow for any other options regarding how `Z` is processed - I can't think of any of these right now that we might want, but it may come up.
+
+A much more flexible way of specifying these terms would be as a function, e.g. `clf(Z)` for a "concurrent linear function" and `caf(Z)` for a "concurrent additive function". This would correspond to how we allow for historical terms with `hlf()` and `haf()`.
+
+Another option is to drop the "l" and "a" for all of these functions. So we would just have `hf()` and `cf()`, both of which would have an argument `additive` which defaults to `FALSE`.
 
 \begin{singlespace}
 \bibliographystyle{Chicago}
