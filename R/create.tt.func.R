@@ -51,7 +51,7 @@ create.tt.func <- function(tind=NULL, divide.by.t=FALSE, limits=NULL,
     
     if (is.null(sm.in)) {
       sm <- if (is.null(k)) {
-        smoothCon(s(tmat, smat, by=LX), data=pdat,
+        smoothCon(mgcv::s(tmat, smat, by=LX), data=pdat,
                   knots=NULL, absorb.cons=TRUE)[[1]]
       } else {
         smoothCon(s(tmat, smat, by=LX, k=k), data=pdat,
