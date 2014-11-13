@@ -1,22 +1,23 @@
 
 
-create.tt.hf <- function(X, tind=NULL, basistype = c("s", "te", "t2"),
+
+create.tt.bf <- function(X, sind=NULL, basistype = c("s", "te", "t2"),
                          tv=TRUE,
                          additive=FALSE,
-                         divide.by.t = FALSE,
-                         domain = c("s", "s-t", "u"),
-                         #domain = c("s", "s-t", "s/t"),
+                         #divide.by.t = FALSE,
+                         #domain = c("s", "s-t", "u"),
                          dbug=FALSE,
                          integration = c("simpson", "trapezoidal", "riemann"),
-                         limits=NULL, splinepars=NULL, ...) {
+                         #limits=NULL, splinepars=NULL,
+                         ...) {
   
   basistype <- match.arg(basistype)
   domain <- match.arg(domain)
   integration <- match.arg(integration)
   
   if (is.null(limits))
-    # Default
-    limits <- "s<=t"
+    # Default: entire range
+    limits <- function(s,t) TRUE
   
   lag <- NULL
   if (!is.function(limits)) {
@@ -37,25 +38,28 @@ create.tt.hf <- function(X, tind=NULL, basistype = c("s", "te", "t2"),
   tt.func <- function(x.var,t.var,...) {
     n <- nrow(x.var)
     J <- ncol(x.var)
+    if (is.null(sind))
+      sind <- 1:J
+    
     tmat <- matrix(t.var, nrow=n, ncol=J)
-    smat <- matrix(1:J, nrow=n, ncol=J, byrow=TRUE)
+    smat <- matrix(sind, nrow=n, ncol=J, byrow=TRUE)
     mask <- t(outer(smat[1,], tmat[,1], limits))
     
-    if (domain=="s-t") {
-      # Align according to s-t
-      smat <- smat-tmat
-    } else if (domain=="u") {
-      stop("Not currently supported")
-      
-      # Domain-standardized
-          # Problem when t==min(smat)?
-          # Need different L matrix? NO (I think....)
-      minS <- min(smat)
-      smat[t.var!=minS,] <- (smat[t.var!=minS,]-minS)/(tmat[t.var!=minS,]-minS)
-      smat[t.var==minS,] <- 0.5
-      
-      #smat <- (smat-min(smat))/(tmat-min(smat))
-    }
+    #if (domain=="s-t") {
+    #  # Align according to s-t
+    #  smat <- smat-tmat
+    #} else if (domain=="u") {
+    #  stop("Not currently supported")
+    #  
+    #  # Domain-standardized
+    #  # Problem when t==min(smat)?
+    #  # Need different L matrix? NO (I think....)
+    #  minS <- min(smat)
+    #  smat[t.var!=minS,] <- (smat[t.var!=minS,]-minS)/(tmat[t.var!=minS,]-minS)
+    #  smat[t.var==minS,] <- 0.5
+    #  
+    #  #smat <- (smat-min(smat))/(tmat-min(smat))
+    #}
     
     L <- getL3(smat, integration=integration, mask=mask)
     x.var[is.na(x.var)] <- 0
@@ -132,3 +136,4 @@ create.tt.hf <- function(X, tind=NULL, basistype = c("s", "te", "t2"),
     undebug(tt.func)
   tt.func  
 }
+
