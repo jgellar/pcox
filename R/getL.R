@@ -65,6 +65,8 @@ getL3 <- function(tind, integration, mask=NULL) {
   if (!is.null(mask))
     #mask[!mask] <- NA
     tind <- tind * ifelse(mask, 1, NA)
+  # mgcv::uniquecombs()
+  
   t(apply(tind, 1, function(tind.i) {
     tvec <- tind.i[!is.na(tind.i)]
     nt <- length(tvec)
@@ -93,4 +95,46 @@ getL3 <- function(tind, integration, mask=NULL) {
     tind.i[is.na(tind.i)] <- 0
     tind.i
   }))
+}
+
+
+getL4 <- function(smat, integration, mask=NULL) {
+  nt <- ncol(smat)
+  if (!is.null(mask))
+    #mask[!mask] <- NA
+    smat <- smat * ifelse(mask, 1, NA)
+  
+  umat <- uniquecombs(cbind(smat, mask))
+  idx <- attr(umat, "index")
+  umat <- umat[,1:nt] * ifelse(umat[,(nt+1):(2*nt)], 1, NA)
+  
+  L <- t(apply(umat, 1, function(tind.i) {
+    tvec <- tind.i[!is.na(tind.i)]
+    nt <- length(tvec)
+    L.i <- switch(integration, simpson = {
+      ((tind[nt]-tind[1])/nt)/3 * matrix(c(1, rep(c(4,2), length=nt-2), 1),
+                                         nrow=n, ncol=nt, byrow=TRUE)
+    }, trapezoidal = {
+      diffs <- diff(tvec)
+      if (length(diffs)>1) {
+        0.5 * c(diffs[1], filter(diffs, filter=c(1,1))[-(nt-1)],
+                diffs[(nt-1)])
+      } else if (length(diffs)==1) {
+        rep(0.5*diffs,2)
+      } else {
+        1
+      }
+    }, riemann = {
+      if (length(tvec)==1) {
+        tvec
+      } else {
+        diffs <- diff(tvec)
+        c(mean(diffs), diffs)
+      }
+    })
+    tind.i[!is.na(tind.i)] <- L.i
+    tind.i[is.na(tind.i)] <- 0
+    tind.i
+  }))
+  L[idx,]
 }

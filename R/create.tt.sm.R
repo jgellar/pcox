@@ -1,8 +1,10 @@
+#' Create tt function for a scalar term
+#' 
+#' @keywords internal
+#' 
 
-# tt function for smooth scalar term
-
-create.tt.sm <- function(x, additive = TRUE, tv = FALSE, basistype = c("s", "te", "t2"),
-                        dbug=FALSE, ...) {
+create.tt.sm <- function(additive = TRUE, tv = FALSE, basistype = c("s", "te", "t2"),
+                         dbug=FALSE, ...) {
   
   basistype <- match.arg(basistype)
   if (!additive & !tv)
@@ -20,8 +22,9 @@ create.tt.sm <- function(x, additive = TRUE, tv = FALSE, basistype = c("s", "te"
     
     if (is.null(sm)) {
       # Set up appropriate call to construct basis
-      s2 <- mgcv::s
-      newcall <- list(ifelse(basistype=="s", quote(s2), as.symbol(basistype)))
+      #s2 <- mgcv::s
+      #newcall <- list(ifelse(basistype=="s", quote(s2), as.symbol(basistype)))
+      newcall <- list(as.symbol(basistype))
       
       # If additive, add x to the smooth
       if (additive) {
@@ -58,7 +61,6 @@ create.tt.sm <- function(x, additive = TRUE, tv = FALSE, basistype = c("s", "te"
   if (dbug) {
     debug(tt.func)
   }
-  
   tt.func
 }
 
