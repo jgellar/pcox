@@ -113,6 +113,8 @@ pcox <- function(formula, data,
     eval(call$data)
   else NULL
   
+  #else parent.frame() # IS THIS OK?
+  
   nobs <- nrow(eval(responsename, envir = evalenv, enclos = frmlenv))
   fitter <- as.symbol(fitter)
   if (is.call(responsename)) {
@@ -144,6 +146,8 @@ pcox <- function(formula, data,
   if (length(where.pen)) {
     for (i in where.pen) {
       # Evaluate term
+      terms[[i]]$method <- method
+      terms[[i]]$eps <- eps
       trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
       
       # Process according to type of term
@@ -157,15 +161,15 @@ pcox <- function(formula, data,
         tt.funcs[[i]] <- tt.i
         
         # Assign data to newfrmlenv and update newtrmstrings
-        nm <- paste0("smooth",i)
+        nm <- paste0("term",i)
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
       } else if (!is.null(trm$smooth)) {
         # Smooth, non-time-varying term: Save smooth, assign
         # coxph.penalty object to newfrmlenv and update newtrmstrings
         smooth[[i]] <- trm$smooth
-        nm <- paste0("smooth",i)
-        assign(x=nm, trm$x, envir=newfrmlenv)
+        nm <- paste0("term",i)
+        assign(x=nm, trm$cpobj, envir=newfrmlenv)
         newtrmstrings[i] <- nm
       } else {
         # Unpenalized term: assign data to newfrmlenv and update newtrmstrings
@@ -206,7 +210,8 @@ pcox <- function(formula, data,
   newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <- newcall$fitter <-
     newcall$method <- newcall$eps <- newcall$knots <- NULL
   newcall$formula <- newfrml
-  newcall$tt <- quote(tt.funcs)
+  if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
+  newcall$na.action <- na.pass
   newcall$data <- quote(pcoxdata)
   newcall$fitter <- newcall$tensortype <- NULL
   newcall[[1]] <- fitter
@@ -217,14 +222,16 @@ pcox <- function(formula, data,
     first.para <- 1
     for (i in 1:length(smooth)) {
       if (!is.null(smooth[[i]])) {
-        environment(tt.funcs[[i]])$sm <- smooth[[i]]
-        nc <- ncol(smooth[[i]]$X)
-        last.para <- first.para+nc-1
-        names(res$coef)[first.para:last.para] <- paste(smooth[[i]]$label, 1:nc, sep=".")
-        names(smooth)[i] <- smooth[[i]]$label
-        smooth[[i]]$first.para <- first.para
-        smooth[[i]]$last.para  <- last.para
-        first.para <- last.para+1
+        for (j in 1:length(smooth[[i]])) {
+          nc <- ncol(smooth[[i]][[j]]$X)
+          last.para <- first.para + nc - 1
+          names(res$coef)[first.para:last.para] <- 
+            paste(smooth[[i]][[j]]$label, 1:nc, sep=".")
+          names(smooth[[i]][j]) <- smooth[[i]][[j]]$label
+          smooth[[i]][[j]]$first.para <- first.para
+          smooth[[i]][[j]]$last.para  <- last.para
+          first.para <- last.para + 1
+        }
       } else {
         first.para <- first.para + 1
       }
@@ -245,7 +252,7 @@ pcox <- function(formula, data,
   ret <- list(formula = formula, method = method, responsename = responsename, nobs = nobs,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
               tt = tt.funcs,
-              where = list(where.sm=where.sm, where.bf=where.bf, where.hf=where.hf,
+              where = list(where.p=where.p, where.bf=where.bf, where.hf=where.hf,
                            where.cf=where.cf, where.par = where.par),
               datameans = datameans, specs=specs, smooth=smooth, terms=tf)
   res$pcox <- ret

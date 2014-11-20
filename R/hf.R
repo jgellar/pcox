@@ -1,8 +1,71 @@
+#' Define historical (functional) time-varying covariate term in a pcox formula
+#' 
+#' Function used to define a historical functional term in a pcox formula.
+#' Simply calls \code{\link{p}} with default arguments for historical terms.
+#' 
+#' @param ... a list of variables that are the covariates used in the term, as well
+#'   as possibly additional arguments that are passed onto the basis constructor
+#'   defined by \code{basistype}. Historical time-varying covariates should be
+#'   included as an \eqn{N x J} matrix, where \eqn{N} is the number of subjects
+#'   and \eqn{J} is the number of time points. The right-most columns of most rows
+#'   will have \code{NA} values if they are after the event/censoring time.
+#' @param limits specifies the range of integration for the historical effect.
+#'   May be a function of \eqn(s,t) that returns \code{TRUE}/\code{FALSE} based
+#'   on whether or not on observation at that combination of \eqn(s,t) should or
+#'   should not be included. Alternatively, the character strings \code{"s<=t"}
+#'   or \code{"s<t"} may be entered.
+#' @param linear if \code{FALSE}, covariates are included as nonlinear (smooth)
+#'   effects, otherwise as a linear effect
+#' @param tv if \code{TRUE}, makes the effect time-varying
+#' @param basistype character string that specifies the basis constructor
+#'   function (from the \code{mgcv} package) that is used to define a smooth
+#'   term. For linear, non-time varying functional effects, must be \code{"s"}
+#'   because the smooth will only be over one argument. For other types of
+#'   functional effects, \code{"te"} or \code{"t2"} may (but don't have to)
+#'   be used.
+#' @param sind specifies the time indices for the time-varying covariate. May
+#'   be entered as a vector of length \code{ncol(X)}, or a matrix of the same
+#'   dimensions as \code{X} (for covariates measured on unequal grids).
+#' @param integration method for numerical integration over \code{sind}
+#' @param divide.by.t include a factor of \eqn{1/t} in front of the integral?
+#' 
+#' @details Historical functional effects involve time-varying covariates.
+#'   They differ from concurrent effects in that for a historical effect,
+#'   the entire (or partial) history of the time-varying covariate (up to
+#'   time \eqn{t}) is allowed to effect the (log) hazard function at time
+#'   \eqn{t}. This is accomplished by estimating a weight function across
+#'   the time domain, and integrating this effect to get the total contribution
+#'   of the time-varying covariate history towards the (log) hazard function
+#'   at time \eqn{t}. These effects differ from baseline functional effects
+#'   because in the latter, the domain of the function is independent of
+#'   \eqn{t}.
+#'   
+#'   The default integration range is over the entire history of the covariate,
+#'   i.e., from 0 to \eqn{t}. Unlike other types of \code{pcox} terms, the
+#'   default is to assume a time-varying historical effect:
+#'   \eqn{\int_0^t X_i(s)\beta(s,t) ds}. This may be overridden by specifying
+#'   \code{tv=FALSE}. The term may also be made nonlinear, i.e.
+#'   \eqn{\int_0^t \beta [s,t,X_i(s)] ds} or
+#'   \eqn{\int_0^t \beta [s,X_i(s)] ds}.
+#' 
+#' @author Jonathan Gellar <jgellar1@@jhu.edu>
+#' @return The result of a call to \code{p()}, which will be a list with
+#'   the raw data required for the term, and a function of \eqn{x} and \eqn{t}
+#'   that specifies how to set up the term within \code{coxph()}.
+#' @seealso \code{\link{p}}
+#' 
 
-hf <- function(X, ...) {
-  tt.func <- create.tt.hf(X, ...)
-  list(x=X, tt=tt.func)
-  #attr(X, "tt") <- tt.func
-  #X
+hf <- function(..., limits = "s<=t", linear = TRUE, tv = FALSE,
+               basistype = c("s", "te", "t2"), sind=NULL,
+               integration=c("riemann", "trapezoidal", "simpson"),
+               divide.by.t=TRUE,
+               domain=c("s", "s-t", "s/t"),
+               dbug=FALSE) {
+  
+  # Do some checks?
+  
+  p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
+    integration=integration, divide.by.t=divide.by.t, domain=domain, dbug=dbug)
 }
+
 

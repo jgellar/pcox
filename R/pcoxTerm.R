@@ -1,6 +1,10 @@
-#' Create a penalized 
+#' Create a smooth and coxph.penalty object for use in a pcox formula
+#' 
+#' 
 
-pcoxTerm <- function(data, limits, linear, tv, basistype, sind, basisargs, t=NULL) {
+pcoxTerm <- function(data, limits, linear, tv, basistype, sind, 
+                     integration, divide.by.t, domain, basisargs,
+                     method, eps, t=NULL) {
   
   # pcoxTerm will be called iff we need to make a smooth term
   # data only includes the real (named) data (x)

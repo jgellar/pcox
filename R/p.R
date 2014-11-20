@@ -23,6 +23,7 @@
 #'   predictors. Can be entered as a vector of length \code{ncol(X)}, or a
 #'   matrix of the same dimensions as \code{X} (for covariates measured on
 #'   unequal grids).
+#' @param integration method for numerical integration
 #' 
 #' @details These are the details... lots to go in here
 #' 
@@ -38,37 +39,76 @@
 #'   from \code{mgcv::smoothCon()} that contain the basis information. If
 #'   the term involves neither time nor a penalty, the data is simply
 #'   returned.
-#' @seealso \code{mgcv}'s \code{\link[mgcv]{smooth.terms}} for details of 
-#'   \code{mgcv} syntax and available spline bases and penalties; the related 
-#'   \code{\link[refund]{pffr}} and \code{\link[refund]{fgam}} from 
-#'   \code{refund}.
+#' @seealso \code{\link{bf}}, \code{\link{cf}}, and \code{\link{hf}}, which
+#'   are wrappers for \code{p} that provide correct default arguments for
+#'   baseline functional, concurrent, and historical terms, respectively.
+#'   Also, \code{\link[mgcv]{s}}, \code{\link[mgcv]{te}}, and
+#'   \code{\link[mgcv]{t2}} for options available for each \code{basistype},
+#'   as well as \code{mgcv}'s \code{\link[mgcv]{smooth.terms}} for details of 
+#'   \code{mgcv} syntax and available spline bases and penalties.
 #' 
 
 p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
               basistype = c("s", "te", "t2"), sind=NULL,
-              dbug=FALSE) {
-  # Separate data from basis options
-  frmls <- formals(match.fun(basistype))
-  dots  <- list(...)
-  args  <- names(dots) %in% names(frmls)
-  basisargs <- dots[args]
-  data      <- as.data.frame(lapply(dots[!args], I))
-  names(data) <- as.list(substitute(list(...)))[-1][!args]
+              integration=c("riemann", "trapezoidal", "simpson"),
+              divide.by.t=FALSE, domain=c("s", "s-t", "u"), dbug=FALSE) {
+  basistype <- match.arg(basistype)
+  integration <- match.arg(integration)
+  domain <- match.arg(domain)
   
-  if ((is.null(limits) | tolower(limits) %in% c("all", "full")) & !tv) {
+  # Extract basis options
+  frmls <- formals(match.fun(basistype))
+  dots <- list(...)
+  args <- if(is.null(names(dots)))
+    rep(FALSE, length(dots))
+  else  names(dots) %in% names(frmls)
+  basisargs <- dots[args]
+  
+  # Extract method and eps
+  method <- dots$method
+  eps <- dots$eps
+  
+  # Set up data
+  vars <- !args & !(names(dots) %in% c("method", "eps"))
+  data      <- as.data.frame(lapply(dots[vars], I))
+  names(data) <- as.list(substitute(list(...)))[-1][vars]
+  
+  if (any(is.null(limits), tolower(limits) %in% c("all", "full")) & !tv) {
+    #if ((is.null(limits) | tolower(limits) %in% c("all", "full")) & !tv) {
     # No tt function required
     if (is.null(limits) & linear) {
       # No smooth required - just return data
       data
     } else {
       # Make coxph.penalty term via pcoxTerm
-      if (!is.null(limits)) limits <- function(s,t) TRUE
+      if (!is.null(limits)) limits <- function(s,t) s==s
       pcoxTerm(data, limits=limits, linear=linear, tv=tv,
-               basistype=basistype, sind=sind, basisargs)
+               basistype=basistype, sind=sind,
+               integration=integration, divide.by.t=divide.by.t,
+               domain=domain, basisargs=basisargs,
+               method=method, eps=eps)
     }
   } else {
-    # tt function required: create function
-    tt <- create.tt.p(limits, linear, tv, basistype, sind, basisargs)
-    list(data=data, tt=tt)
+    # tt function required
+    
+    # First, create the data map and convert data to a matrix
+    map <- vector("list", length=length(data))
+    cnt <- 0
+    for (i in 1:length(data)) {
+      nc <- ifelse(is.null(ncol(data[[i]])), 1, ncol(data[[i]]))
+      map[[i]] <- (cnt+1):(cnt+nc)
+      cnt <- cnt+nc
+    }
+    names(map) <- names(data)
+    x <- as.matrix(data)
+    #attr(x, "map") <- map
+    
+    # Create the tt function
+    tt <- create.tt.p(limits, linear, tv, basistype, sind, basisargs,
+                      method=method, eps=eps, map=map)
+    if (dbug) debug(tt)
+    
+    # data must be a vector or matrix (can't be a data.frame)
+    list(x=x, tt=tt)
   }
 }

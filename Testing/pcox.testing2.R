@@ -9,63 +9,89 @@ library(refundDevel)
 data(sofa_fu)
 data(sofa)
 
+debug(pcox)
 
-fit1 <- pcox2(Surv(time,event) ~ age, data=sofa_fu)
 
-fit2 <- pcox2(Surv(time,event) ~ s(age, additive=TRUE, dbug=TRUE), data=sofa_fu)
+####################
+# Parametric Terms #
+####################
 
+fit1 <- pcox(Surv(los, death) ~ age, data=sofa)
+fit1a <- coxph(Surv(los, death) ~ age, data=sofa)
+
+
+
+
+##################
+# Smooth scalars #
+##################
+
+pdata <- data.frame(age=seq(min(sofa$age), max(sofa$age), by=.5))
+fit2 <- pcox(Surv(los, death) ~ p(age, linear=FALSE, dbug=TRUE) + male, data=sofa)
+fhat <- PredictMat(fit2$pcox$smooth[[1]][[1]], data=pdata) %*% fit2$coefficients[1:9]
+qplot(pdata$age, fhat, geom="line")
+
+# With simulated data
+N <- 500
+J <- 200
+x <- runif(N, 0, 2*pi)
+male <- rbinom(N, size = 1, prob=.5)
+ftrue <- sin(x)
+eta <- matrix(ftrue + .75*male, nrow=N, ncol=J)
+Xdat <- data.frame(x=x, male=male)
+data2 <- simTVSurv(eta, Xdat)
+fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, dbug=TRUE) + male, data=data2)
+pdata.1 <- data.frame(x=seq(0,2*pi,by=.1))
+fhat.1 <- PredictMat(fit2.1$pcox$smooth[[1]][[1]], data=pdata.1) %*%
+  fit2.1$coefficients[1:9]
+qplot(pdata.1$x, fhat.1, geom="line") +
+  geom_line(aes(y=sin(pdata.1$x)), col="red")
+
+
+
+######################
+# Baseline Functions #
+######################
+
+N <- 500
+J <- 101
+sind <- seq(0,1,length=J)
+X <- genX(N, sind)
+beta <- sin(2*pi*sind)
+eta <- matrix((X%*%beta/J + .75*male), nrow=N, ncol=200) 
+data3 <- simTVSurv(eta)
+data3$myX <- I(X)
+data3$male <- male
+fit3.1 <- pcox(Surv(time,event) ~ bf(myX) + male, data=data3)
+pdata.3 <- data.frame(smat=sind, LX=1)
+bhat3.1 <- PredictMat(fit3.1$pcox$smooth[[1]][[1]], pdata.3) %*%
+  fit3.1$coef[-11]
+ggplot(pdata.3, mapping=aes(x = smat)) +
+  geom_line(aes(y=beta)) +
+  geom_line(aes(y=bhat3.1), col="red")
+
+
+
+###################
+# Concurrent TVCs #
+###################
 
 N <- 500
 J <- 200
-x1 <- rbinom(N, size = 1, .5)
-x2 <- runif(N, 0, 2*pi)
-Xdat <- data.frame(x1=x1, x2=x2)
-xb <- 3*sin(x2)
-eta <- matrix(xb, nrow=N, ncol=J)
-
-data2 <- simTVSurv(eta, Xdat)
-fit.1 <- survreg(Surv(time,event) ~ pspline(x2), data=data2)
-fh1 <- predict(fit.1, type="terms")[,1]
-
-fit.2 <- pcox2(Surv(time,event) ~ s(x2, additive=TRUE, dbug=TRUE), data=data2)
-fh2 <- fit.2$pcox$tt[[1]](data2$x2,data2$x2) %*% fit.2$coef
-
-x.seq <- seq(0,2*pi,by=.1)
-plot(x.seq, 3*sin(x.seq), type="l", lwd=3, ylim=c(-4,4))
-points(data2$x2, fh1, col="blue")
-points(data2$x2, fh2, col="red")
+sind <- 1:J
+X <- genX(N, seq(0,1,length=J))
+eta <- t(sapply(1:N, function(i) {
+  1.5*X[i,] + .75*male[i]
+}))
+Xdat <- data.frame(myX=I(X), male=male)
+data4 <- simTVSurv(eta, Xdat)
+sind2 <- 1:ncol(data4$myX)
+fit4.1 <- pcox(Surv(time,event) ~ male + cf(myX, sind = sind2, dbug=TRUE),
+               data=data4)
 
 
 
-xb <- 2*x1 + 3*sin(x2)
-eta <- matrix(xb, nrow=N, ncol=J)
-data3 <- simTVSurv(eta, Xdat)
-fit.3 <- pcox(Surv(time,event) ~ x1 + sm(x2, additive=TRUE, dbug=TRUE), data=data3)
-fh3 <- fit.3$pcox$tt[[2]](data2$x2,data2$x2) %*% fit.3$coef[-1]
-
-points(Xdat$x2, fh3, col="purple")
-
-
-head(fit.3$coef)
-
-
-
-xb <- 2*x1 + 3*sin(x2)
-eta <- matrix(xb, nrow=N, ncol=J)
-data3 <- simTVSurv(eta, Xdat)
-fit.4 <- pcox2(Surv(time,event) ~ x1 + sm(x2, additive=TRUE, tv=TRUE, dbug=TRUE, k=20),
-               data=data3)
-
-
-newx <- seq(0, 2*pi, by=.1)
-newt <- min(data3$time):max(data3$time)
-newxmat <- matrix(newx, nrow=length(newx), ncol=length(newt))
-newtmat <- matrix(newt, nrow=length(newx), ncol=length(newt), byrow=T)
-
-fh4 <- fit.4$pcox$tt[[2]](as.vector(newxmat),as.vector(newtmat)) %*% fit.4$coef[-1]
-fh4.mat <- matrix(fh4, nrow=length(newx), ncol=length(newt))
-
-
-fit3 <- pcox(Surv(time, event) ~ )
-
+###################
+# Historical TVCs #
+###################
 
