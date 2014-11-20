@@ -15,9 +15,9 @@
 #' @param tv if \code{TRUE}, makes the effect time-varying
 #' @param basistype specifies the basis constructor function (from the
 #'   \code{mgcv} package) that is used to define a smooth term. Defaults to
-#'   \code{\link[mgcv]{s}, which is the only option allowed for smooths of only
+#'   \code{\link[mgcv]{s}}, which is the only option allowed for smooths of only
 #'   one argument. For smooths of multiple arguments (including t and s), 
-#'   \code{\link[mgcv]{te} or \code{\link[mgcv]{t2} may (but don't have to)
+#'   \code{\link[mgcv]{te}} or \code{\link[mgcv]{t2}} may (but don't have to)
 #'   be used.
 #' @param sind specifies the time indices for functional and time-varying
 #'   predictors. Can be entered as a vector of length \code{ncol(X)}, or a
