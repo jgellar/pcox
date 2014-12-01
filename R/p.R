@@ -51,7 +51,7 @@
 p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
               basistype = c("s", "te", "t2"), sind=NULL,
               integration=c("riemann", "trapezoidal", "simpson"),
-              divide.by.t=FALSE, domain=c("s", "s-t", "u"), dbug=FALSE) {
+              divide.by.t=FALSE, domain=c("s", "s-t", "s/t"), dbug=FALSE) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
   domain <- match.arg(domain)
@@ -104,8 +104,9 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
     #attr(x, "map") <- map
     
     # Create the tt function
-    tt <- create.tt.p(limits, linear, tv, basistype, sind, basisargs,
-                      method=method, eps=eps, map=map)
+    tt <- create.tt.p(limits, linear, tv, basistype, sind, 
+                      integration, divide.by.t, domain, basisargs,
+                      method, eps, map)
     if (dbug) debug(tt)
     
     # data must be a vector or matrix (can't be a data.frame)

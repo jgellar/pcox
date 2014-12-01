@@ -94,4 +94,23 @@ fit4.1 <- pcox(Surv(time,event) ~ male + cf(myX, sind = sind2, dbug=TRUE),
 ###################
 # Historical TVCs #
 ###################
+N <- 500
+J <- 100
+sind <- 1:J
+X <- genX(N, seq(0,1,length=J))
+beta <- makeBetaMat(J, genBeta1)
+
+eta  <- sapply(1:J, function(j) {
+  .75*male + X[,1:j,drop=F] %*% beta[j,1:j] / j
+})
+Xdat <- data.frame(myX=I(X), male=male)
+data5 <- simTVSurv(eta, Xdat)
+sind2 <- 1:ncol(data5$myX)
+
+fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2, dbug=TRUE),
+               data=data5)
+est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
+                   coefs = fit5.1$coefficients[-1])
+
+
 

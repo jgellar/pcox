@@ -3,10 +3,10 @@
 #' @keywords internal
 #' 
 
+
 create.tt.p <- function(limits, linear, tv, basistype, sind,
-                        basisargs, method, eps, map,
-                        divide.by.t=FALSE, domain=c("s", "s-t", "u"),
-                        integration=c("simpson", "trapezoidal", "riemann")) {
+                        integration, divide.by.t, domain, basisargs,
+                        method, eps, map) {
   
   smooth <- NULL
   
@@ -70,9 +70,10 @@ create.tt.p <- function(limits, linear, tv, basistype, sind,
       as.matrix(data)
     } else {
       # Create coxph.penalty term via pcoxTerm()
-      pt <- pcoxTerm(data, limits, linear, tv, basistype, sind, basisargs,
-                     method, eps, t)
-      env$smooth[[i]] <- pt$smooth
+      pt <- pcoxTerm(data, limits, linear, tv, basistype, sind,
+                     integration, divide.by.t, domain,
+                     basisargs, method, eps, t)
+      env$smooth[[index]] <- pt$smooth
       pt$cpobj
     }
   }

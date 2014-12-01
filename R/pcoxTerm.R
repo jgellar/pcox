@@ -3,7 +3,7 @@
 #' 
 
 pcoxTerm <- function(data, limits, linear, tv, basistype, sind, 
-                     integration, divide.by.t, domain, basisargs,
+                     integration, standardize, domain, basisargs,
                      method, eps, t=NULL) {
   
   # pcoxTerm will be called iff we need to make a smooth term
@@ -37,6 +37,14 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
     n <- nrow(data[[1]])
     J <- ncol(data[[1]])
     smat <- if (is.matrix(sind)) sind else matrix(sind, nrow=n, ncol=J, byrow=TRUE)
+    
+    
+    L <- getL4(sind, t, limits, standardize)
+    
+    mask <- if (is.function(limits)) {
+      t(outer(smat[1,], tmat[,1], limits))
+    } else NULL
+    
     if (!is.null(t)) {
       tmat <- matrix(t, nrow=n, ncol=J)
       mask <- t(outer(smat[1,], tmat[,1], limits))
@@ -44,7 +52,12 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
       # t will be NULL if it's not a tt term: assume full range
       mask <- matrix(TRUE, nrow=n, ncol=J)
     }
+    
+    
+    L <- getL4(smat, integration, mask, )
+    
     L <- getL3(smat, integration, mask)
+    data[[1]][is.na(data[[1]])] <- 0
     evaldat$smat <- smat
     newcall <- c(newcall, quote(smat))
     if (tv) {

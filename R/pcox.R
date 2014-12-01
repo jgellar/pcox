@@ -135,7 +135,7 @@ pcox <- function(formula, data,
   # Set up variables for new formula and smooth objects
   newtrmstrings <- attr(tf, "term.labels")
   tt.funcs <- vector(mode = "list", length = length(trmstrings))
-  smooth = specs <- vector("list", length=length(newtrmstrings))
+  smooth <- vector("list", length=length(newtrmstrings))
   
   
   #################
@@ -206,6 +206,7 @@ pcox <- function(formula, data,
   pcoxdata <- list2df(as.list(newfrmlenv))
   datameans <- sapply(as.list(newfrmlenv), mean)
   tt.funcs  <- tt.funcs[!sapply(tt.funcs, is.null)]
+  #smooth <- 
   newcall <- expand.call(pcox, call)
   newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <- newcall$fitter <-
     newcall$method <- newcall$eps <- newcall$knots <- NULL
@@ -244,7 +245,6 @@ pcox <- function(formula, data,
   lbls <- sapply(smooth, function(x) x$label)
   
   smooth[sapply(smooth,is.null)] <- NULL
-  specs[sapply(specs,is.null)] <- NULL
   
   termtype <- rep("par",length(terms))
   for (i in 1:length(specials)) termtype[specials[[i]]-1] <- names(specials)[i]
@@ -254,7 +254,7 @@ pcox <- function(formula, data,
               tt = tt.funcs,
               where = list(where.p=where.p, where.bf=where.bf, where.hf=where.hf,
                            where.cf=where.cf, where.par = where.par),
-              datameans = datameans, specs=specs, smooth=smooth, terms=tf)
+              datameans = datameans, smooth=smooth, terms=tf)
   res$pcox <- ret
   class(res) <- c("pcox", class(res))
   res

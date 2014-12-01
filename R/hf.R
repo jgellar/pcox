@@ -55,12 +55,14 @@
 #' @seealso \code{\link{p}}
 #' 
 
-hf <- function(..., limits = "s<=t", linear = TRUE, tv = FALSE,
+hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
                basistype = c("s", "te", "t2"), sind=NULL,
                integration=c("riemann", "trapezoidal", "simpson"),
-               divide.by.t=TRUE,
-               domain=c("s", "s-t", "s/t"),
+               divide.by.t=TRUE, domain=c("s", "s-t", "s/t"),
                dbug=FALSE) {
+  basistype <- match.arg(basistype)
+  integration <- match.arg(integration)
+  domain <- match.arg(domain)
   
   # Do some checks?
   
