@@ -37,6 +37,7 @@
 #'   \eqn{\int_0^S \beta[ s,t,X_i(s)] ds}.
 #' 
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
+#' @export
 #' @return If the term is time-varying, the return object is a list with
 #'   two arguemnts: the raw data required for the term, and a function of
 #'   \eqn{x} and \eqn{t} that specifies how to set up the term within
@@ -64,5 +65,5 @@ bf <- function(..., linear = TRUE, tv = FALSE, basistype = c("s", "te", "t2"),
   }
   
   p(..., limits="all", linear=linear, tv=tv, basistype=basistype, sind=sind,
-    integration=integration, divide.by.t=FALSE, domain="s", dbug=dbug)
+    integration=integration, standardize=FALSE, domain="s", dbug=dbug)
 }

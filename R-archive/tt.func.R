@@ -1,5 +1,3 @@
-#' @export
-
 tt.func <- function(x.var,t.var,...) {
   n <- nrow(x.var)
   J <- ncol(x.var)
@@ -18,7 +16,6 @@ tt.func <- function(x.var,t.var,...) {
   pterm(sm, method="aic", eps=.001)
 }
 
-#' @export
 tt.funcD <- function(x.var,t.var,...) {
   n <- nrow(x.var)
   J <- ncol(x.var)

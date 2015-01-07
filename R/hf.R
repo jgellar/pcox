@@ -10,8 +10,8 @@
 #'   and \eqn{J} is the number of time points. The right-most columns of most rows
 #'   will have \code{NA} values if they are after the event/censoring time.
 #' @param limits specifies the range of integration for the historical effect.
-#'   May be a function of \eqn(s,t) that returns \code{TRUE}/\code{FALSE} based
-#'   on whether or not on observation at that combination of \eqn(s,t) should or
+#'   May be a function of \eqn{(s,t)} that returns \code{TRUE}/\code{FALSE} based
+#'   on whether or not on observation at that combination of \eqn{(s,t)} should or
 #'   should not be included. Alternatively, the character strings \code{"s<=t"}
 #'   or \code{"s<t"} may be entered.
 #' @param linear if \code{FALSE}, covariates are included as nonlinear (smooth)
@@ -27,7 +27,7 @@
 #'   be entered as a vector of length \code{ncol(X)}, or a matrix of the same
 #'   dimensions as \code{X} (for covariates measured on unequal grids).
 #' @param integration method for numerical integration over \code{sind}
-#' @param divide.by.t include a factor of \eqn{1/t} in front of the integral?
+#' @param standardize standardize term by dividing by the integration width?
 #' 
 #' @details Historical functional effects involve time-varying covariates.
 #'   They differ from concurrent effects in that for a historical effect,
@@ -49,6 +49,7 @@
 #'   \eqn{\int_0^t \beta [s,X_i(s)] ds}.
 #' 
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
+#' @export
 #' @return The result of a call to \code{p()}, which will be a list with
 #'   the raw data required for the term, and a function of \eqn{x} and \eqn{t}
 #'   that specifies how to set up the term within \code{coxph()}.
@@ -58,16 +59,21 @@
 hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
                basistype = c("s", "te", "t2"), sind=NULL,
                integration=c("riemann", "trapezoidal", "simpson"),
-               divide.by.t=TRUE, domain=c("s", "s-t", "s/t"),
+               standardize=TRUE, domain=c("s", "s-t", "s/t"),
                dbug=FALSE) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
   domain <- match.arg(domain)
   
   # Do some checks?
+  if (is.null(sind)) {
+    dots <- list(...)
+    mat1 <- which(sapply(dots, is.matrix))[[1]]
+    sind <- 1:ncol(dots[[mat1]])
+  }
   
   p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
-    integration=integration, divide.by.t=divide.by.t, domain=domain, dbug=dbug)
+    integration=integration, standardize=standardize, domain=domain, dbug=dbug)
 }
 
 

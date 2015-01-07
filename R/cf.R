@@ -30,6 +30,7 @@
 #'   or time-varying (e.g., \eqn{\beta(t)X_i(t)}).
 #' 
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
+#' @export
 #' @return The result of a call to \code{p()}, which will be a list with
 #'   the raw data required for the term, and a function of \eqn{x} and \eqn{t}
 #'   that specifies how to set up the term within \code{coxph()}.

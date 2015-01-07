@@ -24,7 +24,7 @@
 #' 
 #' @details These are the details of the function
 #' @return A list with some stuff
-#' @export
+# @export
 #' @author Jonathan E. Gellar <jgellar1@@jhu.edu>
 #' 
 

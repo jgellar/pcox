@@ -3,44 +3,72 @@
 #' Function used to set up special terms in a pcox formula. These terms include
 #' penalized terms and/or terms with time-varying coefficients or effects.
 #' 
-#' @param ... a list of variables that are the covariates used in the term, as well
-#'   as possibly additional arguments that are passed onto the basis constructor
-#'   defined by \code{basistype}
-#' @param limits specifies the term as either a term involving scalar covariates,
-#'   a concurrent effect of a time-varying covariate, a baseline functional covariate,
-#'   or a historical effect of a time-varying covariate. Defaults to \code{NULL},
-#'   indicating scalar covariates. See Details.
+#' @param ... a list of variables that are the covariates used in the term, as
+#'   well as possibly additional arguments that are passed onto the basis
+#'   constructor defined by \code{basistype}.
+#' @param limits specifies the term as either a term involving scalar
+#'   covariates, a concurrent effect of a time-varying covariate, a baseline
+#'   functional covariate, or a historical effect of a time-varying covariate.
+#'   Defaults to \code{NULL}, indicating scalar covariates. See Details.
 #' @param linear if \code{FALSE}, covariates are included as nonlinear (smooth)
-#'   effects, otherwise as a linear effect
-#' @param tv if \code{TRUE}, makes the effect time-varying
+#'   effects, otherwise as a linear effect.
+#' @param tv if \code{TRUE}, makes the effect time-varying.
 #' @param basistype specifies the basis constructor function (from the
 #'   \code{mgcv} package) that is used to define a smooth term. Defaults to
-#'   \code{\link[mgcv]{s}, which is the only option allowed for smooths of only
-#'   one argument. For smooths of multiple arguments (including t and s), 
-#'   \code{\link[mgcv]{te} or \code{\link[mgcv]{t2} may (but don't have to)
+#'   \code{\link[mgcv]{s}}, which is the only option allowed for smooths of
+#'   only one argument. For smooths of multiple arguments (including t and s),
+#'   \code{\link[mgcv]{te}} or \code{\link[mgcv]{t2}} may (but don't have to)
 #'   be used.
 #' @param sind specifies the time indices for functional and time-varying
 #'   predictors. Can be entered as a vector of length \code{ncol(X)}, or a
 #'   matrix of the same dimensions as \code{X} (for covariates measured on
 #'   unequal grids).
-#' @param integration method for numerical integration
+#' @param integration method for numerical integration.
 #' 
-#' @details These are the details... lots to go in here
-#' 
+#' @details The \code{limits} argument defines the type of term. Options include:
+#'   \enumerate{
+#'     \item Scalar terms: \code{NULL}
+#'     \item Baseline functional predictors: a character string, any of
+#'       \code{"baseline"}, \code{"all"}, or \code{"full"}, indicating to use
+#'       the entire integration range at all times.
+#'     \item Concurrent time-varying covariates: any of the character strings
+#'       \code{"t"}, \code{"s==t"}, or \code{"s=t"} indicate to use the current
+#'       value of the covariate to effect the hazard at time t. Alternatively,
+#'       a non-negative number may be used to indicate to use a lagged version
+#'       of the time-varying covariate, lagged by the entered amount of time.
+#'       If the covariate value is not available at exactly that time, the last
+#'       value carried forward is used. 
+#'     \item Historical time-varying covariates: one of \code{"s<t"} or
+#'       \code{"s<=t"} to indicate the range of integration up to (and possibly
+#'       including) time t. Alternatively, could be a function of \code{s} and
+#'       \code{t} (in that order), which returns \code{TRUE} if the covariate
+#'       value at time \code{s} should impact the hazard at time \code{t},
+#'       and \code{FALSE} othwerwise. Note that this flexibility could result
+#'       in unpredictable results, so if you enter a function, use at your own
+#'       risk!
+#'   }
+#'   
+#'   More details to come....
 #' 
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
-#' @return If the term involves time in any way, i.e., if it is a time-varying
-#'   covariate (concurrent or historical) or time-varying effect, the return
-#'   object is a list with two arguemnts: the raw data required for the term,
-#'   and a function of \eqn{x} and \eqn{t} that specifies how to set up the
-#'   term within \code{coxph()}. If the term is a smooth term that doesn't
-#'   involve time, the return object is a list with two objects: a
-#'   \code{coxph.penalty} object, and a list of the \code{smooth} objects
-#'   from \code{mgcv::smoothCon()} that contain the basis information. If
-#'   the term involves neither time nor a penalty, the data is simply
-#'   returned.
+#' @export
+#' @return The return object is a list with two components. The first is the
+#'   raw data required for the term. The second is either a time-transform
+#'   function or an x-transform function.
+#'   
+#'   Time-transform functions (element $tt) are returned if the term involves
+#'   any time-varying components (i.e., concurrent or historical time-varying
+#'   covariate, or time-varying effect). It is a function of \eqn{x} and \eqn{t}
+#'   that specifies how to set up the term within \code{coxph()}.
+#'   
+#'   x-transform functions (element $xt) are returned when the term does not
+#'   involve any time-varying aspects. This is a function of \eqn{x} that
+#'   specifies how to set up the term within \code{pcox()}. For simple scalar
+#'   terms, this is just an identity function, but for smooth terms, it requires
+#'   setting up a basis matrix.
+#' 
 #' @seealso \code{\link{bf}}, \code{\link{cf}}, and \code{\link{hf}}, which
-#'   are wrappers for \code{p} that provide correct default arguments for
+#'   are user-friendly wrappers for \code{p} that provide default arguments for
 #'   baseline functional, concurrent, and historical terms, respectively.
 #'   Also, \code{\link[mgcv]{s}}, \code{\link[mgcv]{te}}, and
 #'   \code{\link[mgcv]{t2}} for options available for each \code{basistype},
@@ -51,7 +79,7 @@
 p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
               basistype = c("s", "te", "t2"), sind=NULL,
               integration=c("riemann", "trapezoidal", "simpson"),
-              divide.by.t=FALSE, domain=c("s", "s-t", "s/t"), dbug=FALSE) {
+              standardize=FALSE, domain=c("s", "s-t", "s/t"), dbug=FALSE) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
   domain <- match.arg(domain)
@@ -73,25 +101,34 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   data      <- as.data.frame(lapply(dots[vars], I))
   names(data) <- as.list(substitute(list(...)))[-1][vars]
   
-  if (any(is.null(limits), tolower(limits) %in% c("all", "full")) & !tv) {
+  # For a scalar, limits is NULL. For baseline function, limits is "all"|"full"
+  if (any(is.null(limits), tolower(limits) %in% c("all", "full", "baseline"))
+      & !tv) {
+    # No time-varying aspect to the term: create a xt function
+    xt <- create.xt.func(limits, linear, basistype, sind, integration,
+                         standardize, domain, basisargs, method, eps)
+    
+    # `Return
+    list(x=data, xt=xt)
     #if ((is.null(limits) | tolower(limits) %in% c("all", "full")) & !tv) {
     # No tt function required
-    if (is.null(limits) & linear) {
-      # No smooth required - just return data
-      data
-    } else {
-      # Make coxph.penalty term via pcoxTerm
-      if (!is.null(limits)) limits <- function(s,t) s==s
-      pcoxTerm(data, limits=limits, linear=linear, tv=tv,
-               basistype=basistype, sind=sind,
-               integration=integration, divide.by.t=divide.by.t,
-               domain=domain, basisargs=basisargs,
-               method=method, eps=eps)
-    }
+    #if (is.null(limits) & linear) {
+    #  # No smooth required - just return data
+    #  data
+    #} else {
+    #  # Make coxph.penalty term via pcoxTerm
+    #  if (!is.null(limits)) limits <- function(s,t) s==s
+    #  pcoxTerm(data, limits=limits, linear=linear, tv=tv,
+    #           basistype=basistype, sind=sind,
+    #           integration=integration, standardize=standardize,
+    #           domain=domain, basisargs=basisargs,
+    #           method=method, eps=eps)
+    #}
   } else {
-    # tt function required
+    # Time-varying aspect to the term: create a tt function
     
-    # First, create the data map and convert data to a matrix
+    # data must be passed as a vector or matrix (can't be a data frame)
+    # The map will be used to recreate the data frame within the tt function
     map <- vector("list", length=length(data))
     cnt <- 0
     for (i in 1:length(data)) {
@@ -101,15 +138,14 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
     }
     names(map) <- names(data)
     x <- as.matrix(data)
-    #attr(x, "map") <- map
     
     # Create the tt function
-    tt <- create.tt.p(limits, linear, tv, basistype, sind, 
-                      integration, divide.by.t, domain, basisargs,
-                      method, eps, map)
+    tt <- create.tt.func(limits, linear, tv, basistype, sind, 
+                         integration, standardize, domain, basisargs,
+                         method, eps, map)
     if (dbug) debug(tt)
     
-    # data must be a vector or matrix (can't be a data.frame)
+    # Return
     list(x=x, tt=tt)
   }
 }

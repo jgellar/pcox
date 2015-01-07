@@ -1,4 +1,4 @@
-#' @export
+# Old version!!!!!! - archived
 
 create.tt.func <- function(tind=NULL, divide.by.t=FALSE, limits=NULL,
                            method=c("aic", "caic", "epic"), eps=1e-6,

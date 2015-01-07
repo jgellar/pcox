@@ -4,10 +4,11 @@
 #' 
 
 
-create.tt.p <- function(limits, linear, tv, basistype, sind,
-                        integration, standardize, domain, basisargs,
-                        method, eps, map) {
+create.tt.func <- function(limits, linear, tv, basistype, sind,
+                           integration, standardize, domain, basisargs,
+                           method, eps, map) {
   
+  # Initialize: no smooth object created yet
   smooth <- NULL
   
   # Process limits argument: create appropriate processing function
@@ -27,8 +28,10 @@ create.tt.p <- function(limits, linear, tv, basistype, sind,
       stop("Unrecognized limits option!")
     }
   } else if (is.numeric(limits)) {
+    if (limits<0)
+      stop("limits must be non-negative if using it to specify lagged 
+           time-varying covariates")
     lag <- limits
-    #conc.fcn <- function(s,t) {s==(t-lag)}
     conc.fcn <- function(s,t) abs(s - (t-lag))
     limits <- NULL
     #stop("Numeric limits not currently supported... coming soon")
@@ -68,7 +71,7 @@ create.tt.p <- function(limits, linear, tv, basistype, sind,
     
     if (is.null(limits) & !tv & linear) {
       # No penalized term required: just return data 
-      # (i.e., the most basic concurrent TVC - no extras)
+      #   (i.e., the most basic concurrent TVC - no extras)
       as.matrix(data)
     } else {
       # Create pcoxTerm

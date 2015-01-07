@@ -26,3 +26,22 @@ riskidx <- function (stimes, status, etimes=NULL) {
     cbind(start, finish, newstat, id)
   })))
 }
+
+
+getRiskSet <- function (Y, evaltimes=NULL) {
+  if (is.null(evaltimes)) {
+    sorted <- order(-Y[,1], Y[,2])
+    newstrat <- rep.int(0L, nrow(Y))
+    newstrat[1] <- 1L
+    if (storage.mode(Y) != "double") 
+      storage.mode(Y) <- "double"
+    counts <- .Call(survival:::Ccoxcount1, Y[sorted,], as.integer(newstrat))
+    rs <- data.frame(start=rep(c(counts$time[-1],0), counts$nrisk),
+                     finish=rep(counts$time, counts$nrisk),
+                     newstat=counts$status, id=sorted[counts$index])
+    #rs2 <- arrange(rs2, finish, id)
+  } else {
+    stop("Not yet supported!")
+  }  
+  rs
+}

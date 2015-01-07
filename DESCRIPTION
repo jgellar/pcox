@@ -1,7 +1,7 @@
 Package: pcox
 Type: Package
 Title: Penalized Cox Models
-Version: 1.0
+Version: 0.1.0
 Date: 2014-06-25
 Author: Jonathan Gellar <jgellar1@jhu.edu>
 Maintainer: Jonathan Gellar <jgellar1@jhu.edu>

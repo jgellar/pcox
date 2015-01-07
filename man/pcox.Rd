@@ -3,8 +3,8 @@
 \alias{pcox}
 \title{Fit a Penalized Cox Regression Model}
 \usage{
-pcox(formula, method = c("aic", "caic", "epic", "reml", "ml", "fixed", "df"),
-  eps = 0.001, knots = NULL, ...)
+pcox(formula, data, method = c("aic", "caic", "epic"), eps = 1e-06,
+  knots = NULL, ...)
 }
 \arguments{
 \item{formula}{a formula with special terms as for \code{\link[mgcv]{gam}},

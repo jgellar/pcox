@@ -75,15 +75,18 @@ pcox <- function(formula, data,
   call <- match.call()
   method <- match.arg(method)
   dots <- list(...)
+  if (!("iter.max" %in% names(dots)))  dots$iter.max  <- 100
+  if (!("outer.max" %in% names(dots))) dots$outer.max <- 50
+  
   fitter <- ifelse(method %in% c("reml","ml"), "coxme", "coxph")
-  if (length(dots)) {
-    validDots <- ifelse(fitter=="coxme", names(formals(coxme)),
-                        names(formals(coxph)))
-    notUsed <- names(dots)[!(names(dots) %in% validDots)]
-    if (length(notUsed)) 
-      warning("Arguments <", paste(notUsed, collapse = ", "), 
-              "> supplied but not used.")
-  }  
+  #if (length(dots)) {
+  #  validDots <- ifelse(fitter=="coxme", names(formals(coxme)),
+  #                      names(formals(coxph)))
+  #  notUsed <- names(dots)[!(names(dots) %in% validDots)]
+  #  if (length(notUsed)) 
+  #    warning("Arguments <", paste(notUsed, collapse = ", "), 
+  #            "> supplied but not used.")
+  #}  
   
   # Organize terms
   tf <- terms.formula(formula, specials = c("p", "bf", "hf", "cf",
@@ -97,7 +100,6 @@ pcox <- function(formula, data,
   where.bf <- specials$bf - 1
   where.hf <- specials$hf - 1
   where.cf <- specials$cf - 1
-  
   where.pen <- c(where.p, where.bf, where.hf, where.cf)
   where.par <- if (length(trmstrings)) {
     which(!(1:length(trmstrings) %in% where.pen))
@@ -112,7 +114,6 @@ pcox <- function(formula, data,
   evalenv <- if ("data" %in% names(call)) 
     eval(call$data)
   else NULL
-  
   #else parent.frame() # IS THIS OK?
   
   nobs <- nrow(eval(responsename, envir = evalenv, enclos = frmlenv))
@@ -134,7 +135,9 @@ pcox <- function(formula, data,
   
   # Set up variables for new formula and smooth objects
   newtrmstrings <- attr(tf, "term.labels")
-  tt.funcs <- vector(mode = "list", length = length(trmstrings))
+  # tt.funcs = xt.funcs =
+  t.funcs <- vector(mode = "list", length = length(trmstrings))
+  t.types <- rep(NA, length=length(trmstrings))
   smooth <- vector("list", length=length(newtrmstrings))
   
   
@@ -145,7 +148,7 @@ pcox <- function(formula, data,
   # Penalized terms
   if (length(where.pen)) {
     for (i in where.pen) {
-      # Evaluate term
+      # Evaluate term (which is a call to p() - directly or inderectly)
       terms[[i]]$method <- method
       terms[[i]]$eps <- eps
       trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
@@ -158,24 +161,36 @@ pcox <- function(formula, data,
         environment(tt.i)$index <- i
         environment(tt.i)$method <- method
         environment(tt.i)$eps <- eps
-        tt.funcs[[i]] <- tt.i
+        #tt.funcs[[i]] <- tt.i
+        t.funcs[[i]] <- tt.i
+        t.types[i]   <- "tt"
         
         # Assign data to newfrmlenv and update newtrmstrings
         nm <- paste0("term",i)
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
-      } else if (!is.null(trm$smooth)) {
-        # Smooth, non-time-varying term: Save smooth, assign
-        # coxph.penalty object to newfrmlenv and update newtrmstrings
-        smooth[[i]] <- trm$smooth
+      } else if (!is.null(trm$xt)) {
+        # non time-varying term: extract xt function, execute, and save
+        xt.i  <- trm$xt
+        trm.i <- xt.i(trm$x)
+        t.funcs[[i]] <- xt.i
+        t.types[i] <- "xt"
+        #xt.funcs[[i]] <- xt.i
+        
+        # Update newtrmstrings
         nm <- paste0("term",i)
-        assign(x=nm, trm$cpobj, envir=newfrmlenv)
         newtrmstrings[i] <- nm
+        
+        if (is.list(trm.i)) {
+          # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
+          smooth[[i]] <- trm.i$smooth
+          assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
+        } else {
+          # Unpenalized: assign data to newfrmlenv
+          assign(x=nm, trm.i, envir=newfrmlenv)
+        }
       } else {
-        # Unpenalized term: assign data to newfrmlenv and update newtrmstrings
-        nm <- paste0("term",i)
-        assign(x=nm, trm, envir=newfrmlenv)
-        newtrmstrings[i] <- nm
+        stop("Error: shouldn't get here - something's wrong!")
       }
     }
   }
@@ -205,20 +220,23 @@ pcox <- function(formula, data,
   environment(newfrml) <- newfrmlenv
   pcoxdata <- list2df(as.list(newfrmlenv))
   datameans <- sapply(as.list(newfrmlenv), mean)
-  tt.funcs  <- tt.funcs[!sapply(tt.funcs, is.null)]
+  #tt.funcs  <- tt.funcs[!sapply(tt.funcs, is.null)]
+  tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
   #smooth <- 
   newcall <- expand.call(pcox, call)
-  newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <- newcall$fitter <-
-    newcall$method <- newcall$eps <- newcall$knots <- NULL
+  newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <-
+    newcall$fitter <- newcall$method <- newcall$eps <- newcall$knots <- NULL
   newcall$formula <- newfrml
+  newcall$x <- newcall$model <-  TRUE
   if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
   newcall$na.action <- na.pass
   newcall$data <- quote(pcoxdata)
+  newcall <- modify_call(newcall, dots)
   newcall$fitter <- newcall$tensortype <- NULL
   newcall[[1]] <- fitter
   res <- eval(newcall)
   
-  # Clean up
+  # Update first.para and last.para for the smooths
   if (length(where.pen)) {
     first.para <- 1
     for (i in 1:length(smooth)) {
@@ -239,6 +257,14 @@ pcox <- function(formula, data,
     }
   }
   
+  # Add smooth objects to the environment of the t.funcs
+  sapply(1:length(smooth), function(i) {
+    if (!is.null(smooth[[i]])) {
+      environment(t.funcs[[i]])$smooth <- smooth[[i]]
+    }
+    invisible(NULL)
+  })
+  
   trmmap <- newtrmstrings
   names(trmmap) <- names(terms)
   labelmap <- as.list(trmmap)
@@ -249,12 +275,14 @@ pcox <- function(formula, data,
   termtype <- rep("par",length(terms))
   for (i in 1:length(specials)) termtype[specials[[i]]-1] <- names(specials)[i]
   
-  ret <- list(formula = formula, method = method, responsename = responsename, nobs = nobs,
+  ret <- list(formula.pcox = formula, method = method,
+              responsename = responsename, nobs = nobs,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
-              tt = tt.funcs,
-              where = list(where.p=where.p, where.bf=where.bf, where.hf=where.hf,
-                           where.cf=where.cf, where.par = where.par),
-              datameans = datameans, smooth=smooth, terms=tf)
+              t.funcs = t.funcs, t.types = t.types, smooth = smooth,
+              #tt = tt.funcs,
+              #where = list(where.p=where.p, where.bf=where.bf, where.hf=where.hf,
+              #             where.cf=where.cf, where.par = where.par),
+              datameans = datameans, terms=tf)
   res$pcox <- ret
   class(res) <- c("pcox", class(res))
   res

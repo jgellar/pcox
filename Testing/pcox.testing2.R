@@ -42,8 +42,7 @@ Xdat <- data.frame(x=x, male=male)
 data2 <- simTVSurv(eta, Xdat)
 fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, dbug=TRUE) + male, data=data2)
 pdata.1 <- data.frame(x=seq(0,2*pi,by=.1))
-fhat.1 <- PredictMat(fit2.1$pcox$smooth[[1]][[1]], data=pdata.1) %*%
-  fit2.1$coefficients[1:9]
+fhat.1 <- fit2.1$pcox$t.funcs[[1]](pdata.1) %*% fit2.1$coefficients[1:9]
 qplot(pdata.1$x, fhat.1, geom="line") +
   geom_line(aes(y=sin(pdata.1$x)), col="red")
 
@@ -64,11 +63,13 @@ data3$myX <- I(X)
 data3$male <- male
 fit3.1 <- pcox(Surv(time,event) ~ bf(myX) + male, data=data3)
 pdata.3 <- data.frame(smat=sind, LX=1)
-bhat3.1 <- PredictMat(fit3.1$pcox$smooth[[1]][[1]], pdata.3) %*%
+bhat3.1v1 <- PredictMat(fit3.1$pcox$smooth[[1]][[1]], pdata.3) %*%
   fit3.1$coef[-11]
+bhat3.1 <- fit3.1$pcox$t.funcs[[1]](pdata.3) %*% fit3.1$coef[-11]
+
 ggplot(pdata.3, mapping=aes(x = smat)) +
   geom_line(aes(y=beta)) +
-  geom_line(aes(y=bhat3.1), col="red")
+  geom_line(aes(y=bhat3.1v1), col="red")
 
 
 

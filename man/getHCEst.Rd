@@ -3,7 +3,7 @@
 \alias{getHCEst}
 \title{Extract a historical Cox estimate from a fitted model}
 \usage{
-getHCEst(sm, idx, coefs, trim = NULL)
+getHCEst(sm, idx, coefs, trim = NULL, mask = NULL)
 }
 \description{
 Extract a historical Cox estimate from a fitted model

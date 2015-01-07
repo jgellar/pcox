@@ -98,20 +98,37 @@ getL3 <- function(tind, integration, mask=NULL) {
 }
 
 
-getL4 <- function(smat, integration, mask=NULL) {
-  nt <- ncol(smat)
+# Uses Riemann only for now
+getL4 <- function(sind, integration, mask=NULL, standardize=FALSE) {
+  if (integration!="riemann")
+    warning("Using riemann integration in the current version (getL4)")
+  
+  if (is.vector(sind))
+  
+  
+  
+  nt <- ncol(tind)
   if (!is.null(mask))
-    #mask[!mask] <- NA
-    smat <- smat * ifelse(mask, 1, NA)
+    tind <- tind * ifelse(mask, 1, NA)
   
-  umat <- uniquecombs(cbind(smat, mask))
-  idx <- attr(umat, "index")
-  umat <- umat[,1:nt] * ifelse(umat[,(nt+1):(2*nt)], 1, NA)
+  dwidth <- if (standardize) {
+    apply(tind, 1, function(tind.i) {
+      rng <- range(tind.i, na.rm=TRUE)
+      rng[2]-rng[1]
+    })
+  } else rep(1, )
   
-  L <- t(apply(umat, 1, function(tind.i) {
+  t(apply(tind, 1, function(tind.i) {
     tvec <- tind.i[!is.na(tind.i)]
     nt <- length(tvec)
-    L.i <- switch(integration, simpson = {
+    L.i <- switch(integration, riemann = {
+      if (length(tvec)==1) {
+        tvec
+      } else {
+        diffs <- diff(tvec)
+        c(mean(diffs), diffs)
+      }
+    }, simpson = {
       ((tind[nt]-tind[1])/nt)/3 * matrix(c(1, rep(c(4,2), length=nt-2), 1),
                                          nrow=n, ncol=nt, byrow=TRUE)
     }, trapezoidal = {
@@ -124,17 +141,11 @@ getL4 <- function(smat, integration, mask=NULL) {
       } else {
         1
       }
-    }, riemann = {
-      if (length(tvec)==1) {
-        tvec
-      } else {
-        diffs <- diff(tvec)
-        c(mean(diffs), diffs)
-      }
     })
     tind.i[!is.na(tind.i)] <- L.i
     tind.i[is.na(tind.i)] <- 0
     tind.i
   }))
-  L[idx,]
 }
+
+
