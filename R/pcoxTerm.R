@@ -43,6 +43,12 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
     smat <- if (is.matrix(sind)) sind
     else matrix(sind, nrow=n, ncol=J, byrow=TRUE)
     
+    #if (by.use) {
+    #  
+    #  
+    #  
+    #  
+    #}
     
     # L <- getL4(sind, t, limits, standardize)
     

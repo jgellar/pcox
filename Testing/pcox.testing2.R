@@ -1,6 +1,6 @@
 # New pcox2 testing
 
-
+library(devtools)
 load_all()
 library(survival)
 library(mgcv)
@@ -9,8 +9,10 @@ library(refundDevel)
 data(sofa_fu)
 data(sofa)
 
-debug(pcox)
 
+
+# Take these out later?
+library(pryr)
 
 ####################
 # Parametric Terms #
@@ -18,8 +20,8 @@ debug(pcox)
 
 fit1 <- pcox(Surv(los, death) ~ age, data=sofa)
 fit1a <- coxph(Surv(los, death) ~ age, data=sofa)
-
-
+pre1.1 <- predict(fit1)
+pre1.2 <- predict(fit1, newdata=sofa)
 
 
 ##################
@@ -46,7 +48,9 @@ fhat.1 <- fit2.1$pcox$t.funcs[[1]](pdata.1) %*% fit2.1$coefficients[1:9]
 qplot(pdata.1$x, fhat.1, geom="line") +
   geom_line(aes(y=sin(pdata.1$x)), col="red")
 
-
+pre2.1.1 <- predict(fit2.1)
+pre2.1.2 <- predict(fit2.1, newdata=data2)
+pre2.1.3 <- predict(fit2.1, newdata=data2[-4])
 
 ######################
 # Baseline Functions #
@@ -61,7 +65,18 @@ eta <- matrix((X%*%beta/J + .75*male), nrow=N, ncol=200)
 data3 <- simTVSurv(eta)
 data3$myX <- I(X)
 data3$male <- male
-fit3.1 <- pcox(Surv(time,event) ~ bf(myX) + male, data=data3)
+fit3.1 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", sind=sind) + male, data=data3)
+
+sm <- fit3.1$pcox$smooth[[1]][[1]]
+
+pdata.31 <- data.frame(smat=I(matrix(sind, nrow=N, ncol=J)),
+                       LX=I(matrix(1, nrow=N, ncol=J)))
+pmat.31 <- PredictMat(sm, data = pdata.31)
+pmat.32 <- fit3.1$pcox$t.funcs[[1]](data.frame(myX=I(X)))
+
+
+
+
 pdata.3 <- data.frame(smat=sind, LX=1)
 bhat3.1v1 <- PredictMat(fit3.1$pcox$smooth[[1]][[1]], pdata.3) %*%
   fit3.1$coef[-11]
@@ -102,7 +117,7 @@ X <- genX(N, seq(0,1,length=J))
 beta <- makeBetaMat(J, genBeta1)
 
 eta  <- sapply(1:J, function(j) {
-  .75*male + X[,1:j,drop=F] %*% beta[j,1:j] / j
+  .75*male + X[,1:j,drop=F] %*% beta[j,1:j]
 })
 Xdat <- data.frame(myX=I(X), male=male)
 data5 <- simTVSurv(eta, Xdat)
@@ -113,5 +128,6 @@ fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2, dbug=TRUE),
 est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])
 
-
-
+par(mfrow=c(1,2))
+image.plot(t(beta))
+image.plot(t(est5.1))

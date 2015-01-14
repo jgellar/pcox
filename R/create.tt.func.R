@@ -77,7 +77,7 @@ create.tt.func <- function(limits, linear, tv, basistype, sind,
       # Create pcoxTerm
       pt <- pcoxTerm(data, limits, linear, tv, basistype, sind,
                      integration, standardize, domain,
-                     basisargs, method, eps, t)
+                     basisargs, method, eps, smooth, t)
       if (is.list(pt)) {
         # tt.func is being called within pcox/coxph, to create a new term:
         #   Assign the smooth, and return cpobj

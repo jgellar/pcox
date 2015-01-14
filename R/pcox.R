@@ -116,7 +116,8 @@ pcox <- function(formula, data,
   else NULL
   #else parent.frame() # IS THIS OK?
   
-  nobs <- nrow(eval(responsename, envir = evalenv, enclos = frmlenv))
+  surv <- eval(responsename, envir = evalenv, enclos = frmlenv)
+  nobs <- nrow(surv)
   fitter <- as.symbol(fitter)
   if (is.call(responsename)) {
     # responsename is a call to Surv, assign its arguments to newfrmlenv
@@ -136,9 +137,10 @@ pcox <- function(formula, data,
   # Set up variables for new formula and smooth objects
   newtrmstrings <- attr(tf, "term.labels")
   # tt.funcs = xt.funcs =
-  t.funcs <- vector(mode = "list", length = length(trmstrings))
+  t.funcs = varmap = smooth <-
+    vector(mode = "list", length = length(trmstrings))
   t.types <- rep(NA, length=length(trmstrings))
-  smooth <- vector("list", length=length(newtrmstrings))
+  #smooth <- vector("list", length=length(newtrmstrings))
   
   
   #################
@@ -164,6 +166,8 @@ pcox <- function(formula, data,
         #tt.funcs[[i]] <- tt.i
         t.funcs[[i]] <- tt.i
         t.types[i]   <- "tt"
+        varmap[[i]]  <- names(envirnoment(tt.i)$map)
+        #varmap[[i]]  <- envirnoment(tt.i)$map
         
         # Assign data to newfrmlenv and update newtrmstrings
         nm <- paste0("term",i)
@@ -175,7 +179,7 @@ pcox <- function(formula, data,
         trm.i <- xt.i(trm$x)
         t.funcs[[i]] <- xt.i
         t.types[i] <- "xt"
-        #xt.funcs[[i]] <- xt.i
+        varmap[[i]] <- names(trm$x)
         
         # Update newtrmstrings
         nm <- paste0("term",i)
@@ -199,20 +203,24 @@ pcox <- function(formula, data,
   if (length(where.par)) {
     if ("data" %in% names(call))
       frmlenv <- list2env(eval(call$data), frmlenv)
-    lapply(terms[where.par], function(x) {
-      nms <- if (!is.null(names(x))) {
-        all.vars(x[names(x) == ""])
-      }
-      else all.vars(x)
+    #lapply(terms[where.par], function(x) {
+    #lapply(where.par, function(i) {
+    for (i in where.par) {
+      x <- terms[i]
+      #nms <- if (!is.null(names(x))) {
+      #  all.vars(x[names(x) != ""])
+      #}
+      #else all.vars(x)
+      nms <- names(x)
+      varmap[[i]] <- nms
+      
       sapply(nms, function(nm) {
         stopifnot(length(get(nm, envir = frmlenv)) == nobs)
         assign(x = nm, value = get(nm, envir = frmlenv), envir = newfrmlenv)
         invisible(NULL)
       })
-      invisible(NULL)
-    })
-    #newtrmstrings[where.par] <- paste0("tt(", newtrmstrings[where.par],")")
-    #tt.funcs[[where.par]] <- function(x, ...) x
+      #invisible(NULL)
+    }
   }
   
   # Setup call and fit model
@@ -227,7 +235,8 @@ pcox <- function(formula, data,
   newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <-
     newcall$fitter <- newcall$method <- newcall$eps <- newcall$knots <- NULL
   newcall$formula <- newfrml
-  newcall$x <- newcall$model <-  TRUE
+  newcall$x <- TRUE
+  #newcall$model <-  TRUE
   if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
   newcall$na.action <- na.pass
   newcall$data <- quote(pcoxdata)
@@ -266,18 +275,25 @@ pcox <- function(formula, data,
   })
   
   trmmap <- newtrmstrings
-  names(trmmap) <- names(terms)
-  labelmap <- as.list(trmmap)
-  lbls <- sapply(smooth, function(x) x$label)
+  #labelmap <- as.list(trmmap)
+  labelmap <- sapply(smooth, function(x) x[[1]]$label)
+  names(labelmap) = names(trmmap) <- names(terms)
+  # We really don't need trmmap and labelmap? At least not like this.....
   
   smooth[sapply(smooth,is.null)] <- NULL
-  
+  varlst <- do.call("c", lapply(varmap, function(x) {
+    if (is.list(x)) names(x)
+    else x
+  }))
+  #data.train <- 
+
   termtype <- rep("par",length(terms))
   for (i in 1:length(specials)) termtype[specials[[i]]-1] <- names(specials)[i]
   
   ret <- list(formula.pcox = formula, method = method,
-              responsename = responsename, nobs = nobs,
+              responsename = responsename, surv = surv,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
+              varmap = varmap,
               t.funcs = t.funcs, t.types = t.types, smooth = smooth,
               #tt = tt.funcs,
               #where = list(where.p=where.p, where.bf=where.bf, where.hf=where.hf,

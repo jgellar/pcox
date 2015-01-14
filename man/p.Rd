@@ -64,12 +64,13 @@ The \code{limits} argument defines the type of term. Options include:
     \item Baseline functional predictors: a character string, any of
       \code{"baseline"}, \code{"all"}, or \code{"full"}, indicating to use
       the entire integration range at all times.
-    \item Concurrent time-varying covariates: any of \code{"t"},
-      \code{"s==t"}, or \code{"s=t"} indicate to use the current value of
-      the covariate to effect the hazard at time t. Alternatively, a
-      non-negative number may be used
-      to indicate to use a lagged version of the time-varying covariate,
-      lagged by the entered amount of time.
+    \item Concurrent time-varying covariates: any of the character strings
+      \code{"t"}, \code{"s==t"}, or \code{"s=t"} indicate to use the current
+      value of the covariate to effect the hazard at time t. Alternatively,
+      a non-negative number may be used to indicate to use a lagged version
+      of the time-varying covariate, lagged by the entered amount of time.
+      If the covariate value is not available at exactly that time, the last
+      value carried forward is used.
     \item Historical time-varying covariates: one of \code{"s<t"} or
       \code{"s<=t"} to indicate the range of integration up to (and possibly
       including) time t. Alternatively, could be a function of \code{s} and
