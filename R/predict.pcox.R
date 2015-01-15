@@ -1,6 +1,7 @@
 predict.pcox <- function(object, type=c("lp", "risk", "expected"),
                          newdata=NULL, indices=NULL, ptimes=NULL, stimes=NULL,
                          n=NULL, se.fit=FALSE) {
+  type <- match.arg(type)
   
   # newdata checks
   if (!is.null(newdata)) {
@@ -22,6 +23,9 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
   
   any.tt <- any(object$pcox$t.types=="tt", na.rm = TRUE)
   lp.times <- rev(unique(object$y[,1]))
+  sm.terms <- !sapply(object$pcox$labelmap, is.null)
+  n.terms  <- length(sm.terms)
+  nb <- length(object$coefficients)
   
   # Calculate linear predictors
   lp <- if (is.null(newdata) &
@@ -34,7 +38,7 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
       object$linear.predictors
     } else {
       # Must organize linear.predictor vector into matrix
-      if (is.null(ptimes)){
+      if (is.null(ptimes)) {
         warning(paste0("ptimes must be specified for time-varying model. ",
                        "Returning predictions for all training event times."))
         ptimes <- lp.times
@@ -84,6 +88,7 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
       stimes <- if (is.null(stimes)) {
         if (is.null(newdata)) {
           # Use stimes from training data
+          stop("this isn't right - y has been reordered!!!!!")
           object$y[,1]
         } else {
           # Calculate stimes based on newdata
@@ -140,7 +145,7 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
     t.types <- object$pcox$t.types
     
     # Get prediction matrix (X for \hat\eta = X %*% \hat\beta)
-    pmat <- do.call("cbind", lapply(1:length(t.funcs), function(i) {
+    pmat <- do.call("cbind", lapply(1:n.terms, function(i) {
       vnames <- object$pcox$varmap[[i]]
       
       if (is.na(t.types[i])) {
@@ -155,8 +160,11 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
         p.i <- as.matrix(newdata[vnames])
         if (any.tt) p.i[expand.map[,2], ] else p.i
       } else {
-        # Check if newdata is supplied using original varialbes or in mgcv form
-        mnames <- strsplit(object$pcox$labelmap[[i]], "[/(]|,|[/)]:")[[1]][-1]
+        # Check if newdata is supplied using original variables or in mgcv form
+        mnames <- if (sm.terms[i])
+          # There is a smooth associated with the term - get req'd variables
+          strsplit(object$pcox$labelmap[[i]], "[/(]|,|[/)]:")[[1]][-1]
+        else "(empty)"
         if (all(vnames %in% names(newdata))) {
           # newdata is supplied using original variable names/format
           # use t.func
@@ -172,22 +180,67 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
         } else if (all(mnames %in% names(newdata))) {
           # newdata is supplied using mgcv-style format
           # Call PredictMat() directly
+          # Need to find the right smooth!!!
+          stop("Not supported yet: need other changes outside of this block")
+          sm.idx <- which(which(sm.terms)==i)
           PredictMat(environment(t.funcs[[i]])$smooth[[1]], newdata[mnames], n)
         } else {
-          stop(paste0("Required data is not suppled for term ", i))
+          v.miss <- vnames[!(vnames %in% names(newdata))]
+          stop(paste0("Variable", ifelse(length(v.miss)==1, " ", "s "),
+                      paste(v.miss, collapse = ", "),
+                      ifelse(length(v.miss)==1, " is ", " are "),
+                      "required but not supplied"))
         }
       }
     }))
     
-    # Calculate X %*% \hat\beta
-    lp <- pmat %*% object$coefficients - 
-      as.numeric(object$means %*% object$coefficients)
-    
-    if (any.tt) {
-      # Put in matrix format based on expand.map
-      acast(data.frame(ptimes=ptimes, subject=expand.data[,2], lp=lp),
-            subject ~ ptimes, value.var=lp)
-    } else as.vector(lp)
+    # all.vars(object$terms)
+    # yname <- all.vars(object$terms)[attr(object$terms, "response")]
+    # 
+    if (type=="terms") {
+      stop("Doesn't yet support type \"terms\"")
+      
+      # Calculate column-contributions to the linear predictors
+      Xb <- (pmat - matrix(object$means, nrow=nrow(pmat), ncol=nb, byrow=T)) *
+        matrix(object$coefficients, nrow=nrow(pmat), ncol=nb, byrow=T)
+      
+      # Collapse columns for the same term
+      cstart <- 1
+      lpt <- matrix(nrow=nrow(Xb), ncol=n.terms)
+      colnames(lpt) <- names(object$pcox$termmap)
+      for (i in 1:n.terms) {
+        sm.i <- environment(t.funcs[[i]])$smooth[[1]]
+        if (is.null(sm.i)) {
+          # Term does not have a smooth: only one column wide
+          #lst[[i]] <- 
+          lpt[,i] <- Xb[,cstart]
+          cstart <- cstart+1
+        } else {
+          lpt[,i] <- Xb[,(sm.i[[1]]$first.para):(sm.i[[1]]$last.para)]
+          cstart <- sm.i[[1]]$last.para + 1
+        }
+      }
+      if (any.tt) {
+        # Need to reorder into a 3-D array
+        lpt <- melt(lpt, varnames = c("idx", "term"))
+        lpt$ptimes <- ptimes[lpt$idx]
+        lpt$subject <- expand.map[lpt$idx, 2]
+        
+        lpt.wide <- acast(lpt, subject ~ ptimes ~ term, value.var = "value", )
+        names(dimnames(lpt.wide)) <- c("subject", "ptimes", "term")
+        lpt.wide
+      }
+    } else {
+      # Calculate X %*% \hat\beta
+      lp <- pmat %*% object$coefficients - 
+        as.numeric(object$means %*% object$coefficients)
+      
+      if (any.tt) {
+        # Put in matrix format based on expand.map
+        acast(data.frame(ptimes=ptimes, subject=expand.map[,2], lp=lp),
+              subject ~ ptimes, value.var="lp")
+      } else as.vector(lp)
+    }
   }
   
   lp

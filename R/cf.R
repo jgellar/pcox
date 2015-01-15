@@ -43,6 +43,6 @@ cf <- function(..., lag=0, linear = TRUE, tv = FALSE,
                sind=NULL, dbug=FALSE) {
   
   p(..., limits=(-lag), linear=linear, tv=tv, basistype=basistype, sind=sind,
-    divide.by.t=FALSE, domain="s", dbug=dbug)
+    standardize=FALSE, domain="s", dbug=dbug)
 }
 

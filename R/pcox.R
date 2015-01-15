@@ -166,7 +166,7 @@ pcox <- function(formula, data,
         #tt.funcs[[i]] <- tt.i
         t.funcs[[i]] <- tt.i
         t.types[i]   <- "tt"
-        varmap[[i]]  <- names(envirnoment(tt.i)$map)
+        varmap[[i]]  <- names(environment(tt.i)$map)
         #varmap[[i]]  <- envirnoment(tt.i)$map
         
         # Assign data to newfrmlenv and update newtrmstrings

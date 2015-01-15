@@ -1,6 +1,7 @@
 # New pcox2 testing
 
 library(devtools)
+dev_mode()
 load_all()
 library(survival)
 library(mgcv)
@@ -13,6 +14,7 @@ data(sofa)
 
 # Take these out later?
 library(pryr)
+library(reshape2)
 
 ####################
 # Parametric Terms #
@@ -22,6 +24,7 @@ fit1 <- pcox(Surv(los, death) ~ age, data=sofa)
 fit1a <- coxph(Surv(los, death) ~ age, data=sofa)
 pre1.1 <- predict(fit1)
 pre1.2 <- predict(fit1, newdata=sofa)
+range(pre1.1 - pre1.2, na.rm=T) # Should be 0
 
 
 ##################
@@ -43,14 +46,20 @@ eta <- matrix(ftrue + .75*male, nrow=N, ncol=J)
 Xdat <- data.frame(x=x, male=male)
 data2 <- simTVSurv(eta, Xdat)
 fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, dbug=TRUE) + male, data=data2)
+
+# Predict
+pre2.1.1 <- predict(fit2.1)
+pre2.1.2 <- predict(fit2.1, newdata=data2)
+pre2.1.3 <- predict(fit2.1, newdata=data2[-4]) # Throws an error
+range(pre2.1.1 - pre2.1.2, na.rm=T) # Should be 0
+
+
+# Coef
 pdata.1 <- data.frame(x=seq(0,2*pi,by=.1))
 fhat.1 <- fit2.1$pcox$t.funcs[[1]](pdata.1) %*% fit2.1$coefficients[1:9]
 qplot(pdata.1$x, fhat.1, geom="line") +
   geom_line(aes(y=sin(pdata.1$x)), col="red")
 
-pre2.1.1 <- predict(fit2.1)
-pre2.1.2 <- predict(fit2.1, newdata=data2)
-pre2.1.3 <- predict(fit2.1, newdata=data2[-4])
 
 ######################
 # Baseline Functions #
@@ -66,6 +75,17 @@ data3 <- simTVSurv(eta)
 data3$myX <- I(X)
 data3$male <- male
 fit3.1 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", sind=sind) + male, data=data3)
+
+# Predict
+pre3.1.1 <- predict(fit3.1)
+pre3.1.2 <- predict(fit3.1, newdata=data3)
+pre3.1.3 <- predict(fit3.1, newdata=data3[-3]) # Should throw an error
+range(pre3.1.1 - pre3.1.2, na.rm=T) # Should be 0
+
+
+
+# TO DO:  Try some things with sindices next
+
 
 sm <- fit3.1$pcox$smooth[[1]][[1]]
 
@@ -105,6 +125,11 @@ sind2 <- 1:ncol(data4$myX)
 fit4.1 <- pcox(Surv(time,event) ~ male + cf(myX, sind = sind2, dbug=TRUE),
                data=data4)
 
+# Predict
+pre4.1.1 <- predict(fit4.1)
+pre4.1.2 <- predict(fit4.1, newdata=data4, stimes=data4$time)
+pre4.1.3 <- predict(fit4.1, newdata=data4[-4])
+range(pre4.1.1 - pre4.1.2, na.rm=T) # Should be 0
 
 
 ###################
@@ -122,9 +147,18 @@ eta  <- sapply(1:J, function(j) {
 Xdat <- data.frame(myX=I(X), male=male)
 data5 <- simTVSurv(eta, Xdat)
 sind2 <- 1:ncol(data5$myX)
-
 fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2, dbug=TRUE),
                data=data5)
+
+# Predict
+pre5.1.1 <- predict(fit5.1)
+pre5.1.2 <- predict(fit5.1, newdata=data5, stimes=data5$time)
+pre5.1.3 <- predict(fit5.1, newdata=data5[-4], stimes=data5$time) # Should throw an error
+range(pre5.1.1 - pre5.1.2, na.rm=T) # Should be 0 - confirms correct predictions for training data
+
+
+
+# Coefficient
 est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])
 
