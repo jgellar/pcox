@@ -39,8 +39,8 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
     } else {
       # Must organize linear.predictor vector into matrix
       if (is.null(ptimes)) {
-        warning(paste0("ptimes must be specified for time-varying model. ",
-                       "Returning predictions for all training event times."))
+        #warning(paste0("ptimes must be specified for time-varying model. ",
+        #               "Returning predictions for all training event times."))
         ptimes <- lp.times
       }
       if (is.null(object$x)) stop("model must be fit with x=TRUE option")
@@ -79,8 +79,8 @@ predict.pcox <- function(object, type=c("lp", "risk", "expected"),
       # Need to expand dataset before predicting
       if (is.null(ptimes)) {
         # ptimes are needed: use training event times
-        warning(paste0("ptimes must be specified for time-varying model. ",
-                       "Returning predictions for all training event times."))
+        #warning(paste0("ptimes must be specified for time-varying model. ",
+        #               "Returning predictions for all training event times."))
         ptimes <- lp.times
       }
       

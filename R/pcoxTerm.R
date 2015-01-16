@@ -16,6 +16,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
   # Returns either a list with the cpobj and smooth (if no input smooth),
   # or the prediction matrix (if there is an input smooth)
   
+  data[[1]][is.na(data[[1]])] <- 0
   evaldat <- data
   newcall <- list(as.symbol(basistype))
   varnames <- lapply(names(data), as.symbol)
@@ -56,6 +57,8 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
     #  t(outer(smat[1,], tmat[,1], limits))
     #} else NULL
     
+    
+    
     if (!is.null(t)) {
       tmat <- matrix(t, nrow=n, ncol=J)
       mask <- t(outer(smat[1,], tmat[,1], limits))
@@ -65,7 +68,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
     }
     
     L <- getL3(smat, integration, mask)
-    data[[1]][is.na(data[[1]])] <- 0
+    #data[[1]][is.na(data[[1]])] <- 0
     evaldat$smat <- smat
     newcall <- c(newcall, quote(smat))
     if (tv) {
@@ -74,15 +77,21 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
       newcall <- c(newcall, quote(tmat))
     }
     if (!linear) {
-      # Nonlinear functional term: add L matrix
+      # Nonlinear functional term: X in smooth, by=L
+      # possible transformations of X?
+      #  Quantile
+      #  Log
+      #  Probit
+      
       evaldat$L <- L
       newcall <- c(newcall, varnames, by=quote(L))
     } else if (length(data)==1) {
-      # Linear functional term: add LX, remove X from smooth
+      # Linear functional term: by=LX
       LX <- data[[1]]*L
       evaldat$LX <- LX
       newcall <- c(newcall, by=quote(LX))
     } else {
+      # Linear smooth with multiple functions...
       stop("Not sure how to handle smooths with multiple linear functions yet")
     }
   }
