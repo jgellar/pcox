@@ -1,7 +1,37 @@
-predict.pcox <- function(object, type=c("lp", "risk", "expected"),
+#' Predictions for a \code{pcox} model
+#' 
+#' This function calculates predictios for a pcox model
+#' 
+#' @param object Object of class \code{"pcox"}
+#' @param type type of prediction. Choices are the linear predictor
+#'   (\code{"lp"}), the risk score exp(lp) (\code{"risk"}), the
+#'   terms of the linear predictor (\code{"terms"})
+#' @param newdata new data
+#' @param indices the indices
+#' @param ptimes the prediction times
+#' @param stimes survival times for input data
+#' @param n number of observations in new data
+#' @param se.fit A flag indicating if (model-based) standard errors are to be
+#'   returned
+#' 
+#' @details These are the details
+#'   
+#' @export
+#' @author Jonathan Gellar <jgellar1@@jhu.edu>
+#' @return Details about return object
+#' @seealso \code{\link{pcox}
+#'   
+
+predict.pcox <- function(object,
+                         type=c("lp", "risk", "terms", "lpmatrix"),
                          newdata=NULL, indices=NULL, ptimes=NULL, stimes=NULL,
-                         n=NULL, se.fit=FALSE) {
+                         n=NULL, se.fit=c("none", "var", "var2")) {
   type <- match.arg(type)
+  se.fit <- if (is.logical(se.fit)) {
+    ifelse(se.fit, "var", "none")
+  } else match.arg(se.fit)
+  
+  se <- NULL
   
   # newdata checks
   if (!is.null(newdata)) {

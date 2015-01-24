@@ -96,30 +96,32 @@ syntax for the \texttt{pcox} formula. These terms will be discussed further in S
 %\begin{singlespace}
 \begin{table}[t]
 \centering
-\caption{Summary of the types of terms allowed in an \texttt{pcox} formula.\label{tab:terms}}
+\caption{Summary of the types of terms allowed in an \texttt{pcox} formula. Note that the default behavior
+of the \texttt{linear} and \texttt{tv} flags differs between the four term-specifying functions, \texttt{p()}, 
+\texttt{bf()}, \texttt{cf()}, and \texttt{hf()}. \label{tab:terms}}
 \begin{tabular}{llll}
 \bf Time Effect & \bf Covariate Effect & \bf Term Formula & \bf Implementation in \texttt{pcox}  \\[1ex]
 \hline \\[-1.5ex]
 \multicolumn{4}{l}{\bf Scalar Predictors:} \\
-Static	& Linear	& $\beta x$	& \texttt{x} \\
-Static	& Nonlinear	& $\beta(x)$	& \texttt{s(x)} \\
-Varying	& Linear	& $\beta(t) x$	& \texttt{tv(x)} \\
-Varying	& Nonlinear	& $\beta(x,t)$	& \texttt{tv(s(x))} \\[2ex]
+Static	& Linear		& $\beta x$	& \texttt{x}, \texttt{p(x, linear=TRUE)} \\
+Static	& Nonlinear	& $\beta(x)$	& \texttt{p(x)} \\
+Varying	& Linear		& $\beta(t) x$	& \texttt{p(x, linear=TRUE, tv=TRUE)} \\
+Varying	& Nonlinear	& $\beta(x,t)$	& \texttt{p(x, tv=TRUE)} \\[2ex]
 \multicolumn{4}{l}{\bf Baseline Functional Predictors:} \\
-Static	& Linear	& $\int_{\mathcal{S}} \beta(s)X_i(s)\,ds$		& \texttt{lf(X)}, \texttt{lf.vd(X)} \\
-Static	& Nonlinear	& $\int_{\mathcal{S}} \beta[s,X_i(s)]\,ds$		& \texttt{af(X)}\\
-Varying	& Linear	& $\int_{\mathcal{S}} \beta(s,t)X_i(s)\,ds$	& \texttt{tv(lf(X))}, \texttt{tv(lf.vd(X))} \\
-Varying	& Nonlinear	& $\int_{\mathcal{S}} \beta[s,t,X_i(s)]\, ds$	& \texttt{tv(af(X))} \\[2ex]
+Static	& Linear		& $\int_{\mathcal{S}} \beta(s)X_i(s)\,ds$	& \texttt{bf(X)} \\
+Static	& Nonlinear	& $\int_{\mathcal{S}} \beta[s,X_i(s)]\,ds$	& \texttt{bf(X, linear=FALSE)}\\
+Varying	& Linear		& $\int_{\mathcal{S}} \beta(s,t)X_i(s)\,ds$	& \texttt{bf(X, tv=TRUE)} \\
+Varying	& Nonlinear	& $\int_{\mathcal{S}} \beta[s,t,X_i(s)]\, ds$	& \texttt{bf(X, linear=FALSE, tv=TRUE)} \\[2ex]
 \multicolumn{4}{l}{\bf Concurrent Functional Predictors:} \\
-Static	& Linear	& $\beta Z_i(t)$		& \texttt{Z} or \texttt{clf(Z)} \\
-Static	& Nonlinear	& $\beta[Z_i(t)]$		& \texttt{s(Z)} or \texttt{caf(Z)} \\
-Varying	& Linear	& $\beta(t) Z_i(t)$	& \texttt{tv(Z)} or \texttt{tv(clf(Z))} or \texttt{clf(Z, tv=TRUE)} \\
-Varying	& Nonlinear	& $\beta[Z_i(t), t]$		& \texttt{tv(caf(Z))} or \texttt{caf(Z, tv=TRUE)}\\[2ex]
+Static	& Linear		& $\beta Z_i(t)$		& \texttt{cf(Z)}  \\
+Static	& Nonlinear	& $\beta[Z_i(t)]$		& \texttt{cf(Z, linear=FALSE)} \\
+Varying	& Linear		& $\beta(t) Z_i(t)$		& \texttt{cf(Z, tv=TRUE)} \\
+Varying	& Nonlinear	& $\beta[Z_i(t), t]$		& \texttt{cv(Z, linear=FALSE, tv=TRUE)}\\[2ex]
 \multicolumn{4}{l}{\bf Historical Functional Predictors:} \\
-Static	& Linear	& $\int_{\delta(t)}^t \beta(s)Z_i(s)\,ds$	& \texttt{hlf(Z)} \\
-Static	& Nonlinear	& $\int_{\delta(t)}^t \beta[s, Z_i(s)]\,ds$	& \texttt{haf(Z)} \\
-Varying	& Linear	& $\int_{\delta(t)}^t \beta(s,t)Z_i(s)\,ds$	& \texttt{tv(hlf(Z))} or \texttt{hlf(Z, tv=TRUE)} \\
-Varying	& Nonlinear	& $\int_{\delta(t)}^t \beta[s, t, Z_i(s)]\,ds$	& \texttt{tv(haf(Z))} or \texttt{haf(Z, tv=TRUE)} \\[2ex]
+Static	& Linear		& $\int_{\delta(t)}^t \beta(s)Z_i(s)\,ds$	& \texttt{hf(Z, tv=FALSE)} \\
+Static	& Nonlinear	& $\int_{\delta(t)}^t \beta[s, Z_i(s)]\,ds$	& \texttt{hf(Z, linear=FALSE)} \\
+Varying	& Linear		& $\int_{\delta(t)}^t \beta(s,t)Z_i(s)\,ds$	& \texttt{hf(Z)} \\
+Varying	& Nonlinear	& $\int_{\delta(t)}^t \beta[s, t, Z_i(s)]\,ds$	& \texttt{hf(Z, linear=FALSE)} \\[2ex]
 \multicolumn{4}{l}{\bf Random Effects:} \\
 \end{tabular}
 \end{table}
@@ -140,8 +142,8 @@ the cross-validated likelihood (CVL), a likelihood-based information criterion (
 likelihood (ML), or restricted maximum likelihood (REML). We intend to make each of these optimization criteria
 available in \texttt{pcox}, except for the CVL, which is quite computationally intensive.
 
-\texttt{pcox} is essentially a wrapper for four other \texttt{R} packages: \texttt{survival} and \texttt{coxme} for
-fitting penalized Cox models, and \texttt{mgcv} and \texttt{refund} for processing the covariates. Section
+\texttt{pcox} is essentially a wrapper for two other \texttt{R} packages: \texttt{survival} for
+fitting penalized Cox models, and \texttt{mgcv} for processing the covariates. Section
 \ref{sec:fitting} describes how the models are fit, and Section \ref{sec:covariate} describes how the
 covariates are processed.
 

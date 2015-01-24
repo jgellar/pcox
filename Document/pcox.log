@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  11 NOV 2014 11:14
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  23 JAN 2015 14:39
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -428,9 +428,9 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 86.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 101.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 103.
 
-Overfull \hbox (47.84518pt too wide) in paragraph at lines 100--125
+Overfull \hbox (4.33578pt too wide) in paragraph at lines 102--127
  [][] 
  []
 
@@ -439,11 +439,11 @@ Overfull \hbox (47.84518pt too wide) in paragraph at lines 100--125
 {/usr/local/texlive/2013/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 [2]
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 165.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 167.
 
 
 Package natbib Warning: Citation `Grambsch1998' on page 3 undefined on input li
-ne 167.
+ne 169.
 
 [3] [4]
 No file pcox.bbl.
@@ -475,7 +475,7 @@ pfb></usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pf
 b></usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb
 ></usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
 
-Output written on pcox.pdf (5 pages, 147122 bytes).
+Output written on pcox.pdf (5 pages, 151001 bytes).
 PDF statistics:
  80 PDF objects out of 1000 (max. 8388607)
  57 compressed objects within 1 object stream

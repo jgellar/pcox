@@ -16,9 +16,9 @@ data(sofa)
 library(pryr)
 library(reshape2)
 
-####################
-# Parametric Terms #
-####################
+###########################
+# Simple Parametric Model #
+###########################
 
 fit1 <- pcox(Surv(los, death) ~ age, data=sofa)
 fit1a <- coxph(Surv(los, death) ~ age, data=sofa)
@@ -36,7 +36,8 @@ fit2 <- pcox(Surv(los, death) ~ p(age, linear=FALSE, dbug=TRUE) + male, data=sof
 fhat <- PredictMat(fit2$pcox$smooth[[1]][[1]], data=pdata) %*% fit2$coefficients[1:9]
 qplot(pdata$age, fhat, geom="line")
 
-# With simulated data
+# STANDARD MODEL
+set.seed(1235)
 N <- 500
 J <- 200
 x <- runif(N, 0, 2*pi)
@@ -45,7 +46,8 @@ ftrue <- sin(x)
 eta <- matrix(ftrue + .75*male, nrow=N, ncol=J)
 Xdat <- data.frame(x=x, male=male)
 data2 <- simTVSurv(eta, Xdat)
-fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, dbug=TRUE) + male, data=data2)
+fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, dbug=TRUE) +
+                 male, data=data2)
 
 # Predict
 pre2.1.1 <- predict(fit2.1)
@@ -53,12 +55,18 @@ pre2.1.2 <- predict(fit2.1, newdata=data2)
 pre2.1.3 <- predict(fit2.1, newdata=data2[-4]) # Throws an error
 range(pre2.1.1 - pre2.1.2, na.rm=T) # Should be 0
 
-
 # Coef
 pdata.1 <- data.frame(x=seq(0,2*pi,by=.1))
 fhat.1 <- fit2.1$pcox$t.funcs[[1]](pdata.1) %*% fit2.1$coefficients[1:9]
 qplot(pdata.1$x, fhat.1, geom="line") +
   geom_line(aes(y=sin(pdata.1$x)), col="red")
+
+
+# TIME-VARYING MODEL
+fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, tv=T) +
+                 male, data=data2)
+
+
 
 
 ######################
@@ -132,6 +140,12 @@ pre4.1.3 <- predict(fit4.1, newdata=data4[-4])
 range(pre4.1.1 - pre4.1.2, na.rm=T) # Should be 0
 
 
+
+fit4.2 <- pcox(Surv(time,event) ~ male + cf(myX, tv=TRUE, sind = sind2, dbug=TRUE),
+               data=data4)
+
+
+
 ###################
 # Historical TVCs #
 ###################
@@ -165,3 +179,8 @@ est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
 par(mfrow=c(1,2))
 image.plot(t(beta))
 image.plot(t(est5.1))
+
+
+time5.2 <- system.time(fit5.2 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2, dbug=TRUE, linear = F),
+               data=data5))
+

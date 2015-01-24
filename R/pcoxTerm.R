@@ -69,12 +69,15 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
     
     L <- getL3(smat, integration, mask)
     #data[[1]][is.na(data[[1]])] <- 0
-    evaldat$smat <- smat
-    newcall <- c(newcall, quote(smat))
+    #### Here is where we change name of smat to myX.smat
+    smat.name <- paste0(varnames[1], ".smat")
+    evaldat[[smat.name]] <- smat
+    newcall <- c(newcall, as.symbol(substitute(smat.name)))
     if (tv) {
       # Allow smooth to vary over t
-      evaldat$tmat <- tmat
-      newcall <- c(newcall, quote(tmat))
+      tmat.name <- paste0(varnames[1], ".tmat")
+      evaldat[[tmat.name]] <- tmat
+      newcall <- c(newcall, as.symbol(substitute(tmat.name)))
     }
     if (!linear) {
       # Nonlinear functional term: X in smooth, by=L
@@ -82,14 +85,15 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
       #  Quantile
       #  Log
       #  Probit
-      
-      evaldat$L <- L
-      newcall <- c(newcall, varnames, by=quote(L))
+      L.name <- paste0(varnames[1], ".L")
+      evaldat[[L.name]] <- L
+      newcall <- c(newcall, varnames, by=as.symbol(substitute(L.name)))
     } else if (length(data)==1) {
       # Linear functional term: by=LX
       LX <- data[[1]]*L
-      evaldat$LX <- LX
-      newcall <- c(newcall, by=quote(LX))
+      LX.name <- paste0(varnames[1], ".LX")
+      evaldat[[LX.name]] <- LX
+      newcall <- c(newcall, by=as.symbol(substitute(LX.name)))
     } else {
       # Linear smooth with multiple functions...
       stop("Not sure how to handle smooths with multiple linear functions yet")

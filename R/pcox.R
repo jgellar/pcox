@@ -15,6 +15,8 @@
 #' @param eps convergence level for the criterion indicated by \code{method}.
 #' @param knots optional list containing the user-specified knot values for
 #'   basis construction, as in \code{\link[mgcv]{gam}}.
+#' @param x should the design matrix be included in the return object?
+#'   Defaults to \code{TRUE}.
 #' @param ...   additional arguments for \code{\link[survival]{coxph}} or
 #'   \code{\link[coxme]{coxme}}.
 #' @details This routine is a wrapper for either \code{\link[survival]{coxph}}
@@ -70,7 +72,7 @@
 pcox <- function(formula, data,
                  method=c("aic","caic","epic"),
                  #method=c("aic","caic","epic","reml", "ml", "fixed", "df"),
-                 eps=1e-6, knots=NULL, ...) {
+                 eps=1e-6, knots=NULL, x=TRUE, ...) {
   # Preliminaries...
   call <- match.call()
   method <- match.arg(method)
@@ -170,7 +172,7 @@ pcox <- function(formula, data,
         #varmap[[i]]  <- envirnoment(tt.i)$map
         
         # Assign data to newfrmlenv and update newtrmstrings
-        nm <- paste0("term",i)
+        nm <- paste0("term",i) #### CHANGE TO GET MORE APPROPRIATE NAMES
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
       } else if (!is.null(trm$xt)) {
@@ -181,18 +183,20 @@ pcox <- function(formula, data,
         t.types[i] <- "xt"
         varmap[[i]] <- names(trm$x)
         
-        # Update newtrmstrings
-        nm <- paste0("term",i)
-        newtrmstrings[i] <- nm
-        
         if (is.list(trm.i)) {
           # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
+          nm <- trm.i$smooth[[1]]$label
           smooth[[i]] <- trm.i$smooth
           assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
+          newtrmstrings[i] <- paste0("`", nm, "`")
         } else {
           # Unpenalized: assign data to newfrmlenv
+          nm <- names(trm.i)
           assign(x=nm, trm.i, envir=newfrmlenv)
+          newtrmstrings[i] <- nm
         }
+        
+        # Update newtrmstrings
       } else {
         stop("Error: shouldn't get here - something's wrong!")
       }
@@ -206,12 +210,12 @@ pcox <- function(formula, data,
     #lapply(terms[where.par], function(x) {
     #lapply(where.par, function(i) {
     for (i in where.par) {
-      x <- terms[i]
+      term.i <- terms[i]
       #nms <- if (!is.null(names(x))) {
       #  all.vars(x[names(x) != ""])
       #}
       #else all.vars(x)
-      nms <- names(x)
+      nms <- names(term.i)
       varmap[[i]] <- nms
       
       sapply(nms, function(nm) {
@@ -235,7 +239,7 @@ pcox <- function(formula, data,
   newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <-
     newcall$fitter <- newcall$method <- newcall$eps <- newcall$knots <- NULL
   newcall$formula <- newfrml
-  newcall$x <- TRUE
+  newcall$x <- x
   #newcall$model <-  TRUE
   if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
   newcall$na.action <- na.pass
