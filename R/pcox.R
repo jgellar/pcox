@@ -186,9 +186,13 @@ pcox <- function(formula, data,
         if (is.list(trm.i)) {
           # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
           nm <- trm.i$smooth[[1]]$label
+          # use syntactically valid name for both newtermstrings and coxph.penalty object
+          # in newfrmlenv to avoid: 1. `nm` being evaluated as a function call to `s()` inside
+          # model.frame called from coxph and 2. coxph failing to match term.labels to pnames.
+          nm <- make.names(nm) 
           smooth[[i]] <- trm.i$smooth
           assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
-          newtrmstrings[i] <- paste0("`", nm, "`")
+          newtrmstrings[i] <- nm
         } else {
           # Unpenalized: assign data to newfrmlenv
           nm <- names(trm.i)
