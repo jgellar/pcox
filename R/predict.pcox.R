@@ -19,7 +19,7 @@
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
 #' @return Details about return object
-#' @seealso \code{\link{pcox}
+#' @seealso \code{\link{pcox}}
 #'   
 
 predict.pcox <- function(object,

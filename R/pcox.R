@@ -144,6 +144,14 @@ pcox <- function(formula, data,
   t.types <- rep(NA, length=length(trmstrings))
   #smooth <- vector("list", length=length(newtrmstrings))
   
+  # Override s(), te(), and t2() in newfrmlenv so they can be used in
+  # term names. This forces s(x), etc. to return the variable "s(x)" instead
+  # of calling mgcv::s(). Has to be in the parent of the formula environment
+  # so that list2df(newfrmlenv), etc. below still work:
+  assign("s",  f_override, envir=parent.env(newfrmlenv))
+  assign("te", f_override, envir=parent.env(newfrmlenv))
+  assign("s",  f_override, envir=parent.env(newfrmlenv))
+  
   
   #################
   # Process Terms #
@@ -173,7 +181,7 @@ pcox <- function(formula, data,
         
         # Assign data to newfrmlenv and update newtrmstrings
         nm <- get.ttname()
-        nm <- paste0("term",i) #### CHANGE TO GET MORE APPROPRIATE NAMES
+        #nm <- paste0("term",i) #### CHANGE TO GET MORE APPROPRIATE NAMES
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
       } else if (!is.null(trm$xt)) {
@@ -190,17 +198,7 @@ pcox <- function(formula, data,
           smooth[[i]] <- trm.i$smooth
           assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
           newtrmstrings[i] <- nm
-          # define s()-function in parent of formula environment so that calling
-          # s(x) from the formula environment simply returns the variable called
-          # "s(x)" instead of doing mgcv::s() for a variable "x". has to be in
-          # the parent of the formula environment so that list2df(newfrmlenv)
-          # etc. below still work:
-          s_override <- function(...) {
-            callstring <- deparse(match.call(), width.cutoff = 500L)
-            if (length(callstring) > 1) callstring <- paste0(callstring)
-            get(callstring, parent.frame())
-          }
-          assign("s", s_override, envir=parent.env(newfrmlenv))
+          
         } else {
           # Unpenalized: assign data to newfrmlenv
           nm <- names(trm.i)

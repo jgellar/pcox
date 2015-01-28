@@ -4,7 +4,7 @@
 \title{Fit a Penalized Cox Regression Model}
 \usage{
 pcox(formula, data, method = c("aic", "caic", "epic"), eps = 1e-06,
-  knots = NULL, ...)
+  knots = NULL, x = TRUE, ...)
 }
 \arguments{
 \item{formula}{a formula with special terms as for \code{\link[mgcv]{gam}},
@@ -17,6 +17,9 @@ Details.}
 
 \item{knots}{optional list containing the user-specified knot values for
 basis construction, as in \code{\link[mgcv]{gam}}.}
+
+\item{x}{should the design matrix be included in the return object?
+Defaults to \code{TRUE}.}
 
 \item{...}{additional arguments for \code{\link[survival]{coxph}} or
 \code{\link[coxme]{coxme}}.}
