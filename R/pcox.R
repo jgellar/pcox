@@ -186,20 +186,27 @@ pcox <- function(formula, data,
         
         if (is.list(trm.i)) {
           # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
-          # use syntactically valid name for both newtermstrings and coxph.penalty object
-          # in newfrmlenv to avoid: 1. `nm` being evaluated as a function call to `s()` inside
-          # model.frame called from coxph and 2. coxph failing to match term.labels to pnames.
-          nm <- make.names(trm.i$smooth[[1]]$label)
+          nm <- trm.i$smooth[[1]]$label
+          smooth[[i]] <- trm.i$smooth
           assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
           newtrmstrings[i] <- nm
-          smooth[[i]] <- trm.i$smooth
+          # define s()-function in parent of formula environment so that calling
+          # s(x) from the formula environment simply returns the variable called
+          # "s(x)" instead of doing mgcv::s() for a variable "x". has to be in
+          # the parent of the formula environment so that list2df(newfrmlenv)
+          # etc. below still work:
+          s_override <- function(...) {
+            callstring <- deparse(match.call(), width.cutoff = 500L)
+            if (length(callstring) > 1) callstring <- paste0(callstring)
+            get(callstring, parent.frame())
+          }
+          assign("s", s_override, envir=parent.env(newfrmlenv))
         } else {
           # Unpenalized: assign data to newfrmlenv
           nm <- names(trm.i)
           assign(x=nm, trm.i, envir=newfrmlenv)
           newtrmstrings[i] <- nm
         }
-        
         # Update newtrmstrings
       } else {
         stop("Error: shouldn't get here - something's wrong!")
