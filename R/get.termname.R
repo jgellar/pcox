@@ -12,20 +12,20 @@ get.termname <- function(func, varnames=NULL) {
   # Process concurrent TVC's
   if (!is.null(env$conc.fcn)) {
     # Add .t to appropriate variable names
-    cfidx <- sapply(map, length) > 1
-    varnames[cfidx] <- paste0(varnames[idx], ".t")
+    cfidx <- sapply(env$map, function(x) length(x) > 1)
+    varnames[cfidx] <- paste0(varnames[cfidx], ".t")
   }
   
   # xt functions won't have a $tv variable
   if (is.null(env$tv))
     env$tv <- FALSE
   
-  # Build term name
+  # Create term name
   if (is.null(env$limits) & !(env$tv) & env$linear) {
-    # Basic concurrent TVC - no basistype call
+    # Basic concurrent TVC - no basistype call, just return varname[1]
     varnames[1]
   } else {
-    # A smooth object will be created: build up term label
+    # A smooth object will be created: build up term name
     inside <- vector("character", length=0)
     if (is.null(env$limits)) {
       # Smooth of scalar variable(s)
@@ -48,10 +48,10 @@ get.termname <- function(func, varnames=NULL) {
         inside <- c(inside, varnames)
         byvar <- paste0(varnames[1], ".L")
       }
-    }    
+    }
     
+    # Paste term components and return
     paste0(env$basistype, "(", paste(inside, collapse = ", "),
-                 ifelse(is.null(byvar), "", paste0(", by = ", byvar)),
-                 ")")
+           ifelse(is.null(byvar), "", paste0(", by = ", byvar)), ")")
   }
 }
