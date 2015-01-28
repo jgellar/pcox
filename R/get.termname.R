@@ -1,18 +1,27 @@
-#' Accessory function to extract the term name from a tt function
+#' Accessory function to extract the term name from a tt or xt function
 #' @keywords internal
 #' 
 
-get.ttname <- function(tt) {
-  env <- environment(tt)
+get.termname <- function(func, varnames=NULL) {
+  env <- environment(func)
   
-  varnames <- names(env$map)
+  if (is.null(varnames))
+    # get varnames from tt function map
+    varnames <- names(env$map)
+  
+  # Process concurrent TVC's
   if (!is.null(env$conc.fcn)) {
     # Add .t to appropriate variable names
     cfidx <- sapply(map, length) > 1
     varnames[cfidx] <- paste0(varnames[idx], ".t")
   }
   
-  if (is.null(env$limits) & !env$tv & env$linear) {
+  # xt functions won't have a $tv variable
+  if (is.null(env$tv))
+    env$tv <- FALSE
+  
+  # Build term name
+  if (is.null(env$limits) & !(env$tv) & env$linear) {
     # Basic concurrent TVC - no basistype call
     varnames[1]
   } else {
@@ -33,14 +42,16 @@ get.ttname <- function(tt) {
       inside <- paste0(varnames[1], ".smat")
       if (env$tv)
         inside <- c(inside, paste0(varnames[1], ".tmat"))
-      if (!env$linear) {
+      if (env$linear)
+        byvar <- paste0(varnames[1], ".LX")
+      else {
         inside <- c(inside, varnames)
         byvar <- paste0(varnames[1], ".L")
-      } else
-        byvar <- paste0(varnames[1], ".LX")
+      }
     }    
     
-    nm <- paste0(env$basistype, "(", paste(inside, collapse = ", "), ")")
-    ifelse(is.null(byvar), nm, paste0(nm, ":", byvar))
+    paste0(env$basistype, "(", paste(inside, collapse = ", "),
+                 ifelse(is.null(byvar), "", paste0(", by = ", byvar)),
+                 ")")
   }
 }

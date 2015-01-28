@@ -180,8 +180,9 @@ pcox <- function(formula, data,
         #varmap[[i]]  <- envirnoment(tt.i)$map
         
         # Assign data to newfrmlenv and update newtrmstrings
-        nm <- get.ttname()
+        #nm <- get.ttname(tt.i)
         #nm <- paste0("term",i) #### CHANGE TO GET MORE APPROPRIATE NAMES
+        nm <- get.termname(tt.i)
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
       } else if (!is.null(trm$xt)) {
@@ -194,7 +195,9 @@ pcox <- function(formula, data,
         
         if (is.list(trm.i)) {
           # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
-          nm <- trm.i$smooth[[1]]$label
+          #nm <- trm.i$smooth[[1]]$label
+          #nm <- paste0("term",i)
+          nm <- get.termname(xt.i, names(trm$x))
           smooth[[i]] <- trm.i$smooth
           assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
           newtrmstrings[i] <- nm
