@@ -206,7 +206,6 @@ pcox <- function(formula, data,
           assign(x=nm, trm.i, envir=newfrmlenv)
           newtrmstrings[i] <- nm
         }
-        
         # Update newtrmstrings
       } else {
         stop("Error: shouldn't get here - something's wrong!")
