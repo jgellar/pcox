@@ -4,7 +4,7 @@
 \title{Create a smooth and coxph.penalty object for use in a pcox formula}
 \usage{
 pcoxTerm(data, limits, linear, tv, basistype, sind, integration, standardize,
-  domain, basisargs, method, eps, smooth, t = NULL)
+  s.transform, t.transform, basisargs, method, eps, smooth, t = NULL)
 }
 \description{
 Create a smooth and coxph.penalty object for use in a pcox formula

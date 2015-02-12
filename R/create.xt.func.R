@@ -3,8 +3,12 @@
 #' @keywords internal
 #' 
 
+#create.xt.func <- function(limits, linear, basistype, sind, integration,
+#                           standardize, domain, basisargs, method, eps) {
 create.xt.func <- function(limits, linear, basistype, sind, integration,
-                           standardize, domain, basisargs, method, eps) {
+                           standardize, s.transform, t.transform,
+                           basisargs, method, eps) {
+  
   # Pre-processing
   if (!is.null(limits))
     # limits is either "all", "full", or "baseline" - baseline function
@@ -12,14 +16,20 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
   smooth.flag <- !(is.null(limits) & linear) # No smooth if its a linear scalar
   smooth  <- NULL
   
+  s.transform <- if (is.null(s.transform))
+    function(s, t) s
+  else if (is.character(s.transform)) {
+    
+  }
+  
   xt.func <- function(x) {
     if (smooth.flag) {
       # Smooth involved: call pcoxTerm
       pcoxTerm(x, limits=limits, linear=linear, tv=FALSE,
                basistype=basistype, sind=sind,
                integration=integration, standardize=standardize,
-               domain=domain, basisargs=basisargs,
-               method=method, eps=eps, smooth=smooth)
+               s.transform=s.transform, t.transform=t.transform,
+               basisargs=basisargs, method=method, eps=eps, smooth=smooth)
     } else {
       # No smooth involved: just return the data (glorified identity function)
       x

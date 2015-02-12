@@ -78,11 +78,15 @@
 
 p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
               basistype = c("s", "te", "t2"), sind=NULL,
-              integration=c("riemann", "trapezoidal", "simpson"),
-              standardize=FALSE, domain=c("s", "s-t", "s/t"), dbug=FALSE) {
+              integration = c("riemann", "trapezoidal", "simpson"),
+              standardize = FALSE, s.transform = NULL, t.transform = NULL,
+              #domain = c("s", "s-t", "s/t"),
+              #s.transform = function(s, t=NULL) {s},
+              #t.transform = function(t, tmax=NULL) {t},
+              dbug = FALSE) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
-  domain <- match.arg(domain)
+  #domain <- match.arg(domain)
   
   # Extract basis options
   frmls <- formals(match.fun(basistype))
@@ -101,29 +105,17 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   data      <- as.data.frame(lapply(dots[vars], I))
   names(data) <- as.list(substitute(list(...)))[-1][vars]
   
-  # For a scalar, limits is NULL. For baseline function, limits is "all"|"full"
+  # For a scalar, limits is NULL. For baseline function, limits is
+  #   "all"|"full|"baseline"
   if (any(is.null(limits), tolower(limits) %in% c("all", "full", "baseline"))
       & !tv) {
     # No time-varying aspect to the term: create a xt function
     xt <- create.xt.func(limits, linear, basistype, sind, integration,
-                         standardize, domain, basisargs, method, eps)
+                         standardize, s.transform, t.transform,
+                         basisargs, method, eps)
     
-    # `Return
+    # Return
     list(x=data, xt=xt)
-    #if ((is.null(limits) | tolower(limits) %in% c("all", "full")) & !tv) {
-    # No tt function required
-    #if (is.null(limits) & linear) {
-    #  # No smooth required - just return data
-    #  data
-    #} else {
-    #  # Make coxph.penalty term via pcoxTerm
-    #  if (!is.null(limits)) limits <- function(s,t) s==s
-    #  pcoxTerm(data, limits=limits, linear=linear, tv=tv,
-    #           basistype=basistype, sind=sind,
-    #           integration=integration, standardize=standardize,
-    #           domain=domain, basisargs=basisargs,
-    #           method=method, eps=eps)
-    #}
   } else {
     # Time-varying aspect to the term: create a tt function
     
@@ -140,9 +132,9 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
     x <- as.matrix(data)
     
     # Create the tt function
-    tt <- create.tt.func(limits, linear, tv, basistype, sind, 
-                         integration, standardize, domain, basisargs,
-                         method, eps, map)
+    tt <- create.tt.func(limits, linear, tv, basistype, sind, integration,
+                         standardize, s.transform, t.transform,
+                         basisargs, method, eps, map)
     if (dbug) debug(tt)
     
     # Return

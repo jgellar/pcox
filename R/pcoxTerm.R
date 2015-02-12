@@ -2,9 +2,9 @@
 #' 
 #' 
 
-pcoxTerm <- function(data, limits, linear, tv, basistype, sind, 
-                     integration, standardize, domain, basisargs,
-                     method, eps, smooth, t=NULL) {
+pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
+                     standardize, s.transform, t.transform,
+                     basisargs, method, eps, smooth, t=NULL) {
   
   # pcoxTerm will be called iff a smooth term is involved
   # data only includes the real (named) data (x)
@@ -44,32 +44,23 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
     smat <- if (is.matrix(sind)) sind
     else matrix(sind, nrow=n, ncol=J, byrow=TRUE)
     
-    #if (by.use) {
-    #  
-    #  
-    #  
-    #  
-    #}
-    
-    # L <- getL4(sind, t, limits, standardize)
-    
-    #mask <- if (is.function(limits)) {
-    #  t(outer(smat[1,], tmat[,1], limits))
-    #} else NULL
-    
-    
-    
     if (!is.null(t)) {
       tmat <- matrix(t, nrow=n, ncol=J)
       mask <- t(outer(smat[1,], tmat[,1], limits))
     } else {
       # t will be NULL if it's not a tt term: assume full range
       mask <- matrix(TRUE, nrow=n, ncol=J)
+      tmat <- NULL
     }
-    
     L <- getL3(smat, integration, mask)
-    #data[[1]][is.na(data[[1]])] <- 0
-    #### Here is where we change name of smat to myX.smat
+    
+    # Optional transformations of s and t
+    if (!is.null(s.transform))
+      smat <- s.transform(smat, tmat)
+    if (!is.null(t.transform) & !is.null(tmat))
+      tmat <- t.transform(tmat, max(tmat), min(tmat))
+    
+    
     smat.name <- paste0(varnames[1], ".smat")
     evaldat[[smat.name]] <- smat
     newcall <- c(newcall, as.symbol(substitute(smat.name)))
@@ -79,6 +70,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind,
       evaldat[[tmat.name]] <- tmat
       newcall <- c(newcall, as.symbol(substitute(tmat.name)))
     }
+    
     if (!linear) {
       # Nonlinear functional term: X in smooth, by=L
       # possible transformations of X?

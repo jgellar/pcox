@@ -5,7 +5,7 @@
 \usage{
 bf(..., linear = TRUE, tv = FALSE, basistype = c("s", "te", "t2"),
   sind = NULL, integration = c("riemann", "trapezoidal", "simpson"),
-  dbug = FALSE)
+  s.transform = NULL, t.transform = NULL, vd = FALSE, dbug = FALSE)
 }
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as well

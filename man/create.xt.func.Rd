@@ -4,7 +4,7 @@
 \title{Create x-transform function for non-time-varying terms}
 \usage{
 create.xt.func(limits, linear, basistype, sind, integration, standardize,
-  domain, basisargs, method, eps)
+  s.transform, t.transform, basisargs, method, eps)
 }
 \description{
 Create x-transform function for non-time-varying terms

@@ -59,11 +59,11 @@
 hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
                basistype = c("s", "te", "t2"), sind=NULL,
                integration=c("riemann", "trapezoidal", "simpson"),
-               standardize=TRUE, domain=c("s", "s-t", "s/t"),
+               standardize = TRUE, s.transform = NULL, t.transform = NULL,
                dbug=FALSE) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
-  domain <- match.arg(domain)
+  #domain <- match.arg(domain)
   
   # Do some checks?
   if (is.null(sind)) {
@@ -73,7 +73,8 @@ hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
   }
   
   p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
-    integration=integration, standardize=standardize, domain=domain, dbug=dbug)
+    integration=integration, standardize=standardize,
+    s.transform=s.transform, t.transform=t.transform, dbug=dbug)
 }
 
 

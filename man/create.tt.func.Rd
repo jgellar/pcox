@@ -4,7 +4,7 @@
 \title{Create tt function for a time-varying terms}
 \usage{
 create.tt.func(limits, linear, tv, basistype, sind, integration, standardize,
-  domain, basisargs, method, eps, map)
+  s.transform, t.transform, basisargs, method, eps, map)
 }
 \description{
 Create tt function for a time-varying terms

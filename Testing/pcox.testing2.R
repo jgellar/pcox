@@ -180,6 +180,20 @@ par(mfrow=c(1,2))
 image.plot(t(beta))
 image.plot(t(est5.1))
 
+# Domain-standardized
+fit5.1b <- pcox(Surv(time,event) ~ male +
+                  hf(myX, sind = sind2, s.transform = "s/t", dbug=TRUE),
+                data=data5)
+pre5.1b <- predict(fit5.1b)
+
+
+
+
+
+
+
+
+# Nonlinear
 
 time5.2 <- system.time(fit5.2 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2, dbug=TRUE, linear = F),
                data=data5))

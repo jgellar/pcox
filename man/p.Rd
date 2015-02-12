@@ -5,7 +5,7 @@
 \usage{
 p(..., limits = NULL, linear = TRUE, tv = FALSE, basistype = c("s",
   "te", "t2"), sind = NULL, integration = c("riemann", "trapezoidal",
-  "simpson"), standardize = FALSE, domain = c("s", "s-t", "s/t"),
+  "simpson"), standardize = FALSE, s.transform = NULL, t.transform = NULL,
   dbug = FALSE)
 }
 \arguments{
