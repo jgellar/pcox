@@ -176,17 +176,6 @@ pre5.1.2 <- predict(fit5.1, newdata=data5, stimes=data5$time)
 pre5.1.3 <- predict(fit5.1, newdata=data5[-4], stimes=data5$time) # Should throw an error
 range(pre5.1.1 - pre5.1.2, na.rm=T) # Should be 0 - confirms correct predictions for training data
 
-
-
-tt.func <- create.tt.func2(divide.by.t = FALSE, integration = "riemann")
-fit.tst <- coxph(Surv(time,event) ~ male + tt(myX), data=data5,
-                    na.action=na.pass, tt=tt.func, iter.max=100, outer.max=50)
-est.tst <- getHCEst(sm.out, 1:J, fit.tst$coefficients, trim="tt")
-image.plot(t(est.tst))
-
-
-
-
 # Coefficient
 est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])

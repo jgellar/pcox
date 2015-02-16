@@ -53,6 +53,10 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
       tmat <- NULL
     }
     L <- getL3(smat, integration, mask)
+    if (standardize)
+      L <- L / matrix(apply(smat*mask, 1, function(x) diff(range(x))),
+                      nrow=nrow(L), ncol=ncol(L))
+    
     
     # Optional transformations of s and t
     if (!is.null(s.transform))
