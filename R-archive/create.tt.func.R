@@ -1,6 +1,6 @@
 # Old version!!!!!! - archived
 
-create.tt.func <- function(tind=NULL, divide.by.t=FALSE, limits=NULL,
+create.tt.func2 <- function(tind=NULL, divide.by.t=FALSE, limits=NULL,
                            method=c("aic", "caic", "epic"), eps=1e-6,
                            integration=c("trapezoidal", "simpson", "riemann"),
                            dbug=FALSE, k=NULL) {
@@ -51,10 +51,10 @@ create.tt.func <- function(tind=NULL, divide.by.t=FALSE, limits=NULL,
     
     if (is.null(sm.in)) {
       sm <- if (is.null(k)) {
-        smoothCon(mgcv::s(tmat, smat, by=LX), data=pdat,
+        smoothCon(mgcv::s(smat, tmat, by=LX), data=pdat,
                   knots=NULL, absorb.cons=TRUE)[[1]]
       } else {
-        smoothCon(s(tmat, smat, by=LX, k=k), data=pdat,
+        smoothCon(s(smat, tmat, by=LX, k=k), data=pdat,
                   knots=NULL, absorb.cons=TRUE)[[1]]
       }
       # NEED TO GET RID OF <<-

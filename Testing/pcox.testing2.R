@@ -105,12 +105,18 @@ pmat.32 <- fit3.1$pcox$t.funcs[[1]](data.frame(myX=I(X)))
 
 
 
-pdata.3 <- data.frame(smat=sind, LX=1)
+pdata.3 <- data.frame(myX.smat=sind, myX.LX=1)
+#pdata.3 <- data.frame(smat=I(matrix(sind, nrow=1)), myX=I(matrix(rep(1,length(sind)), nrow=1)))
+#pdata.3 <- data.frame(myX=I(matrix(rep(1,length(sind)), nrow=1)))
+
 bhat3.1v1 <- PredictMat(fit3.1$pcox$smooth[[1]][[1]], pdata.3) %*%
   fit3.1$coef[-11]
+
+
+
 bhat3.1 <- fit3.1$pcox$t.funcs[[1]](pdata.3) %*% fit3.1$coef[-11]
 
-ggplot(pdata.3, mapping=aes(x = smat)) +
+ggplot(pdata.3, mapping=aes(x = myX.smat)) +
   geom_line(aes(y=beta)) +
   geom_line(aes(y=bhat3.1v1), col="red")
 
@@ -156,19 +162,28 @@ X <- genX(N, seq(0,1,length=J))
 beta <- makeBetaMat(J, genBeta1)
 
 eta  <- sapply(1:J, function(j) {
-  .75*male + X[,1:j,drop=F] %*% beta[j,1:j]
+  .75*male + (X[,1:j,drop=F] %*% beta[j,1:j])/j
 })
+
 Xdat <- data.frame(myX=I(X), male=male)
 data5 <- simTVSurv(eta, Xdat)
 sind2 <- 1:ncol(data5$myX)
-fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2, dbug=TRUE),
-               data=data5)
+fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sind2), data=data5)
 
 # Predict
 pre5.1.1 <- predict(fit5.1)
 pre5.1.2 <- predict(fit5.1, newdata=data5, stimes=data5$time)
 pre5.1.3 <- predict(fit5.1, newdata=data5[-4], stimes=data5$time) # Should throw an error
 range(pre5.1.1 - pre5.1.2, na.rm=T) # Should be 0 - confirms correct predictions for training data
+
+
+
+tt.func <- create.tt.func2(divide.by.t = FALSE, integration = "riemann")
+fit.tst <- coxph(Surv(time,event) ~ male + tt(myX), data=data5,
+                    na.action=na.pass, tt=tt.func, iter.max=100, outer.max=50)
+est.tst <- getHCEst(sm.out, 1:J, fit.tst$coefficients, trim="tt")
+image.plot(t(est.tst))
+
 
 
 
@@ -181,11 +196,23 @@ image.plot(t(beta))
 image.plot(t(est5.1))
 
 # Domain-standardized
-fit5.1b <- pcox(Surv(time,event) ~ male +
+fit5.1a <- pcox(Surv(time,event) ~ male +
                   hf(myX, sind = sind2, s.transform = "s/t", dbug=TRUE),
+                data=data5)
+pre5.1a <- predict(fit5.1a)
+
+# Lagged model
+fit5.1b <- pcox(Surv(time,event) ~ male +
+                  hf(myX, sind = sind2, s.transform = "s-t", dbug=TRUE),
                 data=data5)
 pre5.1b <- predict(fit5.1b)
 
+# Linear interaction
+fit5.1c <- pcox(Surv(time,event) ~ male +
+                  hf(myX, sind = sind2, s.transform = "s/t", dbug=TRUE,
+                     bs="pb", xt="linear"),
+                data=data5)
+pre5.1c <- predict(fit5.1c)
 
 
 

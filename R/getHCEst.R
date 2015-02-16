@@ -23,7 +23,9 @@ getHCEst <- function(sm, idx, coefs, trim=NULL, mask=NULL) {
   } else {
     as.vector(smat[mask])
   }
-  pmat <- PredictMat(sm, data=data.frame(tmat=tmat, smat=smat, LX=1))
+  df <- data.frame(smat=smat, tmat=tmat, LX=1)
+  names(df) <- c(sm$term, sm$by)
+  pmat <- PredictMat(sm, data=df)
   est  <- matrix(nrow=J, ncol=J, byrow=FALSE)
   
   if (is.null(mask)) {

@@ -19,59 +19,35 @@ ggplot2::qplot(x=s, y=t, fill = rowSums(ft), data=data, geom="tile")
 ggplot2::qplot(x=s, y=t, fill = f, data=data, geom="tile")
 ggplot2::qplot(x=s, y=t, fill = y, data=data, geom="tile")
 
-#'
-#'
-object <- s(s, t, bs="parametrictime", xt=list(bs="tp", tt=t_transforms))
-smooth.construct.parametrictime.smooth.spec <- function(object,data,knots){
-  ## todo: input checks
+object <- s(s, t, bs="pb", xt=list(bs="tp", tf=t_transforms))
+sm1 <- smooth.construct.pb.smooth.spec(object, data = data, knots=NULL)
+sm2 <- smoothCon(object, data=data, knots=NULL, absorb.cons=TRUE)[[1]]
 
-  #set up design for t
-  t_vec <- data[[object$term[2]]]
-  n_transform <- length(object$xt$tt)
-  n <- length(data[[object$term[2]]])
-  tt_name <- paste0(object$term[2], "_tt_", 1:n_transform)
-  t_X <-  vapply(object$xt$tt,
-    function(f) do.call(f, list(t=data[[object$term[2]]])), numeric(n))
+sm3 <- smoothCon(s(s, y, t, bs="pb", xt=list(bs="tp", tf=t_transforms)),
+                 data=data, knots=NULL, absorb.cons=TRUE)[[1]]
 
-  #set up smooth over s given args in object$xt
-  s_args <- object$xt[!grepl("tt", names(object$xt))]
-  s_smoothspec <- do.call(mgcv::s, append(as.name(object$term[1]), s_args))
-  sm <- smooth.construct(s_smoothspec, data = data, knots = NULL)
-  # modify smooth term:
 
-  sm$term <- object$term
-  sm$bs.dim <-  sm$bs.dim * n_transform
-  sm$null.space.dim <-  sm$null.space.dim * n_transform
-  sm$df <- sm$df * n_transform
-  sm$dim <- 2
-  sm$label <- paste0("f(", object$term[2], ")*", sm$label)
-  sm$xt <- object$xt
-  sm$X <- mgcv::tensor.prod.model.matrix(list(t_X, sm$X))
-  sm$S[[1]] <- diag(n_transform) %x% sm$S[[1]]
-  ## ctrl-c-v from smooth.construct.tp.smooth.spec:
-  if (sm$drop.null > 0) {
-    ind <- 1:(sm$bs.dim - sm$null.space.dim)
-    if (FALSE) { ## nat param version
-     np <- nat.param(sm$X, sm$S[[1]], rank=sm$bs.dim - sm$null.space.dim, type=0)
-     sm$P <- np$P
-     sm$S[[1]] <- diag(np$D)
-     sm$X <- np$X[,ind]
-    } else { ## original param
-     sm$S[[1]] <-sm$S[[1]][ind,ind]
-     sm$X <-sm$X[, ind]
-     sm$cmX <- colMeans(object$X)
-     sm$X <- sweep(object$X, 2, object$cmX)
-    }
-    sm$null.space.dim <- 0
-    sm$df <- sm$df - M
-    sm$bs.dim <-sm$bs.dim -M
-    sm$C <- matrix(0,0,ncol(object$X)) # null constraint matrix
-  }
-  sm
-}
+sm4 <- smoothCon(s(s,t), data=data, knots=NULL, absorb.cons=TRUE)[[1]]
 
-m <- gam(y ~  s(s, t, bs="parametrictime", xt=list(bs="tp", tt=t_transforms)),
+pm1 <- PredictMat(sm1, data=data)
+pm2 <- PredictMat(sm2, data=data)
+pm3 <- PredictMat(sm3, data=data)
+
+
+
+m <- gam(y ~  s(s, t, bs="pb", xt=list(bs="tp", tf=t_transforms)),
   data=data)
+m2 <- gam(y ~  s(s, t, bs="pb", xt=t_transforms, k=15),
+         data=data)
 data$fit <- fitted(m)
+data$fit2 <- fitted(m2)
 ggplot2::qplot(x=s, y=t, fill = f, data=data, geom="tile")
-ggplot2::qplot(x=s, y=t, fill = fit, data=data, geom="tile")
+ggplot2::qplot(x=s, y=t, fill = fit2, data=data, geom="tile")
+
+
+
+
+# Now try w functional variables
+
+
+
