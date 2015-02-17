@@ -19,11 +19,11 @@ ggplot2::qplot(x=s, y=t, fill = rowSums(ft), data=data, geom="tile")
 ggplot2::qplot(x=s, y=t, fill = f, data=data, geom="tile")
 ggplot2::qplot(x=s, y=t, fill = y, data=data, geom="tile")
 
-object <- s(s, t, bs="pb", xt=list(bs="tp", tf=t_transforms))
-sm1 <- smooth.construct.pb.smooth.spec(object, data = data, knots=NULL)
+object <- s(s, t, bs="pi", xt=list(bs="tp", tf=t_transforms))
+sm1 <- smooth.construct.pi.smooth.spec(object, data = data, knots=NULL)
 sm2 <- smoothCon(object, data=data, knots=NULL, absorb.cons=TRUE)[[1]]
 
-sm3 <- smoothCon(s(s, y, t, bs="pb", xt=list(bs="tp", tf=t_transforms)),
+sm3 <- smoothCon(s(s, y, t, bs="pi", xt=list(bs="tp", tf=t_transforms)),
                  data=data, knots=NULL, absorb.cons=TRUE)[[1]]
 
 
@@ -35,9 +35,9 @@ pm3 <- PredictMat(sm3, data=data)
 
 
 
-m <- gam(y ~  s(s, t, bs="pb", xt=list(bs="tp", tf=t_transforms)),
+m <- gam(y ~  s(s, t, bs="pi", xt=list(bs="tp", tf=t_transforms)),
   data=data)
-m2 <- gam(y ~  s(s, t, bs="pb", xt=t_transforms, k=15),
+m2 <- gam(y ~  s(s, t, bs="pi", xt=t_transforms, k=15),
          data=data)
 data$fit <- fitted(m)
 data$fit2 <- fitted(m2)
