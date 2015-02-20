@@ -181,8 +181,8 @@ est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])
 
 par(mfrow=c(1,2))
-image.plot(t(beta))
-image.plot(t(est5.1))
+image.plot(t(beta), zlim=c(-6,6))
+image.plot(t(est5.1), zlim=c(-6,6))
 
 # Domain-standardized
 fit5.1a <- pcox(Surv(time,event) ~ male +

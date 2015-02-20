@@ -63,7 +63,8 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
       smat <- s.transform(smat, tmat)
     if (!is.null(t.transform) & !is.null(tmat))
       tmat <- t.transform(tmat, max(tmat), min(tmat))
-    
+    smat[!mask] <- smat[mask][1]
+    tmat[!mask] <- tmat[mask][1]
     
     smat.name <- paste0(varnames[1], ".smat")
     evaldat[[smat.name]] <- smat

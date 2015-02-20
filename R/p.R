@@ -105,15 +105,24 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   data      <- as.data.frame(lapply(dots[vars], I))
   names(data) <- as.list(substitute(list(...)))[-1][vars]
   
-  # For a scalar, limits is NULL. For baseline function, limits is
-  #   "all"|"full|"baseline"
-  if (any(is.null(limits), tolower(limits) %in% c("all", "full", "baseline"))
-      & !tv) {
+  # Determine if the term is time-varying or time-static, based on limits/tv
+  tt <- if (is.null(limits)) {
+    tv
+  } else if (is.character(limits)) {
+    if (tolower(limits) %in% c("all", "full", "baseline"))
+      tv
+    else TRUE
+  } else if (is.function(limits)) {
+    length(formals(limits)) > 1
+  } else if (is.numeric(limits)) {
+    TRUE
+  } else stop("Unrecognized entry for limits argument")
+  
+  if (!tt) {
     # No time-varying aspect to the term: create a xt function
     xt <- create.xt.func(limits, linear, basistype, sind, integration,
                          standardize, s.transform, t.transform,
                          basisargs, method, eps)
-    
     # Return
     list(x=data, xt=xt)
   } else {
@@ -135,9 +144,7 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
     tt <- create.tt.func(limits, linear, tv, basistype, sind, integration,
                          standardize, s.transform, t.transform,
                          basisargs, method, eps, map)
-    if (dbug) debug(tt)
-    
     # Return
-    list(x=x, tt=tt)
+    list(x=x, tt=tt)    
   }
 }

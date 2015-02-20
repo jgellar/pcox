@@ -33,8 +33,9 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
            time-varying covariates")
     lag <- limits
     conc.fcn <- function(s,t) abs(s - (t-lag))
-    limits <- NULL
-    #stop("Numeric limits not currently supported... coming soon")
+    limits <- NULL # Treat the lagged covariate as a scalar
+  } else if (!is.function(limits)) {
+    stop("Unrecognized input for limits argument")
   }
   
   # Process optional t transformation
