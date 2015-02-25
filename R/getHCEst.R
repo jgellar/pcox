@@ -7,13 +7,16 @@ getHCEst2 <- function(fit, term=NULL, idx=NULL, mask=NULL) {
   if (is.null(term)) {
     term <- which(fit$pcox$termtype=="hf")[1]
   }
+  sm.id <- fit$pcox$smoothmap[[term]]
+  if (is.null(sm.id))
+    stop("Supplied term does not have a smooth object associated")
   
   if (is.null(idx))
     idx <- 1:max(fit$y[,1])
   else if (length(idx)==1)
     idx <- 1:idx
   
-  sm <- fit$pcox$smooth[[term]][[1]]
+  sm <- fit$pcox$smooth[[sm.id]]
   coefs <- fit$coefficients[sm$first.para:sm$last.para]
   env <- environment(fit$pcox$t.funcs[[term]])
   
@@ -22,15 +25,37 @@ getHCEst2 <- function(fit, term=NULL, idx=NULL, mask=NULL) {
   smat <- matrix(idx, nrow=J, ncol=J, byrow=TRUE)
   if (is.null(mask))
     mask <- t(outer(smat[1,], tmat[,1], env$limits))
+  
+  # Mask out unneeded coordinates
+  smat[!mask] <- NA
+  tmat[!mask] <- NA
+  
+  # Optional transformations of s and t
+  s.transform <- env$s.transform
+  t.transform <- env$t.transform  
+  if (!is.null(s.transform)) {
+    smat.tmp <- if (length(formals(s.transform))==1)
+      s.transform(smat)
+    else if (length(formals(s.transform))==2)
+      s.transform(smat, tmat)
+    else stop("Incorrect number of arguments for s.transform")
+  }
+  if (!is.null(t.transform)) {
+    tmat <- if (length(formals(t.transform))==1)
+      t.transform(tmat)
+    else if (length(formals(t.transform))==2)
+      t.transform(smat, tmat)
+    else stop("Incorrect number of arguments for t.transform")
+  }
+  if (!is.null(s.transform)) {
+    smat <- smat.tmp
+    rm(smat.tmp)
+  }  
+  
+  # Vectorize for prediction
   smat <- as.vector(smat[mask])
   tmat <- as.vector(tmat[mask])
   
-  s.transform <- env$s.transform
-  t.transform <- env$t.transform
-  if (!is.null(s.transform))
-    smat <- s.transform(smat, tmat)  
-  if (!is.null(t.transform))
-    tmat <- t.transform(tmat, max(fit$y[,1]), min(fit$y[,1]))
   
   df <- data.frame(smat=smat, tmat=tmat, LX=1)
   names(df) <- c(sm$term, sm$by)

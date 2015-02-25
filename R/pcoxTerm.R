@@ -57,14 +57,33 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
       L <- L / matrix(apply(smat*mask, 1, function(x) diff(range(x))),
                       nrow=nrow(L), ncol=ncol(L))
     
+    # (Temporarily) replace masked out coordinates with NA
+    smat[!mask] <- NA
+    if (!is.null(t)) tmat[!mask] <- NA
     
     # Optional transformations of s and t
-    if (!is.null(s.transform))
-      smat <- s.transform(smat, tmat)
-    if (!is.null(t.transform) & !is.null(tmat))
-      tmat <- t.transform(tmat, max(tmat), min(tmat))
+    if (!is.null(s.transform)) {
+      smat.tmp <- if (length(formals(s.transform))==1)
+        s.transform(smat)
+      else if (length(formals(s.transform))==2)
+        s.transform(smat, tmat)
+      else stop("Incorrect number of arguments for s.transform")
+    }
+    if (!is.null(t.transform) & !is.null(t)) {
+      tmat <- if (length(formals(t.transform))==1)
+        t.transform(tmat)
+      else if (length(formals(t.transform))==2)
+        t.transform(smat, tmat)
+      else stop("Incorrect number of arguments for t.transform")
+    }
+    if (!is.null(s.transform)) {
+      smat <- smat.tmp
+      rm(smat.tmp)
+    }
+    
+    # Replace mased coordinates of smat and tmat
     smat[!mask] <- smat[mask][1]
-    tmat[!mask] <- tmat[mask][1]
+    if (!is.null(t)) tmat[!mask] <- tmat[mask][1]
     
     smat.name <- paste0(varnames[1], ".smat")
     evaldat[[smat.name]] <- smat

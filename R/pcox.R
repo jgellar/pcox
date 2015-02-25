@@ -138,8 +138,7 @@ pcox <- function(formula, data,
   
   # Set up variables for new formula and smooth objects
   newtrmstrings <- attr(tf, "term.labels")
-  # tt.funcs = xt.funcs =
-  t.funcs = varmap = smooth <-
+  t.funcs = varmap = smooth  <-
     vector(mode = "list", length = length(trmstrings))
   t.types <- rep(NA, length=length(trmstrings))
   #smooth <- vector("list", length=length(newtrmstrings))
@@ -173,15 +172,11 @@ pcox <- function(formula, data,
         environment(tt.i)$index <- i
         environment(tt.i)$method <- method
         environment(tt.i)$eps <- eps
-        #tt.funcs[[i]] <- tt.i
         t.funcs[[i]] <- tt.i
         t.types[i]   <- "tt"
         varmap[[i]]  <- names(environment(tt.i)$map)
-        #varmap[[i]]  <- envirnoment(tt.i)$map
         
         # Assign data to newfrmlenv and update newtrmstrings
-        #nm <- get.ttname(tt.i)
-        #nm <- paste0("term",i) #### CHANGE TO GET MORE APPROPRIATE NAMES
         nm <- get.termname(tt.i)
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
@@ -195,8 +190,6 @@ pcox <- function(formula, data,
         
         if (is.list(trm.i)) {
           # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
-          #nm <- trm.i$smooth[[1]]$label
-          #nm <- paste0("term",i)
           nm <- get.termname(xt.i, names(trm$x))
           smooth[[i]] <- trm.i$smooth
           assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
@@ -244,15 +237,12 @@ pcox <- function(formula, data,
   environment(newfrml) <- newfrmlenv
   pcoxdata <- list2df(as.list(newfrmlenv))
   datameans <- sapply(as.list(newfrmlenv), mean)
-  #tt.funcs  <- tt.funcs[!sapply(tt.funcs, is.null)]
-  tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
-  #smooth <- 
   newcall <- expand.call(pcox, call)
   newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <-
     newcall$fitter <- newcall$method <- newcall$eps <- newcall$knots <- NULL
   newcall$formula <- newfrml
   newcall$x <- x
-  #newcall$model <-  TRUE
+  tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
   if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
   newcall$na.action <- na.pass
   newcall$data <- quote(pcoxdata)
@@ -291,29 +281,35 @@ pcox <- function(formula, data,
   })
   
   trmmap <- newtrmstrings
-  #labelmap <- as.list(trmmap)
   labelmap <- sapply(smooth, function(x) x[[1]]$label)
   names(labelmap) = names(trmmap) <- names(terms)
   # We really don't need trmmap and labelmap? At least not like this.....
   
-  smooth[sapply(smooth,is.null)] <- NULL
+  # Create smoothmap
+  cnt <- 1
+  sm.length <- sapply(smooth, length)
+  sm.cumsum <- cumsum(sm.length)
+  smoothmap <- lapply(1:length(smooth), function(i) {
+    if (sm.length[i]>0)
+      (sm.cumsum[i]-sm.length[i]+1):(sm.cumsum[i])
+  })
+  smooth <- do.call("c", smooth)
+  
+  # Create varlst
   varlst <- do.call("c", lapply(varmap, function(x) {
     if (is.list(x)) names(x)
     else x
   }))
-  #data.train <- 
-
+  
+  # Create termtype (type of special term)
   termtype <- rep("par",length(terms))
   for (i in 1:length(specials)) termtype[specials[[i]]-1] <- names(specials)[i]
   
   ret <- list(formula.pcox = formula, method = method,
               responsename = responsename, surv = surv,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
-              varmap = varmap,
+              varmap = varmap, smoothmap = smoothmap,
               t.funcs = t.funcs, t.types = t.types, smooth = smooth,
-              #tt = tt.funcs,
-              #where = list(where.p=where.p, where.bf=where.bf, where.hf=where.hf,
-              #             where.cf=where.cf, where.par = where.par),
               datameans = datameans, terms=tf)
   res$pcox <- ret
   class(res) <- c("pcox", class(res))

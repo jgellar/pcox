@@ -41,22 +41,32 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
   # Process optional t transformation
   t.transform <- if (is.null(t.transform)) {
     if (!is.null(s.transform) & basistype=="s") {
-      if (s.transform=="s/t")
-        # Defaults to "tmaxmin"
-        function(t, tmax, tmin) (t-tmin)/(tmax-tmin)
+      if (s.transform %in% c("s/t", "range")) # Defaults to "tmaxmin"
+        function(t) (t-min(t, na.rm=T))/(max(t, na.rm=T)-min(t, na.rm=T))
       else NULL            # Defaults to no transform
     } else NULL            # Defaults to no transform
   } else if (is.character(t.transform)) {
     if (t.transform=="t") NULL
-    else if (t.transform=="tmax") function(t, tmax) t/tmax
-    else if (t.transform=="tmaxmin") function(t, tmax, tmin)
-      (t-tmin)/(tmax-tmin)
+    else if (t.transform=="tmax") function(t) t/max(t, na.rm=T)
+    else if (t.transform=="tmaxmin") function(t)
+      (t-min(t, na.rm=T))/(max(t, na.rm=T)-min(t, na.rm=T))
+    else if (t.transform=="ecdf") function(t) {
+      y <- ecdf(t)(t)
+      if (is.matrix(t)) matrix(y, nrow=nrow(t), ncol=ncol(t))
+      else y
+    }
+    else if (t.transform=="ecdf2") function(t) {
+      y <- ecdf(t)(t)
+      y <- (y-min(y))/(max(y)-min(y))
+      if (is.matrix(t)) matrix(y, nrow=nrow(t), ncol=ncol(t))
+      else y
+    }
     else stop("Unrecognized t transformation")
   } else if (!is.function(t.transform))
     stop("Unrecognized t tranformation: must be a function or a
          recognized transformation string")
-  else if (length(formals(t.transform))>3 | length(formals(t.transform))<1)
-    stop("t.transform must have 1, 2, or 3 arguments")
+  else if (length(formals(t.transform))>2 )
+    stop("t.transform can only have 1 or 2 arguments")
   
   # Process optional s transformation
   s.transform <- if (is.null(s.transform))
@@ -67,7 +77,14 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
     else if (s.transform=="s-t") function(s,t) s-t
     else if (s.transform=="s/t") function(s,t) {
       smin <- min(s)
-      ifelse(t==smin, 0.5, (s-smin)/(t-smin))
+      ifelse(t==smin, 0.5, (s-smin)/(t-smin))} 
+    else if (s.transform=="range") function(s,t) {
+      smt <- s-t
+      t(apply(smt, 1, function(x) {
+        y <- x[!is.na(x)]
+        x[!is.na(x)] <- if (length(y)==1) 0.5 else (y-min(y))/(max(y)-min(y))
+        x
+      }))
     }
     else stop("Unrecognized s transformation")
   } else if (!is.function(s.transform))

@@ -16,11 +16,18 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
   smooth.flag <- !(is.null(limits) & linear) # No smooth if its a linear scalar
   smooth  <- NULL
   
+  # Process optional s transformation
   s.transform <- if (is.null(s.transform))
-    function(s, t) s
+    # Defaults to no transform
+    NULL
   else if (is.character(s.transform)) {
-    
-  }
+    if (s.transform=="s") NULL
+    else stop("Unrecognized s transformation")
+  } else if (!is.function(s.transform))
+    stop("Unrecognized s tranformation: must be a function or a
+         recognized transformation string")
+  else if (length(formals(s.transform))>1)
+    stop("s.transform can only have 1 argument for a non-time-varying term")  
   
   xt.func <- function(x) {
     if (smooth.flag) {

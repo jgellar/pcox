@@ -95,10 +95,10 @@ range(pre3.1.1 - pre3.1.2, na.rm=T) # Should be 0
 # TO DO:  Try some things with sindices next
 
 
-sm <- fit3.1$pcox$smooth[[1]][[1]]
+sm <- fit3.1$pcox$smooth[[1]]
 
-pdata.31 <- data.frame(smat=I(matrix(sind, nrow=N, ncol=J)),
-                       LX=I(matrix(1, nrow=N, ncol=J)))
+pdata.31 <- data.frame(myX.smat=I(matrix(sind, nrow=N, ncol=J)),
+                       myX.LX=I(matrix(1, nrow=N, ncol=J)))
 pmat.31 <- PredictMat(sm, data = pdata.31)
 pmat.32 <- fit3.1$pcox$t.funcs[[1]](data.frame(myX=I(X)))
 
@@ -177,7 +177,7 @@ pre5.1.3 <- predict(fit5.1, newdata=data5[-4], stimes=data5$time) # Should throw
 range(pre5.1.1 - pre5.1.2, na.rm=T) # Should be 0 - confirms correct predictions for training data
 
 # Coefficient
-est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]][[1]], 1:J,
+est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])
 
 par(mfrow=c(1,2))
