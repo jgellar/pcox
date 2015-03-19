@@ -30,7 +30,7 @@
 #' 
 #' @details
 #' The smooth specifiation object, defined using \code{s()}, must contain an
-#' \code{xt} argument. The object assigned to \code{xt} defines the
+#' \code{xt} element The object assigned to \code{xt} defines the
 #' transformation functions (\eqn{g_k(t)} in the above notation), and can
 #' take one of the following forms:
 #' 

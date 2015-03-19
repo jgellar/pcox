@@ -4,7 +4,7 @@
 
 pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
                      standardize, s.transform, t.transform,
-                     basisargs, method, eps, smooth, t=NULL) {
+                     basisargs, method, eps, smooth, s0, t0=NULL, t=NULL) {
   
   # pcoxTerm will be called iff a smooth term is involved
   # data only includes the real (named) data (x)
@@ -59,7 +59,17 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
     
     # (Temporarily) replace masked out coordinates with NA
     smat[!mask] <- NA
-    if (!is.null(t)) tmat[!mask] <- NA
+    if (is.null(s0)) {
+      assign("s0", smat, envir=environment(s.transform))
+      assign("s0", smat, envir=environment(t.transform))
+    }
+    if (!is.null(t)) {
+      tmat[!mask] <- NA
+      if (is.null(t0)) {
+        assign("t0", tmat, envir=environment(s.transform))
+        assign("t0", tmat, envir=environment(t.transform))
+      }
+    }
     
     # Optional transformations of s and t
     if (!is.null(s.transform)) {
@@ -127,7 +137,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
     if (length(smooth)>1) {
       # Can we turn these into a single smooth object (wider basis matrix, 
       #   block diagonal penalty matrix)?
-      stop("We don't yet support terms with multiple smooth objects... stay tuned")
+      stop("We don't yet support terms with multiple smooth objects.")
     }
     cpobj <- pterm(smooth[[1]], method=method, eps=eps)
     list(cpobj=cpobj, smooth=smooth)

@@ -9,7 +9,7 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
                            basisargs, method, eps, map) {
   
   # Initialize: no smooth object created yet
-  smooth <- NULL
+  smooth = s0 = t0 <- NULL
   
   # Process limits argument: create appropriate processing function
   conc.fcn <- NULL
@@ -42,21 +42,22 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
   t.transform <- if (is.null(t.transform)) {
     if (!is.null(s.transform) & basistype=="s") {
       if (s.transform %in% c("s/t", "range")) # Defaults to "tmaxmin"
-        function(t) (t-min(t, na.rm=T))/(max(t, na.rm=T)-min(t, na.rm=T))
+        function(t) (t-min(t0, na.rm=T))/(max(t0, na.rm=T)-min(t0, na.rm=T))
       else NULL            # Defaults to no transform
     } else NULL            # Defaults to no transform
   } else if (is.character(t.transform)) {
     if (t.transform=="t") NULL
-    else if (t.transform=="tmax") function(t) t/max(t, na.rm=T)
+    else if (t.transform=="tmax") function(t) t/max(t0, na.rm=T)
     else if (t.transform=="tmaxmin") function(t)
-      (t-min(t, na.rm=T))/(max(t, na.rm=T)-min(t, na.rm=T))
+      (t-min(t, na.rm=T))/(max(t0, na.rm=T)-min(t0, na.rm=T))
     else if (t.transform=="ecdf") function(t) {
-      y <- ecdf(t)(t)
+      y <- ecdf(t0)(t)
       if (is.matrix(t)) matrix(y, nrow=nrow(t), ncol=ncol(t))
       else y
     }
     else if (t.transform=="ecdf2") function(t) {
-      y <- ecdf(t)(t)
+      stop("not implemented yet")
+      y <- ecdf(t0)(t)
       y <- (y-min(y))/(max(y)-min(y))
       if (is.matrix(t)) matrix(y, nrow=nrow(t), ncol=ncol(t))
       else y
@@ -76,7 +77,7 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
     if (s.transform=="s") NULL
     else if (s.transform=="s-t") function(s,t) s-t
     else if (s.transform=="s/t") function(s,t) {
-      smin <- min(s)
+      smin <- min(s0, na.rm=TRUE)
       ifelse(t==smin, 0.5, (s-smin)/(t-smin))} 
     else if (s.transform=="range") function(s,t) {
       smt <- s-t
@@ -134,7 +135,7 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
       # Create pcoxTerm
       pt <- pcoxTerm(data, limits, linear, tv, basistype, sind, integration,
                      standardize, s.transform, t.transform,
-                     basisargs, method, eps, smooth, t)
+                     basisargs, method, eps, smooth, s0, t0, t)
       if (is.list(pt)) {
         # tt.func is being called within pcox/coxph, to create a new term:
         #   Assign the smooth, and return cpobj

@@ -162,6 +162,7 @@ predict.pcox <- function(object,
       if (length(stimes)!=n) {
         stop("length of stimes does not match n")
       }
+      ptimes <- ptimes[ptimes<=max(stimes)]
       
       # Expand dataset at ptimes
       expand.map <- do.call("rbind", sapply(ptimes, function(t.i) {
@@ -224,6 +225,7 @@ predict.pcox <- function(object,
         }
       }
     }))
+    rownames(pmat) <- NULL
     
     # all.vars(object$terms)
     # yname <- all.vars(object$terms)[attr(object$terms, "response")]

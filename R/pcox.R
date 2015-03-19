@@ -259,7 +259,7 @@ pcox <- function(formula, data,
         for (j in 1:length(smooth[[i]])) {
           nc <- ncol(smooth[[i]][[j]]$X)
           last.para <- first.para + nc - 1
-          names(res$coef)[first.para:last.para] <- 
+          names(res$coefficients)[first.para:last.para] <- 
             paste(smooth[[i]][[j]]$label, 1:nc, sep=".")
           names(smooth[[i]][j]) <- smooth[[i]][[j]]$label
           smooth[[i]][[j]]$first.para <- first.para
@@ -305,7 +305,7 @@ pcox <- function(formula, data,
   termtype <- rep("par",length(terms))
   for (i in 1:length(specials)) termtype[specials[[i]]-1] <- names(specials)[i]
   
-  ret <- list(formula.pcox = formula, method = method,
+  ret <- list(call=call, formula = formula, method = method,
               responsename = responsename, surv = surv,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
               varmap = varmap, smoothmap = smoothmap,
@@ -316,3 +316,4 @@ pcox <- function(formula, data,
   res
 }
 
+getCall.pcox <- function(x) x$pcox$call
