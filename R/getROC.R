@@ -1,3 +1,8 @@
+#' Generate Time-Varying ROC Curve
+#' 
+#' @export
+#' 
+
 getROC <- function(fit, evaltimes=NULL, plot=FALSE, K=NULL, data=NULL,
                    bhaz=c("none", "breslow")) {
   
