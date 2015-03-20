@@ -47,7 +47,7 @@ cf <- function(..., lag=0, linear = TRUE, tv = FALSE,
     sind <- 1:ncol(dots[names(dots)==""][[1]])
   }
   
-  p(..., limits=(-lag), linear=linear, tv=tv, basistype=basistype, sind=sind,
+  p(..., limits=lag, linear=linear, tv=tv, basistype=basistype, sind=sind,
     standardize=FALSE, s.transform=NULL, t.transform=NULL, dbug=dbug)
 }
 
