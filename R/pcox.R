@@ -113,10 +113,8 @@ pcox <- function(formula, data,
   responsename <- attr(tf, "variables")[2][[1]]
   newfrml <- paste(safeDeparse(responsename), "~", sep = "")
   newfrmlenv <- new.env()
-  evalenv <- if (!is.null(data))
-    data
-  else if ("data" %in% names(call)) 
-    eval(call$data)
+  evalenv <- if ("data" %in% names(call)) 
+    eval(call$data, envir=parent.frame())
   else NULL
   #else parent.frame() # IS THIS OK?
   
@@ -213,7 +211,7 @@ pcox <- function(formula, data,
   # Parametric terms
   if (length(where.par)) {
     if ("data" %in% names(call))
-      frmlenv <- list2env(eval(call$data), frmlenv)
+      frmlenv <- list2env(eval(call$data, envir=parent.frame()), frmlenv)
     #lapply(terms[where.par], function(x) {
     #lapply(where.par, function(i) {
     for (i in where.par) {
