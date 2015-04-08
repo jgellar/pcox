@@ -3,11 +3,14 @@
 #' @export
 #' 
 
-getROC <- function(fit, evaltimes=NULL, plot=FALSE, K=NULL, data=NULL,
-                   bhaz=c("none", "breslow")) {
+getROC <- function(fit, utime=NULL, evaltimes=NULL, plot=FALSE, K=NULL, data=NULL,
+                   bhaz=c("none", "breslow"), St=NULL, tmax=NULL) {
   
   # Unique time points
-  utime <- c(0, rev(unique(fit$y[,1])))
+  if (is.null(utime))
+    utime <- c(0, rev(unique(fit$y[,1])))
+  else if (!(0 %in% utime))
+    utime <- c(0, utime)
   
   # Get lp, Stime, entry, and status
   if (is.null(K)) {
@@ -21,7 +24,7 @@ getROC <- function(fit, evaltimes=NULL, plot=FALSE, K=NULL, data=NULL,
     # K-fold cross-validation
     if (is.null(data))
       stop("data required for cross-validation")
-    stop("Not yet implemented!")
+    #stop("Not yet implemented!")
     n <- nrow(data)
     folds <- sample(rep(1:K, ceiling(n/K))[1:n])
     pre.mat <- matrix(nrow=n, ncol=(length(utime)-1))
@@ -62,56 +65,18 @@ getROC <- function(fit, evaltimes=NULL, plot=FALSE, K=NULL, data=NULL,
     data.frame(TP=roc.i$TP, FP=roc.i$FP, t=evaltimes[i])
   }))
   auc <- sapply(roc, function(x) x$AUC)
-  list(roc=roc, roc.long=roc.long, auc=auc)
+  tmp <- survConcordance.fit(Surv(Stime, status), lp,
+                             as.numeric(factor(Stime, levels=unique(Stime))),
+                             NULL)
+  if (is.matrix(tmp))
+    tmp <- colSums(tmp)
+  tmp <- (tmp[1] + tmp[3]/2)/sum(tmp[1:3])
   
-  
-#   # Get risk set information
-#   rs <- getRiskSet(surv, evaltimes)
-#   lp <- fit$linear.predictors
-#   
-#   #same results if we limit rs to the predict.time days?  YES!!!!!!!!
-#   # if (is.null(evaltimes)) -> use info from fit (fit$linear.predictors & fit$y)
-#   # otherwise, call predict() using evaltimes
-#   # if evaltimes given:
-#   #    Calculate linear predictor at each evaltime, for all in risk set, using predict()
-#   
-#   p.time <- 34.5
-#   cw1 <- CoxWeights(marker=as.vector(lp), entry=rs$start, Stime=rs$finish,
-#              status=rs$newstat, predict.time=p.time)
-#   ooo <- rs$finish>p.time & rs$start<p.time
-#   rs.o <- rs[ooo,]
-#   lp.o <- lp[ooo]
-#   cw2 <- CoxWeights(marker=as.vector(lp.o), entry=rs.o$start, Stime=rs.o$finish,
-#                     status=rs.o$newstat, predict.time=p.time)
-#   
-#   if (is.null(evaltimes)) {
-#     lp <- fit$linear.predictors
-#     evaltimes <- unique(rs$finish)
-#   } else {
-#     stop("Not yet supported")
-#     
-#     environment(tt)$sm.in <- sm
-#     pt <- tt(x.var[rs$id,], rs$finish)
-#     environment(tt)$sm.in <- NULL
-#     pt <- cbind(pt, sofa[rs$id, c("age", "male", "Charlson")])
-#     pt$male <- as.numeric(pt$male)
-#     lp <- (as.matrix(pt) - matrix(fit$means, nrow=nrow(pt),
-#                                   ncol=ncol(pt), byrow=TRUE)
-#     ) %*% fit$coefficients
-#   }
-#   
-#   # Get ROC curve at each unique time point
-#   roc <- lapply(evaltimes, function(p.time) {
-#     CoxWeights(marker=as.vector(lp), entry=rs$start, Stime=rs$finish,
-#                status=rs$newstat, predict.time=p.time)
-#   })
-#   names(roc) <- evaltimes
-#   roc.long <- do.call("rbind", lapply(1:length(evaltimes), function(i) {
-#     roc.i <- roc[[i]]
-#     data.frame(TP=roc.i$TP, FP=roc.i$FP, t=evaltimes[i])
-#   }))
-#   auc <- sapply(roc, function(x) x$AUC)
-#   list(roc=roc, roc.long=roc.long, auc=auc)
+  ret <- list(roc=roc, roc.long=roc.long, auc=auc, concordance=tmp)
+  if (!is.null(St)) {
+    ret$concordance2 <- IntegrateAUC(auc, et1, St, tmax)
+  }
+  ret
 }
 
 getROC.old <- function(fit, Y, tt, sm, x.var, etimes=NULL) {

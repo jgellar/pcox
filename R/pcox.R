@@ -113,7 +113,9 @@ pcox <- function(formula, data,
   responsename <- attr(tf, "variables")[2][[1]]
   newfrml <- paste(safeDeparse(responsename), "~", sep = "")
   newfrmlenv <- new.env()
-  evalenv <- if ("data" %in% names(call)) 
+  evalenv <- if (!is.null(data))
+    data
+  else if ("data" %in% names(call)) 
     eval(call$data)
   else NULL
   #else parent.frame() # IS THIS OK?
