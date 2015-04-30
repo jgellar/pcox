@@ -5,7 +5,6 @@ dev_mode()
 load_all()
 library(survival)
 library(mgcv)
-library(refundDevel)
 
 data(sofa_fu)
 data(sofa)
@@ -32,7 +31,7 @@ range(pre1.1 - pre1.2, na.rm=T) # Should be 0
 ##################
 
 pdata <- data.frame(age=seq(min(sofa$age), max(sofa$age), by=.5))
-fit2 <- pcox(Surv(los, death) ~ p(age, linear=FALSE, dbug=TRUE) + male, data=sofa)
+fit2 <- pcox(Surv(los, death) ~ p(age, linear=FALSE) + male, data=sofa)
 fhat <- PredictMat(fit2$pcox$smooth[[1]][[1]], data=pdata) %*% fit2$coefficients[1:9]
 qplot(pdata$age, fhat, geom="line")
 
