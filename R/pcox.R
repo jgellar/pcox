@@ -114,7 +114,7 @@ pcox <- function(formula, data,
   newfrml <- paste(safeDeparse(responsename), "~", sep = "")
   newfrmlenv <- new.env()
   evalenv <- if ("data" %in% names(call)) 
-    eval(call$data, envir=parent.frame())
+    eval.parent(call$data)
   else NULL
   #else parent.frame() # IS THIS OK?
   
@@ -149,7 +149,7 @@ pcox <- function(formula, data,
   # so that list2df(newfrmlenv), etc. below still work:
   assign("s",  f_override, envir=parent.env(newfrmlenv))
   assign("te", f_override, envir=parent.env(newfrmlenv))
-  assign("s",  f_override, envir=parent.env(newfrmlenv))
+  assign("t2", f_override, envir=parent.env(newfrmlenv))
   
   
   #################
@@ -210,25 +210,16 @@ pcox <- function(formula, data,
   
   # Parametric terms
   if (length(where.par)) {
-    if ("data" %in% names(call))
-      frmlenv <- list2env(eval(call$data, envir=parent.frame()), frmlenv)
-    #lapply(terms[where.par], function(x) {
-    #lapply(where.par, function(i) {
     for (i in where.par) {
       term.i <- terms[i]
-      #nms <- if (!is.null(names(x))) {
-      #  all.vars(x[names(x) != ""])
-      #}
-      #else all.vars(x)
       nms <- names(term.i)
       varmap[[i]] <- nms
-      
       sapply(nms, function(nm) {
-        stopifnot(length(get(nm, envir = frmlenv)) == nobs)
-        assign(x = nm, value = get(nm, envir = frmlenv), envir = newfrmlenv)
+        v <- eval(as.name(nm), envir = evalenv, enclos = frmlenv)
+        stopifnot(length(v) == nobs)
+        assign(x = nm, value = v, envir = newfrmlenv)
         invisible(NULL)
       })
-      #invisible(NULL)
     }
   }
   
