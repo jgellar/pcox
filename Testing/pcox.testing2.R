@@ -62,10 +62,22 @@ qplot(pdata.1$x, fhat.1, geom="line") +
 
 
 # TIME-VARYING MODEL
-fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, tv=T) +
+x <- rnorm(N)
+ftrue <- sin(2*pi*(1:J)/J)
+eta <- matrix(ftrue %x% x, nrow=N, ncol=J) + matrix(0.75*male, nrow=N, ncol=J)
+Xdat <- data.frame(x=x, male=male)
+data2 <- simTVSurv(eta, Xdat)
+fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
                  male, data=data2)
+bhat <- PredictMat(fit2.2$pcox$smooth[[1]], data=data.frame(t=1:J, x=1)) %*%
+  fit2.2$coefficients[1:10]
+qplot(1:J, ftrue, geom="line") + geom_line(aes(y=bhat), col="red")
 
 
+
+# VARIABLE-DOMAIN SCALAR TERMS
+tmp <- pcox(Surv(time,event) ~ p(male, by=x, linear=TRUE, tv=FALSE),
+            data=data2)
 
 
 ######################

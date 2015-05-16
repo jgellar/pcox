@@ -9,12 +9,14 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
                            standardize, s.transform, t.transform,
                            basisargs, method, eps) {
   
-  # Pre-processing
+  # Initialize: no smooth object created yet
+  smooth = s0 <- NULL
+  
+  # Process limits argument: create appropriate processing function
   if (!is.null(limits))
     # limits is either "all", "full", or "baseline" - baseline function
     limits <- function(s,t) {s==s} # Will just spit out TRUE's
   smooth.flag <- !(is.null(limits) & linear) # No smooth if its a linear scalar
-  smooth  <- NULL
   
   # Process optional s transformation
   s.transform <- if (is.null(s.transform))
@@ -27,7 +29,7 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
     stop("Unrecognized s tranformation: must be a function or a
          recognized transformation string")
   else if (length(formals(s.transform))>1)
-    stop("s.transform can only have 1 argument for a non-time-varying term")  
+    stop("s.transform can only have 1 argument for a non-time-varying term")
   
   xt.func <- function(x) {
     if (smooth.flag) {
@@ -36,7 +38,8 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
                basistype=basistype, sind=sind,
                integration=integration, standardize=standardize,
                s.transform=s.transform, t.transform=t.transform,
-               basisargs=basisargs, method=method, eps=eps, smooth=smooth)
+               basisargs=basisargs, method=method, eps=eps, smooth=smooth,
+               s0=s0)
     } else {
       # No smooth involved: just return the data (glorified identity function)
       x
