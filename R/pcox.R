@@ -212,7 +212,13 @@ pcox <- function(formula, data,
   if (length(where.par)) {
     for (i in where.par) {
       term.i <- terms[i]
-      nms <- names(term.i)
+      nms <- if (is.call(term.i[[1]]))
+        # term is a call: extract variable names
+        sapply(as.list(term.i[[1]])[-1], function(cl) as.character(cl) )
+      else
+        # term is a name, just use it
+        as.character(term.i[[1]])
+        
       varmap[[i]] <- nms
       sapply(nms, function(nm) {
         v <- eval(as.name(nm), envir = evalenv, enclos = frmlenv)

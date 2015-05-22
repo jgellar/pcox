@@ -26,6 +26,10 @@ pre1.2 <- predict(fit1, newdata=sofa)
 range(pre1.1 - pre1.2, na.rm=T) # Should be 0
 
 
+fit2 <- pcox(Surv(los, death) ~ age*male + Charlson, data=sofa)
+fit2a <- coxph(Surv(los, death) ~ age*male + Charlson, data=sofa)
+
+
 ##################
 # Smooth scalars #
 ##################
