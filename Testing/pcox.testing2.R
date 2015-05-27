@@ -202,14 +202,15 @@ pre5.1.3 <- predict(fit5.1, newdata=data5[-4], stimes=data5$time) # Should throw
 range(pre5.1.1 - pre5.1.2, na.rm=T) # Should be 0 - confirms correct predictions for training data
 
 # Coefficient
-est5.1 <- coef(fit5.1, n=95, n2=95, seWithMean = FALSE) %>% filter(myX.smat <= myX.argvals)
+est5.1 <- coef(fit5.1, n=95, n2=95, seWithMean = FALSE) %>%
+  filter(myX.s <= myX.t)
 est5.1_old <- getHCEst(fit5.1$pcox$smooth[[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])
 
 library(fields)
 image.plot(t(est5.1_old))
 lims <- range(est5.1$value)
-ggplot(est5.1, aes(myX.smat, myX.tmat)) + 
+ggplot(est5.1, aes(myX.s, myX.t)) + 
   geom_tile(aes(fill=value, colour=value)) +
   theme_bw() +
   scale_fill_gradientn(name="", limits=lims,
@@ -219,9 +220,14 @@ ggplot(est5.1, aes(myX.smat, myX.tmat)) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(expand = c(0,0))
 
+ggplot(est5.1, aes(myX.s, myX.t)) + 
+  geom_triangle(value)
+  
+
+
 par(mfrow=c(1,2))
 image.plot(t(beta), zlim=c(-6,6))
-image.plot(t(est5.1), zlim=c(-6,6))
+image.plot(t(est5.1_old), zlim=c(-6,6))
 
 # Domain-standardized
 fit5.1a <- pcox(Surv(time,event) ~ male +

@@ -77,18 +77,18 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=TRUE,
       }
       if (smooth.i$dim == 1) {
         if(!is.re) {
-          #coef.i[[gsub("tmat", "argvals", plotdata$xlab)]] <- plotdata$x
-          coef.i[[plotdata$xlab]] <- plotdata$x
+          coef.i[[gsub("\\.tmat", "\\.t", plotdata$xlab)]] <- plotdata$x
+          #coef.i[[plotdata$xlab]] <- plotdata$x
         } else {
           coef.i[[smooth.i$term]] <- plotdata$x
         }
         
       } else {
         grid <- expand.grid(x=plotdata$x, y=plotdata$y)
-        coef.i[[plotdata$ylab]] <- grid$y
-        coef.i[[plotdata$xlab]] <- grid$x
-        #coef.i[[gsub("tmat", "argvals", plotdata$ylab)]] <- grid$y
-        #coef.i[[gsub("\\.omat", "", plotdata$xlab)]] <- grid$x
+        #coef.i[[plotdata$ylab]] <- grid$y
+        #coef.i[[plotdata$xlab]] <- grid$x
+        coef.i[[gsub("\\.tmat", "\\.t", plotdata$ylab)]] <- grid$y
+        coef.i[[gsub("\\.smat", "\\.s", plotdata$xlab)]] <- grid$x
       }
       as.data.frame(coef.i)      
     })
