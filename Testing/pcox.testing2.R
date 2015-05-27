@@ -36,7 +36,7 @@ fit2a <- coxph(Surv(los, death) ~ age*male + Charlson, data=sofa)
 
 pdata <- data.frame(age=seq(min(sofa$age), max(sofa$age), by=.5))
 fit2 <- pcox(Surv(los, death) ~ p(age, linear=FALSE) + male, data=sofa)
-fhat <- PredictMat(fit2$pcox$smooth[[1]][[1]], data=pdata) %*% fit2$coefficients[1:9]
+fhat <- PredictMat(fit2$pcox$smooth[[1]], data=pdata) %*% fit2$coefficients[1:9]
 qplot(pdata$age, fhat, geom="line")
 
 # STANDARD MODEL
@@ -61,8 +61,11 @@ range(pre2.1.1 - pre2.1.2, na.rm=T) # Should be 0
 # Coef
 pdata.1 <- data.frame(x=seq(0,2*pi,by=.1))
 fhat.1 <- fit2.1$pcox$t.funcs[[1]](pdata.1) %*% fit2.1$coefficients[1:9]
+est2.1 <- coef(fit2.1, seWithMean=FALSE)
 qplot(pdata.1$x, fhat.1, geom="line") +
-  geom_line(aes(y=sin(pdata.1$x)), col="red")
+  geom_line(aes(y=sin(pdata.1$x)), col="red") +
+  geom_line(aes(y=est2.1$value, x=est2.1$x), col="green")
+
 
 
 # TIME-VARYING MODEL
@@ -75,7 +78,9 @@ fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
                  male, data=data2)
 bhat <- PredictMat(fit2.2$pcox$smooth[[1]], data=data.frame(t=1:J, x=1)) %*%
   fit2.2$coefficients[1:10]
-qplot(1:J, ftrue, geom="line") + geom_line(aes(y=bhat), col="red")
+est2.2 <- coef(fit2.2, seWithMean=F)
+qplot(1:J, ftrue, geom="line") + geom_line(aes(y=bhat), col="red") +
+  geom_line(aes(x=est2.2$t, y=est2.2$value), col="green")
 
 
 
@@ -105,6 +110,11 @@ pre3.1.2 <- predict(fit3.1, newdata=data3)
 pre3.1.3 <- predict(fit3.1, newdata=data3[-3]) # Should throw an error
 range(pre3.1.1 - pre3.1.2, na.rm=T) # Should be 0
 
+# Coefficient
+est3.1 <- coef(fit3.1, se=F)
+est3.1$beta <- sin(2*pi*est3.1$myX.smat)
+qplot(myX.smat, value, geom="line", colour="red", data=est3.1) +
+  geom_line(aes(y=beta), colour="black")
 
 
 # TO DO:  Try some things with sindices next
@@ -192,8 +202,22 @@ pre5.1.3 <- predict(fit5.1, newdata=data5[-4], stimes=data5$time) # Should throw
 range(pre5.1.1 - pre5.1.2, na.rm=T) # Should be 0 - confirms correct predictions for training data
 
 # Coefficient
-est5.1 <- getHCEst(fit5.1$pcox$smooth[[1]], 1:J,
+est5.1 <- coef(fit5.1, n=95, n2=95, seWithMean = FALSE) %>% filter(myX.smat <= myX.argvals)
+est5.1_old <- getHCEst(fit5.1$pcox$smooth[[1]], 1:J,
                    coefs = fit5.1$coefficients[-1])
+
+library(fields)
+image.plot(t(est5.1_old))
+lims <- range(est5.1$value)
+ggplot(est5.1, aes(myX.smat, myX.tmat)) + 
+  geom_tile(aes(fill=value, colour=value)) +
+  theme_bw() +
+  scale_fill_gradientn(name="", limits=lims,
+                       colours=rev(brewer.pal(11,"Spectral"))) +
+  scale_colour_gradientn(name="", limits=lims,
+                         colours=rev(brewer.pal(11,"Spectral"))) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0))
 
 par(mfrow=c(1,2))
 image.plot(t(beta), zlim=c(-6,6))

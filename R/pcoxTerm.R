@@ -4,7 +4,8 @@
 
 pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
                      standardize, s.transform, t.transform,
-                     basisargs, method, eps, smooth, s0, t0=NULL, t=NULL) {
+                     basisargs, method, eps, env, index,
+                     smooth, s0, t0=NULL, t=NULL) {
   
   # pcoxTerm will be called iff a smooth term is involved
   # data only includes the real (named) data (x)
@@ -130,7 +131,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
   # If not, we create the new smooth and the coxph.penalty object, and
   # return them. If smooth is supplied, return prediction matrix
   if (is.null(smooth)) {
-    # Create and return smooth and cpobj objects
+    # Createsmooth object
     newcall <- c(newcall, basisargs)
     smooth <- smoothCon(eval(as.call(newcall)), data=evaldat, knots=NULL,
                         absorb.cons=TRUE)
@@ -139,8 +140,16 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
       #   block diagonal penalty matrix)?
       stop("We don't yet support terms with multiple smooth objects.")
     }
-    cpobj <- pterm(smooth[[1]], method=method, eps=eps)
-    list(cpobj=cpobj, smooth=smooth)
+    
+    # Assign smooth object and smoothdata back to pcox
+    env$smooth[[index]] <- smooth
+    env$smoothdata[[index]] <- evaldat
+    
+    # Create coxph.penalty term based on smooth
+    pterm(smooth[[1]], method=method, eps=eps)
+    
+#     cpobj <- pterm(smooth[[1]], method=method, eps=eps)
+#     list(cpobj=cpobj, smooth=smooth)
   } else {
     # Return prediction matrix
     PredictMat(smooth[[1]], data=evaldat)

@@ -132,20 +132,25 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
       #   (i.e., the most basic concurrent TVC - no extras)
       as.matrix(data)
     } else {
-      # Create pcoxTerm
-      pt <- pcoxTerm(data, limits, linear, tv, basistype, sind, integration,
-                     standardize, s.transform, t.transform,
-                     basisargs, method, eps, smooth, s0, t0, t)
-      if (is.list(pt)) {
-        # tt.func is being called within pcox/coxph, to create a new term:
-        #   Assign the smooth, and return cpobj
-        env$smooth[[index]] <- pt$smooth
-        pt$cpobj
-      } else {
-        # tt.func is called for a pre-existing term:
-        #   Return the prediction matrix
-        pt
-      }
+      # Create and return pcoxTerm
+      pcoxTerm(data, limits, linear, tv, basistype, sind, integration,
+               standardize, s.transform, t.transform,
+               basisargs, method, eps, env, index,
+               smooth, s0, t0, t)
+#       pt <- pcoxTerm(data, limits, linear, tv, basistype, sind, integration,
+#                      standardize, s.transform, t.transform,
+#                      basisargs, method, eps, env, index,
+#                      smooth, s0, t0, t)
+#       if (is.list(pt)) {
+#         # tt.func is being called within pcox/coxph, to create a new term:
+#         #   Assign the smooth, and return cpobj
+#         env$smooth[[index]] <- pt$smooth
+#         pt$cpobj
+#       } else {
+#         # tt.func is called for a pre-existing term:
+#         #   Return the prediction matrix
+#         pt
+#       }
     }
   }
   # Return

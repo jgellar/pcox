@@ -138,7 +138,7 @@ pcox <- function(formula, data,
   
   # Set up variables for new formula and smooth objects
   newtrmstrings <- attr(tf, "term.labels")
-  t.funcs = varmap = smooth  <-
+  t.funcs = varmap = paramap = smooth = smoothdata  <-
     vector(mode = "list", length = length(trmstrings))
   t.types <- rep(NA, length=length(trmstrings))
   #smooth <- vector("list", length=length(newtrmstrings))
@@ -164,46 +164,30 @@ pcox <- function(formula, data,
       terms[[i]]$eps <- eps
       trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
       
-      # Process according to type of term
-      if (!is.null(trm$tt)) {
-        # tt term: extract tt function, assign paramters, and save
-        tt.i <- trm$tt
-        environment(tt.i)$env <- environment()
-        environment(tt.i)$index <- i
-        environment(tt.i)$method <- method
-        environment(tt.i)$eps <- eps
-        t.funcs[[i]] <- tt.i
-        t.types[i]   <- "tt"
-        varmap[[i]]  <- names(environment(tt.i)$map)
-        
-        # Assign data to newfrmlenv and update newtrmstrings
-        nm <- get.termname(tt.i)
+      # Extract, modify, and save transformation function
+      is.tt <- if (!is.null(trm$tt)) TRUE else if (!is.null(trm$xt)) FALSE else
+        stop("Error: shouldn't get here - something's wrong!")
+      tf.i <- if (is.tt) trm$tt else trm$xt
+      environment(tf.i)$env   <- environment()
+      environment(tf.i)$index <- i
+      t.funcs[[i]] <- tf.i
+      t.types[i] <- ifelse(is.tt, "tt", "xt")
+      
+      # Process separately for xt/tt
+      if (!is.tt) {
+        # xt function: execute now
+        trm.i <- tf.i(trm$x)
+        varmap[[i]] <- names(trm$x)
+        nm <- if (class(trm.i)=="coxph.penalty")
+          get.termname(tf.i, names(trm$x)) else names(trm.i)
+        assign(x=nm, trm.i, envir=newfrmlenv)
+        newtrmstrings[i] <- nm
+      } else {
+        # tt function: execute later (within coxph)
+        varmap[[i]] <- names(environment(tf.i)$map)
+        nm <- get.termname(tf.i)
         assign(x=nm, trm$x, envir=newfrmlenv)
         newtrmstrings[i] <- paste0("tt(",nm,")")
-      } else if (!is.null(trm$xt)) {
-        # non time-varying term: extract xt function, execute, and save
-        xt.i  <- trm$xt
-        trm.i <- xt.i(trm$x)
-        t.funcs[[i]] <- xt.i
-        t.types[i] <- "xt"
-        varmap[[i]] <- names(trm$x)
-        
-        if (is.list(trm.i)) {
-          # Penalized: save smooth & assign coxph.penalty object to newfrmlenv
-          nm <- get.termname(xt.i, names(trm$x))
-          smooth[[i]] <- trm.i$smooth
-          assign(x=nm, trm.i$cpobj, envir=newfrmlenv)
-          newtrmstrings[i] <- nm
-          
-        } else {
-          # Unpenalized: assign data to newfrmlenv
-          nm <- names(trm.i)
-          assign(x=nm, trm.i, envir=newfrmlenv)
-          newtrmstrings[i] <- nm
-        }
-        # Update newtrmstrings
-      } else {
-        stop("Error: shouldn't get here - something's wrong!")
       }
     }
   }
@@ -248,24 +232,25 @@ pcox <- function(formula, data,
   newcall[[1]] <- fitter
   res <- eval(newcall)
   
-  # Update first.para and last.para for the smooths
-  if (length(where.pen)) {
-    first.para <- 1
-    for (i in 1:length(smooth)) {
-      if (!is.null(smooth[[i]])) {
-        for (j in 1:length(smooth[[i]])) {
-          nc <- ncol(smooth[[i]][[j]]$X)
-          last.para <- first.para + nc - 1
-          names(res$coefficients)[first.para:last.para] <- 
-            paste(smooth[[i]][[j]]$label, 1:nc, sep=".")
-          names(smooth[[i]][j]) <- smooth[[i]][[j]]$label
-          smooth[[i]][[j]]$first.para <- first.para
-          smooth[[i]][[j]]$last.para  <- last.para
-          first.para <- last.para + 1
-        }
-      } else {
-        first.para <- first.para + 1
+  # Map paramters
+  first.para <- 1
+  for (i in 1:length(smooth)) {
+    if (!is.null(smooth[[i]])) {
+      for (j in 1:length(smooth[[i]])) {
+        nc <- ncol(smooth[[i]][[j]]$X)
+        last.para <- first.para + nc - 1
+        names(res$coefficients)[first.para:last.para] <- 
+          paste(smooth[[i]][[j]]$label, 1:nc, sep=".")
+        names(smooth[[i]][j]) <- smooth[[i]][[j]]$label
+        smooth[[i]][[j]]$first.para <- first.para
+        smooth[[i]][[j]]$last.para  <- last.para
+        first.para <- last.para + 1
       }
+      paramap[[i]] <- do.call("c", lapply(smooth[[i]], function(sm)
+        sm$first.para:sm$last.para))
+    } else {
+      paramap[[i]] <- first.para
+      first.para <- first.para + 1
     }
   }
   
@@ -291,6 +276,7 @@ pcox <- function(formula, data,
       (sm.cumsum[i]-sm.length[i]+1):(sm.cumsum[i])
   })
   smooth <- do.call("c", smooth)
+  smoothdata <- smoothdata[!sapply(smoothdata, is.null)]
   
   # Create varlst
   varlst <- do.call("c", lapply(varmap, function(x) {
@@ -305,8 +291,9 @@ pcox <- function(formula, data,
   ret <- list(call=call, formula = formula, method = method,
               responsename = responsename, surv = surv,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
-              varmap = varmap, smoothmap = smoothmap,
+              varmap = varmap, smoothmap = smoothmap, paramap = paramap,
               t.funcs = t.funcs, t.types = t.types, smooth = smooth,
+              smoothdata = smoothdata,
               datameans = datameans, terms=tf)
   res$pcox <- ret
   class(res) <- c("pcox", class(res))

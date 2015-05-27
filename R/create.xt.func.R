@@ -38,8 +38,8 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
                basistype=basistype, sind=sind,
                integration=integration, standardize=standardize,
                s.transform=s.transform, t.transform=t.transform,
-               basisargs=basisargs, method=method, eps=eps, smooth=smooth,
-               s0=s0)
+               basisargs=basisargs, method=method, eps=eps,
+               env=env, index=index, smooth=smooth, s0=s0)
     } else {
       # No smooth involved: just return the data (glorified identity function)
       x

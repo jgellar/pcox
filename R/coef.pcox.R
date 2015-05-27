@@ -1,6 +1,6 @@
-# coef.pcox
+# coef.pcox: old version
 
-coef.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=FALSE) {
+oldcoef.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=FALSE) {
     if (raw) {
       # Raw coefficients only
       if (se) {
@@ -27,6 +27,18 @@ coef.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=FALSE) {
         
         
         #res <- acmCoef(object, ??, inds, se)
+        
+        
+        
+        
+        smap.i <- object$pcox$smoothmap[[i]]
+        if (is.null(smap.i)) {
+          # No smooth involved - just return coefficient(s)
+          data.frame()
+        } else {
+          # Smooth term: call appropriate mgcv:::plot function
+          smooth.i <- object$smooth[[]]
+        }
         
       }
     }  
