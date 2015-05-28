@@ -4,8 +4,10 @@
 #' 
 #' 
 
-coefficients.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=TRUE,
-                              seWithMean=TRUE, n=100, n2=100, ...) {
+coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=100, n2=100,
+                              inds=NULL, se=TRUE,
+                              limit=TRUE, untransform=TRUE,
+                              seWithMean=TRUE, ...) {
   if (is.null(object$pcox$smooth) & !raw) {
     #warning("No smooth objects, returning raw coefficients")
     raw <- TRUE
@@ -77,7 +79,8 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=TRUE,
       }
       if (smooth.i$dim == 1) {
         if(!is.re) {
-          coef.i[[gsub("\\.tmat", "\\.t", plotdata$xlab)]] <- plotdata$x
+          coef.i[[modify_st(plotdata$xlab)]] <- plotdata$x
+          #coef.i[[gsub("\\.tmat", "\\.t", plotdata$xlab)]] <- plotdata$x
           #coef.i[[plotdata$xlab]] <- plotdata$x
         } else {
           coef.i[[smooth.i$term]] <- plotdata$x
@@ -85,12 +88,44 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=TRUE,
         
       } else {
         grid <- expand.grid(x=plotdata$x, y=plotdata$y)
+        coef.i[[modify_st(plotdata$ylab)]] <- grid$y
+        coef.i[[modify_st(plotdata$xlab)]] <- grid$x
         #coef.i[[plotdata$ylab]] <- grid$y
         #coef.i[[plotdata$xlab]] <- grid$x
-        coef.i[[gsub("\\.tmat", "\\.t", plotdata$ylab)]] <- grid$y
-        coef.i[[gsub("\\.smat", "\\.s", plotdata$xlab)]] <- grid$x
+        #coef.i[[gsub("\\.tmat", "\\.t", plotdata$ylab)]] <- grid$y
+        #coef.i[[gsub("\\.smat", "\\.s", plotdata$xlab)]] <- grid$x
       }
-      as.data.frame(coef.i)      
+      
+      # Post-Processing
+      coef.i <- as.data.frame(coef.i)
+      tf.env <- environment(object$pcox$t.funcs[[
+        which(sapply(object$pcox$smoothmap, function(x) i %in% x))
+        ]])
+      if (limit) {
+        # Check if limits function exists
+        limits.i <- tf.env$limits
+        if (is.function(limits.i)) {
+          # Apply limits function
+          if (smooth.i$dim==2 & "s" %in% names(coef.i) & "t" %in% names(coef.i))
+            coef.i <- coef.i[limits.i(coef.i$s, coef.i$t), ]
+        } else {
+          stop("limits option not yet supported for this term")
+        }
+        
+      }
+      if (untransform) {
+        # Check if transformation functions were applied
+        st.i <- tf.env$s.transform
+        tt.i <- tf.env$t.transform
+        if (!is.null(st.i)) {
+          stop("untransform option not yet supported")
+        }
+        if (!is.null(tt.i)) {
+          stop("untransform option not yet supported")
+        }
+      }
+      
+      coef.i
     })
     
     if (length(coefs)==1) coefs[[1]] else coefs
@@ -99,3 +134,7 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, inds=NULL, se=TRUE,
 
 #' @rdname coefficients.pcox
 coef.pcox <- coefficients.pcox
+
+modify_st <- function(x) {
+  ifelse(grepl("\\.tmat", x), "t", ifelse(grepl("\\.smat", x), "s", x))
+}
