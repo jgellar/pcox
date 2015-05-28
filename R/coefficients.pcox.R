@@ -4,7 +4,7 @@
 #' 
 #' 
 
-coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=100, n2=100,
+coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
                               inds=NULL, se=TRUE,
                               limit=TRUE, untransform=TRUE,
                               seWithMean=TRUE, ...) {
@@ -36,7 +36,13 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=100, n2=100,
       } else {
         mgcv:::plot.mgcv.smooth
       }
-      plotdata <- plotf(smooth.i, P=NULL, n=n, n2=n2, data=sdat.i, ...)
+      
+      # Set values of n and n2 (if not supplied)
+      n.i  <- ifelse(is.null(n),  default_n(sdat.i[[smooth.i$term[[1]]]]), n)
+      n2.i <- ifelse(is.null(n2), n.i, n2)
+      
+      # Get plotdata via plotf()
+      plotdata <- plotf(smooth.i, P=NULL, n=n.i, n2=n2.i, data=sdat.i, ...)
       
       if(is.re) plotdata$x <- levels(sdat.i[[smooth.i$term]])
       first <- smooth.i$first.para
@@ -49,13 +55,12 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=100, n2=100,
       if (se && plotdata$se) { ## get standard errors for fit
         ## test whether mean variability to be added to variability (only for centred terms)
         if (seWithMean && attr(smooth.i, "nCons") > 0) {
-          
-          ################# NEED TO TRANSLATE TO PCOX ############
-          
-          if (length(object$cmX) < ncol(object$Vp)){
-            object$cmX <- c(object$cmX,rep(0,ncol(object$Vp)-length(object$cmX)))
-          } 
-          X1 <- matrix(object$cmX, nrow(plotdata$X), ncol(object$Vp), byrow=TRUE)
+          if (length(object$means) < ncol(object$var)){
+            object$means <- c(object$means, 
+                              rep(0,ncol(object$var)-length(object$means)))
+          }
+          X1 <- matrix(object$means, nrow(plotdata$X), ncol(object$var),
+                       byrow=TRUE)
           meanL1 <- smooth.i$meanL1
           if (!is.null(meanL1)) {
             X1 <- X1 / meanL1
@@ -108,8 +113,10 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=100, n2=100,
           # Apply limits function
           if (smooth.i$dim==2 & "s" %in% names(coef.i) & "t" %in% names(coef.i))
             coef.i <- coef.i[limits.i(coef.i$s, coef.i$t), ]
-        } else {
-          stop("limits option not yet supported for this term")
+          else if (smooth.i$dim==1 & "s" %in% names(coef.i))
+            coef.i <- coef.i[limits.i(coef.i$s), ]
+          else
+            stop("limits option not yet supported for this term")
         }
         
       }
@@ -137,4 +144,13 @@ coef.pcox <- coefficients.pcox
 
 modify_st <- function(x) {
   ifelse(grepl("\\.tmat", x), "t", ifelse(grepl("\\.smat", x), "s", x))
+}
+
+ndefault <- function(x) {
+  x <- unique(as.vector(x))
+  x <- x[order(x)]
+  if (length(unique(diff(x)))==1)
+    length(x)
+  else
+    101
 }
