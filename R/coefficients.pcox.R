@@ -38,7 +38,7 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
       }
       
       # Set values of n and n2 (if not supplied)
-      n.i  <- ifelse(is.null(n),  default_n(sdat.i[[smooth.i$term[[1]]]]), n)
+      n.i  <- ifelse(is.null(n),  ndefault(sdat.i[[smooth.i$term[[1]]]]), n)
       n2.i <- ifelse(is.null(n2), n.i, n2)
       
       # Get plotdata via plotf()
