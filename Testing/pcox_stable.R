@@ -7,6 +7,7 @@ load_all()
 library(survival)
 library(mgcv)
 library(ggplot2)
+library(gridExtra)
 
 
 # Take these out later?
@@ -80,6 +81,21 @@ ggplot(est2.2a, aes(t, value)) + geom_line(colour="red", size=2) +
 pre2.2a <- predict(fit2.2)
 pre2.2b <- predict(fit2.2, newdata=dat2.2, stimes=dat2.2$time)
 range(pre2.2a - pre2.2b, na.rm=T) # Should be 0
+
+# Two time-varying terms
+eta2.3 <- matrix(sin(2*pi*(1:J)/J) %x% z, nrow=N, ncol=J) +
+  matrix(cos(2*pi*(1:J)/J) %x% male, nrow=N, ncol=J)
+dat2.3 <- simTVSurv(eta2.3, data.frame(x=z, male=male))
+fit2.3 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
+                 p(male, linear=T, tv=T), data=dat2.3)
+est2.3a <- coef(fit2.3)
+p1 <- ggplot(est2.3a[[1]], aes(t, value)) + geom_line(colour="red", size=2) +
+  geom_line(aes(y=sin(2*pi*t/J)), size=2) + ylim(c(-1.5,1.5))
+p2 <- ggplot(est2.3a[[2]], aes(t, value)) + geom_line(colour="red", size=2) +
+  geom_line(aes(y=cos(2*pi*t/J)), size=2) + ylim(c(-1.5,1.5))
+p  <- arrangeGrob(p1,p2,nrow=1)
+p
+
 
 
 ##################################
