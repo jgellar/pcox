@@ -55,6 +55,8 @@
 #'   special attention....
 #'   
 #' @import mgcv refund coxme survival
+# @importFrom mgcv gam gam.fit s te t2
+# @importFrom survival coxph Surv
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
 #' @return a fitted \code{pcox} object. This is either a \code{coxph} or 
@@ -225,7 +227,7 @@ pcox <- function(formula, data,
   newcall$x <- x
   tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
   if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
-  newcall$na.action <- na.pass
+  newcall$na.action <- na.omit_pcox
   newcall$data <- quote(pcoxdata)
   newcall <- modify_call(newcall, dots)
   newcall$fitter <- newcall$tensortype <- NULL
@@ -301,3 +303,29 @@ pcox <- function(formula, data,
 }
 
 getCall.pcox <- function(x) x$pcox$call
+
+
+na.omit_pcox <- function(object, ...) {
+  n <- length(object)
+  omit <- logical(nrow(object))
+  vars <- seq_len(n)
+  for (j in vars) {
+    x <- object[[j]]
+    if (!is.atomic(x)) 
+      next
+    x <- is.na(x)
+    d <- dim(x)
+    if (is.null(d) || length(d) != 2L) 
+      omit <- omit | x
+    else
+      omit <- omit | apply(x, 1, all)
+  }
+  xx <- object[!omit, , drop = FALSE]
+  if (any(omit > 0L)) {
+    temp <- setNames(seq(omit)[omit], attr(object, "row.names")[omit])
+    attr(temp, "class") <- "omit"
+    attr(xx, "na.action") <- temp
+  }
+  xx
+}
+

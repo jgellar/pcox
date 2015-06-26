@@ -5,11 +5,13 @@
 \alias{coefficients.pcox}
 \title{Extract coefficients from a fitted pcox model}
 \usage{
-\method{coefficients}{pcox}(object, raw = FALSE, term = NULL, inds = NULL,
-  se = TRUE, seWithMean = TRUE, n = 100, n2 = 100, ...)
+\method{coefficients}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
+  n2 = NULL, inds = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
+  seWithMean = TRUE, ...)
 
-\method{coef}{pcox}(object, raw = FALSE, term = NULL, inds = NULL,
-  se = TRUE, seWithMean = TRUE, n = 100, n2 = 100, ...)
+\method{coef}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
+  n2 = NULL, inds = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
+  seWithMean = TRUE, ...)
 }
 \description{
 Extract coefficients from a fitted pcox model
