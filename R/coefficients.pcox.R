@@ -1,11 +1,34 @@
 #' Extract coefficients from a fitted pcox model
 #' 
+#' This method is used to extract coefficients from a fitted `pcox` model, in
+#' particular functional coefficients resulting from including smooth effects
+#' of scalar covariates, time-varying effects, functional predictors, or
+#' historical effects.
 #' 
-#' 
+#' @param object a fitted \code{pfr} object as produced by \code{\link{pfr}()}.
+#' @param raw if \code{TRUE}, returns the parameters used in the fitting of the
+#'   model. This would be the actual spline coefficients for smooth terms.
+#' @param term integer to indicate the desired smooth term, according to its order
+#'   in \code{object$pcox$smooth}. A vector of term indices may be supplied.
+#' @param n number of estimation points for each 1-dimensional coefficient
+#'   function.
+#' @param n2 Square root of the number of points used to grid estimates of
+#'   2-dimensinoal functions for contouring
+# @param inds
+#' @param se if \code{TRUE}, returns pointwise standard error estimates. Two
+#'   estimates of the pointwise standard error are returned, based on the two
+#'   estimates of the covariance matrix produced by \code{coxph}; see
+#'   \code{\link[survival]{coxph}} for details.
+#' @param limit if \code{TRUE}, checks the \code{limits} function that was
+#'   used to create the term and applies it to filter out some of the
+#'   coordinates. Most relevant for variable-domain and historical functional
+#'   terms.
+#' @param untransform if \code{TRUE}, 
 #' 
 
 coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
-                              inds=NULL, se=TRUE,
+                              #inds=NULL,
+                              se=TRUE,
                               limit=TRUE, untransform=TRUE,
                               seWithMean=TRUE, ...) {
   if (is.null(object$pcox$smooth) & !raw) {
