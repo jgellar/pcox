@@ -32,7 +32,11 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
       stop("limits must be non-negative if using it to specify lagged 
            time-varying covariates")
     lag <- limits
-    conc.fcn <- function(s,t) abs(s - (t-lag))
+    conc.fcn <- function(t, s) {
+      targ <- t-lag
+      ifelse(targ<min(s), NA, which.min(abs(s-targ)))
+    }
+    #conc.fcn <- function(s,t) abs(s - (t-lag))
     limits <- NULL # Treat the lagged covariate as a scalar
   } else if (!is.function(limits) & !is.null(limits)) {
     stop("Unrecognized input for limits argument")
@@ -118,11 +122,10 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
         if (ncol(x)!=length(sind))
           stop("Mismatch between length of sind and number of columns 
                of data matrix")
-        #if (any(sapply(t, function(t.i) min(conc.fcn(sind, t.i)))>1e-2))
-        #  stop("Mismatch between event times and sind")
-        idxs <- sapply(t, function(t.i) which.min(conc.fcn(sind, t.i)))
-        #idxs <- sapply(t, function(t.i) which.min(abs(sind-t.i)))
-        sapply(1:nrow(x), function(i) x[i,idxs[i]])
+        #idxs <- sapply(t, function(t.i) which.min(conc.fcn(sind, t.i)))
+        #sapply(1:nrow(x), function(i) x[i,idxs[i]])
+        idxs <- sapply(t, conc.fcn, s=sind)
+        x[cbind(1:nrow(x), idxs)]
       })
       names(data)[cfidx] <- paste0(names(data)[cfidx], ".t")
     }

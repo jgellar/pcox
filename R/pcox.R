@@ -215,6 +215,39 @@ pcox <- function(formula, data,
     }
   }
   
+  
+  # Insert code to remove NAs from model frame AFTER tt terms are processed
+  # This is necessary especially for lagged concurrent effects of TVC's,
+  # and possibly for historical effects (if unusual limits are used)
+  suppressMessages(
+    trace(coxph,
+          at=which(sapply(as.list(body(coxph)), function(x)
+            any(grepl(x, pattern="mf[[timetrans$var[i]]]", fixed=TRUE)))) + 1,
+          print=FALSE,
+          tracer = quote({
+            #rn <- row.names(mf)
+            mf <- na.action(mf)
+            Y  <- Y[-attr(mf, "na.action"),]
+            strats <- strats[-attr(mf, "na.action")]
+            
+            #omit <- na.action(mf, idxOnly=TRUE)
+            #rns  <- attr(mf, "row.names")[omit]
+            #mf <- mf[!omit, , drop=FALSE]
+            #if (any(omit > 0L)) {
+            #  temp <- setNames(seq(omit)[omit], rns)
+            #  attr(temp, "class") <- "omit"
+            #  attr(mf, "na.action") <- temp
+            #}
+            #Y <- model.extract(mf, "response")
+            #strats <- strats[!omit]
+            #Y <- model.extract(mf, "response")
+            # what to do about strats??? Something with row names?
+          })
+  ))
+  on.exit({
+    suppressMessages(try(untrace(coxph), silent = TRUE))
+  })
+  
   # Setup call and fit model
   newfrml <- formula(paste(c(newfrml, paste(newtrmstrings, collapse="+"))))
   environment(newfrml) <- newfrmlenv

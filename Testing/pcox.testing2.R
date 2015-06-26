@@ -55,6 +55,17 @@ pre4.1c <- predict(fit4.1, newdata=dat4.1[-4])
 pre4.2c <- predict(fit4.2, newdata = dat4.2[-4], stimes=dat4.2$time)
 
 
+# Lagged concurrent TVC's
+lag=5
+eta4.3 <- 1.5*cbind(matrix(0, nrow=N, ncol=lag), X[, 1:(J-lag)]) +
+  .75*matrix(male, nrow=N, ncol=J)
+dat4.3 <- simTVSurv(eta4.3, data.frame(myX=I(X), male=male))
+fit4.3 <- pcox(Surv(time,event) ~ male + cf(myX, sind = (1:ncol(dat4.3$myX)), lag=lag),
+               data=dat4.3)
+est4.3 <- coef(fit4.3)
+pre4.3a <- predict(fit4.3)
+pre4.3b <- predict(fit4.3, newdata=dat4.3, stimes=dat4.3$time)
+range(pre4.3a - pre4.3b, na.rm=T) # Should be 0
 
 
 
