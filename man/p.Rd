@@ -6,8 +6,7 @@
 \usage{
 p(..., limits = NULL, linear = TRUE, tv = FALSE, basistype = c("s",
   "te", "t2"), sind = NULL, integration = c("riemann", "trapezoidal",
-  "simpson"), standardize = FALSE, s.transform = NULL, t.transform = NULL,
-  dbug = FALSE)
+  "simpson"), standardize = FALSE, s.transform = NULL, t.transform = NULL)
 }
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as
@@ -31,12 +30,22 @@ only one argument. For smooths of multiple arguments (including t and s),
 \code{\link[mgcv]{te}} or \code{\link[mgcv]{t2}} may (but don't have to)
 be used.}
 
-\item{sind}{specifies the time indices for functional and time-varying
+\item{sind}{specifies the argument values for functional and time-varying
 predictors. Can be entered as a vector of length \code{ncol(X)}, or a
 matrix of the same dimensions as \code{X} (for covariates measured on
 unequal grids).}
 
 \item{integration}{method for numerical integration.}
+
+\item{standardize}{if \code{TRUE}, the term is "standardized" by dividing
+by the width of integration.}
+
+\item{s.transform}{optional transformation function for the first variable
+of the smooth. For functional/historical predictors, this is the variable
+over which the integration takes place.}
+
+\item{t.transform}{optional transformation function for the time variable,
+  if it is one of the indices of the smooth}
 }
 \value{
 The return object is a list with two components. The first is the

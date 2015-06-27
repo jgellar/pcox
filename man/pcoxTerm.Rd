@@ -8,7 +8,92 @@ pcoxTerm(data, limits, linear, tv, basistype, sind, integration, standardize,
   s.transform, t.transform, basisargs, method, eps, env, index, smooth, s0,
   t0 = NULL, t = NULL)
 }
-\description{
-Create a smooth and coxph.penalty object for use in a pcox formula
+\arguments{
+\item{data}{data frame needed to set up the smooth term or prediction matrix}
+
+\item{limits}{either a function to define integration limits for
+functional/historical predictors, or \code{NULL} indicating a smooth of
+scalar variables.}
+
+\item{linear}{if \code{FALSE}, covariates are included as nonlinear (smooth)
+effects, otherwise as a linear effect.}
+
+\item{tv}{if \code{TRUE}, makes the effect time-varying.}
+
+\item{basistype}{specifies the basis constructor function (from the
+\code{mgcv} package) that is used to define a smooth term. Defaults to
+\code{\link[mgcv]{s}}, which is the only option allowed for smooths of
+only one argument. For smooths of multiple arguments (including t and s),
+\code{\link[mgcv]{te}} or \code{\link[mgcv]{t2}} may (but don't have to)
+be used.}
+
+\item{sind}{specifies the time indices for functional and time-varying
+predictors. Can be entered as a vector of length \code{ncol(X)}, or a
+matrix of the same dimensions as \code{X} (for covariates measured on
+unequal grids).}
+
+\item{integration}{method for numerical integration.}
+
+\item{standardize}{if \code{TRUE}, the term is "standardized" by dividing
+by the width of integration.}
+
+\item{s.transform}{optional transformation function for the first variable
+of the smooth. For functional/historical predictors, this is the variable
+over which the integration takes place.}
+
+\item{t.transform}{optional transformation function for the time variable,
+if it is one of the indices of the smooth}
+
+\item{basisargs}{arguments for the function specified by \code{basistype},
+used to set up the basis and penalization}
+
+\item{method}{method of optimization of the smoothing parameter, for
+penalized terms}
+
+\item{eps}{tolerance level for the optimization of the smoothing parameter,
+for penalized terms#'}
+
+\item{env}{environment that contains the list of \code{smooth} objects
+within \code{pcox()}. This allows \code{pcoxTerm} to save a newly generated
+smooth somewhere that \code{pcox} has access to. This cannot be done by
+returning the \code{smooth} object for cases when \code{pcoxTerm} is called
+within a \code{tt} function by \code{coxph}.}
+
+\item{index}{the index of \code{env$smooth} where a newly generated smooth
+should be stored}
+
+\item{smooth}{an optional supplied \code{mgcv}-style smooth object. If it
+is present, then that object is used to generate a prediction matrix for
+the new \code{data}. If \code{NULL}, a new smooth object is created.}
+
+\item{s0}{the orginal \eqn{s} indices used when the \code{smooth} object
+was/is created. This is used by \code{s.transform}, to make transformation
+functions using fixed points (e.g., \eqn{min} or \code{max}) defined by
+the original \code{s} data; see \code{\link{p}}.}
+
+\item{t0}{the original \eqn{t} indices used when the \code{smooth} object
+was/is created, see above.}
+
+\item{t}{time points for time-varying terms}
 }
+\value{
+One of the following:
+\enumerate{
+  \item If \code{smooth} is \code{NULL}, a \code{coxph.penalty} term
+        resulting from a call to \code{\link{pterm}}
+  \item If \code{smooth} is an \code{mgcv}-style smooth object, the
+        prediction matrix resulting from a call to
+        \code{\link[mgcv]{PredictMat}}.
+}
+}
+\description{
+This function, called by either a \code{tt} or \code{xt} function, will
+create a new \code{mgcv}-style smooth object, save it, and convert it
+into a \code{coxph.penalty} term (by calling \code{\link{pterm}}), as long
+as the smooth object is not already created. If the smooth object has
+already been created (and is supplied as the \code{smooth} argument),
+then \code{pcoxTerm} returns the prediction matrix (by calling
+\code{\link[mgcv]{PredictMat}}).
+}
+\keyword{internal}
 

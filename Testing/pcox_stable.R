@@ -53,7 +53,7 @@ range(pre1.1a - pre1.1b)
 # STANDARD MODEL, i.e. ~ \beta(x)
 eta2.1 <- matrix(sin(x) + .75*male, nrow=N, ncol=J)
 dat2.1 <- simTVSurv(eta2.1, data.frame(x=x, male=male))
-fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, dbug=TRUE) +
+fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE) +
                  male, data=dat2.1)
 est2.1a <- coef(fit2.1)
 est2.1b <- drop(fit2.1$pcox$t.funcs[[1]](est2.1a["x"]) %*%

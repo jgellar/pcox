@@ -75,7 +75,7 @@ This routine is a wrapper for either \code{\link[survival]{coxph}}
   special attention....
 }
 \author{
-Jonathan Gellar <jgellar1@jhu.edu>
+Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
 }
 \references{
 Gellar, Jonathan E., Colantuoni, Elizabeth, Needham, Dale M., and

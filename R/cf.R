@@ -40,7 +40,7 @@
 
 cf <- function(..., lag=0, linear = TRUE, tv = FALSE,
                basistype = c("s", "te", "t2"),
-               sind=NULL, dbug=FALSE) {
+               sind=NULL) {
   
   if (is.null(sind)) {
     dots <- list(...)
@@ -48,6 +48,6 @@ cf <- function(..., lag=0, linear = TRUE, tv = FALSE,
   }
   
   p(..., limits=lag, linear=linear, tv=tv, basistype=basistype, sind=sind,
-    standardize=FALSE, s.transform=NULL, t.transform=NULL, dbug=dbug)
+    standardize=FALSE, s.transform=NULL, t.transform=NULL)
 }
 

@@ -6,14 +6,74 @@
 \title{Extract coefficients from a fitted pcox model}
 \usage{
 \method{coefficients}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
-  n2 = NULL, inds = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
+  n2 = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
   seWithMean = TRUE, ...)
 
 \method{coef}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
-  n2 = NULL, inds = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
+  n2 = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
   seWithMean = TRUE, ...)
 }
+\arguments{
+\item{object}{a fitted \code{pfr} object as produced by \code{\link{pfr}()}.}
+
+\item{raw}{if \code{TRUE}, returns the parameters used in the fitting of the
+model. This would be the actual spline coefficients for smooth terms.}
+
+\item{term}{integer to indicate the desired smooth term, according to its order
+in \code{object$pcox$smooth}. A vector of term indices may be supplied.}
+
+\item{n}{number of estimation points for each 1-dimensional coefficient
+function.}
+
+\item{n2}{Square root of the number of points used to grid estimates of
+2-dimensinoal functions for contouring}
+
+\item{se}{if \code{TRUE}, returns pointwise standard error estimates. Two
+estimates of the pointwise standard error are returned, based on the two
+estimates of the covariance matrix produced by \code{coxph}; see
+\code{\link[survival]{coxph}} for details.}
+
+\item{limit}{if \code{TRUE}, checks the \code{limits} function that was
+used to create the term and applies it to filter out some of the
+coordinates. Most relevant for variable-domain and historical functional
+terms.}
+
+\item{untransform}{if \code{TRUE}, checks if a transformation function
+was applied to the data, and if so, untransforms per that funtion}
+
+\item{...}{other parameters to pass to the plotting function (either
+  \code{mgcv:::plot.mgcv.smooth} or \code{mgcv:::plot.random.effect}.}
+
+\item{seWtihMean}{if \code{TRUE} the component smooths are shown with
+confidence intervals that include the uncertainty about the overall mean;
+if \code{FALSE}, then the uncertainty relates purely to the centered
+smooth itself.}
+}
+\value{
+a data frame containing:
+  \itemize{
+    \item The coordinates where the coefficient is estimated
+    \item The estimated coefficient at those coordinates (\code{value})
+    \item The standard error estimate(s) at those coordinates, if requested
+  }
+}
 \description{
-Extract coefficients from a fitted pcox model
+This method is used to extract coefficients from a fitted `pcox` model, in
+particular functional coefficients resulting from including smooth effects
+of scalar covariates, time-varying effects, functional predictors, or
+historical effects.
+}
+\details{
+This function calls either \code{mgcv:::plot.mgcv.smooth} or
+  \code{mgcv:::plot.random.effect} to get the data that would be used
+  to create an \code{mgcv}-style plot, but instead of plotting the data,
+  it returns it. Much of the code and ideas behind this method were taken
+  from \code{refund::coefficients.pfr}.
+}
+\author{
+Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
+}
+\seealso{
+\code{\link[mgcv]{plot.gam}}, \code{\link[refund]{coefficients.pfr}}
 }
 
