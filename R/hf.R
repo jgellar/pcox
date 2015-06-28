@@ -28,6 +28,9 @@
 #'   dimensions as \code{X} (for covariates measured on unequal grids).
 #' @param integration method for numerical integration over \code{sind}
 #' @param standardize standardize term by dividing by the integration width?
+#' @param transform character string indicating an optional basis transformation;
+#'    see Details for options.
+#' 
 #' 
 #' @details Historical functional effects involve time-varying covariates.
 #'   They differ from concurrent effects in that for a historical effect,
@@ -59,7 +62,10 @@
 hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
                basistype = c("s", "te", "t2"), sind=NULL,
                integration=c("riemann", "trapezoidal", "simpson"),
-               standardize = TRUE, s.transform = NULL, t.transform = NULL) {
+               standardize = TRUE,
+               #s.transform = NULL, t.transform = NULL
+               transform = NULL
+               ) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
   #domain <- match.arg(domain)
@@ -71,9 +77,51 @@ hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
     sind <- 1:ncol(dots[[mat1]])
   }
   
-  p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
-    integration=integration, standardize=standardize,
-    s.transform=s.transform, t.transform=t.transform)
+  # Process transformation
+  dots <- list(...)
+  if (!is.null(transform)) {
+    # Set up dt basis call
+    bs0 <- dots$bs
+    xt0 <- dots$xt
+    dots$bs <- "dt"
+    if (transform=="lagged") {
+      dots$xt <- list(tf=list("s-t"))
+      if (!is.null(bs0)) dots$xt$bs=bs0
+      if (!is.null(xt0)) dots$xt$xt=xt0
+    } else if (transform=="standardized") {
+      dots$xt <- list(tf=list("s/t", "linear01"))
+      if (!is.null(bs0)) dots$xt$bs=bs0
+      if (!is.null(xt0)) dots$xt$xt=xt0
+    } else if (transform=="noInteraction") {
+      dots$xt <- list(tf="s/t", bs="pi", xt=list(g="none"))
+      if (!is.null(bs0)) dots$xt$xt$bs=bs0
+      if (!is.null(xt0)) dots$xt$xt$xt=xt0
+    } else if (transform=="linear") {
+      dots$xt <- list(tf="s/t", bs="pi", xt=list(g="linear", mp=mp))
+      if (!is.null(bs0)) dots$xt$xt$bs=bs0
+      if (!is.null(xt0)) dots$xt$xt$xt=xt0
+    } else if (transform=="quadratic") {
+      dots$xt <- list(tf="s/t", bs="pi", xt=list(g="quadratic", mp=mp))
+      if (!is.null(bs0)) dots$xt$xt$bs=bs0
+      if (!is.null(xt0)) dots$xt$xt$xt=xt0
+    }
+    if (basistype!="s") {
+      # dt basis call must go through s to allow bivariate transformations
+      # (te would split the coordinates up too early)
+      dots$xt$basistype <- basistype
+      basistype <- "s"
+    }
+  }
+  
+  # Execute a call to p
+  do.call(p, args=c(dots,
+                    list(limits=limits, linear=linear, tv=tv,
+                         basistype=basistype, sind=sind,
+                         integration=integration, standardize=standardize)))
+  
+  #p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
+  #  integration=integration, standardize=standardize,
+  #  s.transform=s.transform, t.transform=t.transform)
 }
 
 

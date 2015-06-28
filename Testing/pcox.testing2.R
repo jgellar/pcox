@@ -63,6 +63,75 @@ pre4.2c <- predict(fit4.2, newdata = dat4.2[-4], stimes=dat4.2$time)
 ###################
 # Historical TVCs #
 ###################
+
+
+fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = (1:ncol(dat5.1$myX))),
+               data=dat5.1)
+fit5.2 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), basistype="te", bs="ps"),
+               data=dat5.1)
+est5.2 <- coef(fit5.2)
+
+fit5.3 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), bs="dt",
+                    xt=list(tf=list("s-t"))),
+               data=dat5.1)
+est5.3 <- coef(fit5.3)
+
+fit5.3b <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), transform="lagged"),
+               data=dat5.1)
+est5.3b <- coef(fit5.3b)
+
+
+
+
+
+fit5.4 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), bs="dt",
+                    xt=list(tf=list("s/t", "linear01"))),
+               data=dat5.1)
+est5.4 <- coef(fit5.4)
+
+fit5.5 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), bs="dt",
+                    xt=list(basistype="te", bs="ps", tf=list("s/t", "linear01"))),
+               data=dat5.1)
+est5.5 <- coef(fit5.5)
+
+fit5.6 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), bs="dt",
+                    xt=list(tf=list("s/t", "linear01"), bs="pi",
+                            xt=list(g="linear", bs="ps"))),
+               data=dat5.1)
+est5.6 <- coef(fit5.6)
+
+fit5.7 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), bs="dt",
+                    xt=list(tf=list("s/t", "linear01"), bs="pi",
+                            xt=list(g="quadratic", bs="ps"))),
+               data=dat5.1)
+est5.7 <- coef(fit5.7)
+
+fit5.8 <- pcox(Surv(time,event) ~ male + 
+                 hf(myX, sind = (1:ncol(dat5.1$myX)), bs="dt",
+                    xt=list(tf=list("s/t", "linear01"), bs="pi",
+                            xt=list(g="none", bs="ps"))),
+               data=dat5.1)
+est5.8 <- coef(fit5.8)
+
+lims <- range(est5.8$value)
+ggplot(est5.8, aes(s, t)) + 
+  geom_tile(aes(fill=value, colour=value)) +
+  theme_bw() +
+  scale_fill_gradientn(name="", limits=lims,
+                       colours=rev(brewer.pal(11,"Spectral"))) +
+  scale_colour_gradientn(name="", limits=lims,
+                         colours=rev(brewer.pal(11,"Spectral"))) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0))
+
+
 pre5.1c <- predict(fit5.1, newdata=dat5.1[-4],
                    stimes=dat5.1$time) # Should throw an error
 

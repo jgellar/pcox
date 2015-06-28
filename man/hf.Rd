@@ -6,7 +6,7 @@
 \usage{
 hf(..., limits = "s<=t", linear = TRUE, tv = TRUE, basistype = c("s",
   "te", "t2"), sind = NULL, integration = c("riemann", "trapezoidal",
-  "simpson"), standardize = TRUE, s.transform = NULL, t.transform = NULL)
+  "simpson"), standardize = TRUE, transform = NULL)
 }
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as well
@@ -41,6 +41,9 @@ dimensions as \code{X} (for covariates measured on unequal grids).}
 \item{integration}{method for numerical integration over \code{sind}}
 
 \item{standardize}{standardize term by dividing by the integration width?}
+
+\item{transform}{character string indicating an optional basis transformation;
+   see Details for options.}
 }
 \value{
 The result of a call to \code{p()}, which will be a list with
