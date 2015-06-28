@@ -26,6 +26,8 @@
 #' @param integration method for numerical integration.
 #' @param standardize if \code{TRUE}, the term is "standardized" by dividing
 #'   by the width of integration.
+#' @param transform optional transformation functions; see Details.
+#'   
 #' @param s.transform optional transformation function for the first variable
 #'   of the smooth. For functional/historical predictors, this is the variable
 #'   over which the integration takes place.
