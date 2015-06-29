@@ -26,14 +26,7 @@
 #' @param integration method for numerical integration.
 #' @param standardize if \code{TRUE}, the term is "standardized" by dividing
 #'   by the width of integration.
-#' @param transform optional transformation functions; see Details.
 #'   
-#' @param s.transform optional transformation function for the first variable
-#'   of the smooth. For functional/historical predictors, this is the variable
-#'   over which the integration takes place.
-#' @param t.transform optional transformation function for the time variable,
-#'   if it is one of the indices of the smooth
-#' 
 #' @details The \code{limits} argument defines the type of term. Options include:
 #'   \enumerate{
 #'     \item Scalar terms: \code{NULL}
@@ -88,10 +81,8 @@
 p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
               basistype = c("s", "te", "t2"), sind=NULL,
               integration = c("riemann", "trapezoidal", "simpson"),
-              standardize = FALSE, s.transform = NULL, t.transform = NULL
+              standardize = FALSE
               #domain = c("s", "s-t", "s/t"),
-              #s.transform = function(s, t=NULL) {s},
-              #t.transform = function(t, tmax=NULL) {t},
               ) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
@@ -130,8 +121,7 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   if (!tt) {
     # No time-varying aspect to the term: create a xt function
     xt <- create.xt.func(limits, linear, basistype, sind, integration,
-                         standardize, s.transform,
-                         basisargs, method, eps)
+                         standardize, basisargs, method, eps)
     # Return
     list(x=data, xt=xt)
   } else {
@@ -151,8 +141,7 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
     
     # Create the tt function
     tt <- create.tt.func(limits, linear, tv, basistype, sind, integration,
-                         standardize, s.transform, t.transform,
-                         basisargs, method, eps, map)
+                         standardize, basisargs, method, eps, map)
     # Return
     list(x=x, tt=tt)    
   }

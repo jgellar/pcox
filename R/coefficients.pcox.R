@@ -14,7 +14,6 @@
 #'   function.
 #' @param n2 Square root of the number of points used to grid estimates of
 #'   2-dimensinoal functions for contouring
-# @param inds
 #' @param se if \code{TRUE}, returns pointwise standard error estimates. Two
 #'   estimates of the pointwise standard error are returned, based on the two
 #'   estimates of the covariance matrix produced by \code{coxph}; see
@@ -23,8 +22,6 @@
 #'   used to create the term and applies it to filter out some of the
 #'   coordinates. Most relevant for variable-domain and historical functional
 #'   terms.
-#' @param untransform if \code{TRUE}, checks if a transformation function
-#'   was applied to the data, and if so, untransforms per that funtion
 #' @param seWtihMean if \code{TRUE} the component smooths are shown with
 #'   confidence intervals that include the uncertainty about the overall mean;
 #'   if \code{FALSE}, then the uncertainty relates purely to the centered
@@ -131,8 +128,6 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
       if (smooth.i$dim == 1) {
         if(!is.re) {
           coef.i[[modify_st(plotdata$xlab)]] <- plotdata$x
-          #coef.i[[gsub("\\.tmat", "\\.t", plotdata$xlab)]] <- plotdata$x
-          #coef.i[[plotdata$xlab]] <- plotdata$x
         } else {
           coef.i[[smooth.i$term]] <- plotdata$x
         }
@@ -141,10 +136,6 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
         grid <- expand.grid(x=plotdata$x, y=plotdata$y)
         coef.i[[modify_st(plotdata$ylab)]] <- grid$y
         coef.i[[modify_st(plotdata$xlab)]] <- grid$x
-        #coef.i[[plotdata$ylab]] <- grid$y
-        #coef.i[[plotdata$xlab]] <- grid$x
-        #coef.i[[gsub("\\.tmat", "\\.t", plotdata$ylab)]] <- grid$y
-        #coef.i[[gsub("\\.smat", "\\.s", plotdata$xlab)]] <- grid$x
       }
       
       # Post-Processing
@@ -166,18 +157,6 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
         }
         
       }
-      if (untransform) {
-        # Check if transformation functions were applied
-        st.i <- tf.env$s.transform
-        tt.i <- tf.env$t.transform
-        if (!is.null(st.i)) {
-          stop("untransform option not yet supported")
-        }
-        if (!is.null(tt.i)) {
-          stop("untransform option not yet supported")
-        }
-      }
-      
       coef.i
     })
     
