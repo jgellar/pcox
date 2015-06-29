@@ -1,21 +1,77 @@
 #' Create a smooth and coxph.penalty object for use in a pcox formula
 #' 
+#' This function, called by either a \code{tt} or \code{xt} function, will
+#' create a new \code{mgcv}-style smooth object, save it, and convert it
+#' into a \code{coxph.penalty} term (by calling \code{\link{pterm}}), as long
+#' as the smooth object is not already created. If the smooth object has
+#' already been created (and is supplied as the \code{smooth} argument),
+#' then \code{pcoxTerm} returns the prediction matrix (by calling
+#' \code{\link[mgcv]{PredictMat}}).
+#' 
+#' @param data data frame needed to set up the smooth term or prediction matrix
+#' @param limits either a function to define integration limits for
+#'   functional/historical predictors, or \code{NULL} indicating a smooth of
+#'   scalar variables.
+#' @param linear if \code{FALSE}, covariates are included as nonlinear (smooth)
+#'   effects, otherwise as a linear effect.
+#' @param tv if \code{TRUE}, makes the effect time-varying.
+#' @param basistype specifies the basis constructor function (from the
+#'   \code{mgcv} package) that is used to define a smooth term. Defaults to
+#'   \code{\link[mgcv]{s}}, which is the only option allowed for smooths of
+#'   only one argument. For smooths of multiple arguments (including t and s),
+#'   \code{\link[mgcv]{te}} or \code{\link[mgcv]{t2}} may (but don't have to)
+#'   be used.
+#' @param sind specifies the time indices for functional and time-varying
+#'   predictors. Can be entered as a vector of length \code{ncol(X)}, or a
+#'   matrix of the same dimensions as \code{X} (for covariates measured on
+#'   unequal grids).
+#' @param integration method for numerical integration.
+#' @param standardize if \code{TRUE}, the term is "standardized" by dividing
+#'   by the width of integration.
+#' @param s.transform optional transformation function for the first variable
+#'   of the smooth. For functional/historical predictors, this is the variable
+#'   over which the integration takes place.
+#' @param t.transform optional transformation function for the time variable,
+#'   if it is one of the indices of the smooth
+#' @param basisargs arguments for the function specified by \code{basistype},
+#'   used to set up the basis and penalization
+#' @param method method of optimization of the smoothing parameter, for
+#'   penalized terms
+#' @param eps tolerance level for the optimization of the smoothing parameter,
+#'   for penalized terms#' 
+#' @param env environment that contains the list of \code{smooth} objects
+#'   within \code{pcox()}. This allows \code{pcoxTerm} to save a newly generated
+#'   smooth somewhere that \code{pcox} has access to. This cannot be done by
+#'   returning the \code{smooth} object for cases when \code{pcoxTerm} is called
+#'   within a \code{tt} function by \code{coxph}.
+#' @param index the index of \code{env$smooth} where a newly generated smooth
+#'   should be stored
+#' @param smooth an optional supplied \code{mgcv}-style smooth object. If it
+#'   is present, then that object is used to generate a prediction matrix for
+#'   the new \code{data}. If \code{NULL}, a new smooth object is created.
+#' @param s0 the orginal \eqn{s} indices used when the \code{smooth} object
+#'   was/is created. This is used by \code{s.transform}, to make transformation
+#'   functions using fixed points (e.g., \eqn{min} or \code{max}) defined by
+#'   the original \code{s} data; see \code{\link{p}}.
+#' @param t0 the original \eqn{t} indices used when the \code{smooth} object
+#'   was/is created, see above.
+#' @param t time points for time-varying terms
+#' 
+#' @return One of the following:
+#' \enumerate{
+#'   \item If \code{smooth} is \code{NULL}, a \code{coxph.penalty} term
+#'         resulting from a call to \code{\link{pterm}}
+#'   \item If \code{smooth} is an \code{mgcv}-style smooth object, the
+#'         prediction matrix resulting from a call to
+#'         \code{\link[mgcv]{PredictMat}}.
+#' }
+#' @keywords internal
 #' 
 
 pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
                      standardize, s.transform, t.transform,
                      basisargs, method, eps, env, index,
                      smooth, s0, t0=NULL, t=NULL) {
-  
-  # pcoxTerm will be called iff a smooth term is involved
-  # data only includes the real (named) data (x)
-  # time appears as t argument (vector of length nrow(data))
-  # limits will be a function or NULL
-  # if concurrent term, it will already be processed
-  #   (so x_i(t) is in data as vector)
-  
-  # Returns either a list with the cpobj and smooth (if no input smooth),
-  # or the prediction matrix (if there is an input smooth)
   
   data[[1]][is.na(data[[1]])] <- 0
   evaldat <- data

@@ -19,11 +19,18 @@
 #'   only one argument. For smooths of multiple arguments (including t and s),
 #'   \code{\link[mgcv]{te}} or \code{\link[mgcv]{t2}} may (but don't have to)
 #'   be used.
-#' @param sind specifies the time indices for functional and time-varying
+#' @param sind specifies the argument values for functional and time-varying
 #'   predictors. Can be entered as a vector of length \code{ncol(X)}, or a
 #'   matrix of the same dimensions as \code{X} (for covariates measured on
 #'   unequal grids).
 #' @param integration method for numerical integration.
+#' @param standardize if \code{TRUE}, the term is "standardized" by dividing
+#'   by the width of integration.
+#' @param s.transform optional transformation function for the first variable
+#'   of the smooth. For functional/historical predictors, this is the variable
+#'   over which the integration takes place.
+#' @param t.transform optional transformation function for the time variable,
+#'   if it is one of the indices of the smooth
 #' 
 #' @details The \code{limits} argument defines the type of term. Options include:
 #'   \enumerate{
@@ -79,11 +86,11 @@
 p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
               basistype = c("s", "te", "t2"), sind=NULL,
               integration = c("riemann", "trapezoidal", "simpson"),
-              standardize = FALSE, s.transform = NULL, t.transform = NULL,
+              standardize = FALSE, s.transform = NULL, t.transform = NULL
               #domain = c("s", "s-t", "s/t"),
               #s.transform = function(s, t=NULL) {s},
               #t.transform = function(t, tmax=NULL) {t},
-              dbug = FALSE) {
+              ) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
   #domain <- match.arg(domain)
@@ -121,7 +128,7 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   if (!tt) {
     # No time-varying aspect to the term: create a xt function
     xt <- create.xt.func(limits, linear, basistype, sind, integration,
-                         standardize, s.transform, t.transform,
+                         standardize, s.transform,
                          basisargs, method, eps)
     # Return
     list(x=data, xt=xt)

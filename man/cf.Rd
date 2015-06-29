@@ -5,7 +5,7 @@
 \title{Define concurrent time-varying covariate term in a pcox formula}
 \usage{
 cf(..., lag = 0, linear = TRUE, tv = FALSE, basistype = c("s", "te",
-  "t2"), sind = NULL, dbug = FALSE)
+  "t2"), sind = NULL)
 }
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as well
