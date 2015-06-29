@@ -4,19 +4,18 @@
 library(devtools)
 dev_mode()
 load_all()
-library(survival)
-library(mgcv)
+#library(survival)
+#library(mgcv)
+
 library(ggplot2)
 library(gridExtra)
-
+library(RColorBrewer)
 
 # Take these out later?
 library(pryr)
 library(reshape2)
 
 
-library(ggplot2)
-library(RColorBrewer)
 
 # Set up variables
 
