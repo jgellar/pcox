@@ -28,11 +28,6 @@
 #' @param integration method for numerical integration.
 #' @param standardize if \code{TRUE}, the term is "standardized" by dividing
 #'   by the width of integration.
-#' @param s.transform optional transformation function for the first variable
-#'   of the smooth. For functional/historical predictors, this is the variable
-#'   over which the integration takes place.
-#' @param t.transform optional transformation function for the time variable,
-#'   if it is one of the indices of the smooth
 #' @param basisargs arguments for the function specified by \code{basistype},
 #'   used to set up the basis and penalization
 #' @param method method of optimization of the smoothing parameter, for
@@ -49,12 +44,6 @@
 #' @param smooth an optional supplied \code{mgcv}-style smooth object. If it
 #'   is present, then that object is used to generate a prediction matrix for
 #'   the new \code{data}. If \code{NULL}, a new smooth object is created.
-#' @param s0 the orginal \eqn{s} indices used when the \code{smooth} object
-#'   was/is created. This is used by \code{s.transform}, to make transformation
-#'   functions using fixed points (e.g., \eqn{min} or \code{max}) defined by
-#'   the original \code{s} data; see \code{\link{p}}.
-#' @param t0 the original \eqn{t} indices used when the \code{smooth} object
-#'   was/is created, see above.
 #' @param t time points for time-varying terms
 #' 
 #' @return One of the following:
@@ -69,9 +58,8 @@
 #' 
 
 pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
-                     standardize, s.transform, t.transform,
-                     basisargs, method, eps, env, index,
-                     smooth, s0, t0=NULL, t=NULL) {
+                     standardize, basisargs, method, eps, env, index,
+                     smooth, t=NULL) {
   
   data[[1]][is.na(data[[1]])] <- 0
   evaldat <- data
@@ -116,37 +104,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
     
     # (Temporarily) replace masked out coordinates with NA
     smat[!mask] <- NA
-    if (is.null(s0)) {
-      assign("s0", smat, envir=environment(s.transform))
-      assign("s0", smat, envir=environment(t.transform))
-    }
-    if (!is.null(t)) {
-      tmat[!mask] <- NA
-      if (is.null(t0)) {
-        assign("t0", tmat, envir=environment(s.transform))
-        assign("t0", tmat, envir=environment(t.transform))
-      }
-    }
-    
-    # Optional transformations of s and t
-    if (!is.null(s.transform)) {
-      smat.tmp <- if (length(formals(s.transform))==1)
-        s.transform(smat)
-      else if (length(formals(s.transform))==2)
-        s.transform(smat, tmat)
-      else stop("Incorrect number of arguments for s.transform")
-    }
-    if (!is.null(t.transform) & !is.null(t)) {
-      tmat <- if (length(formals(t.transform))==1)
-        t.transform(tmat)
-      else if (length(formals(t.transform))==2)
-        t.transform(smat, tmat)
-      else stop("Incorrect number of arguments for t.transform")
-    }
-    if (!is.null(s.transform)) {
-      smat <- smat.tmp
-      rm(smat.tmp)
-    }
+    if (!is.null(t)) tmat[!mask] <- NA
     
     # Replace mased coordinates of smat and tmat
     smat[!mask] <- smat[mask][1]
@@ -203,9 +161,6 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
     
     # Create coxph.penalty term based on smooth
     pterm(smooth[[1]], method=method, eps=eps)
-    
-#     cpobj <- pterm(smooth[[1]], method=method, eps=eps)
-#     list(cpobj=cpobj, smooth=smooth)
   } else {
     # Return prediction matrix
     PredictMat(smooth[[1]], data=evaldat)

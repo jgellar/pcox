@@ -25,9 +25,9 @@
 #' @param integration method for numerical integration.
 #' @param standardize if \code{TRUE}, the term is "standardized" by dividing
 #'   by the width of integration.
-#' @param s.transform optional transformation function for the first variable
-#'   of the smooth. For functional/historical predictors, this is the variable
-#'   over which the integration takes place.
+# @param s.transform optional transformation function for the first variable
+#   of the smooth. For functional/historical predictors, this is the variable
+#   over which the integration takes place.
 # @param t.transform optional transformation function for the time variable,
 #   if it is one of the indices of the smooth
 #' @param basisargs arguments for the function specified by \code{basistype},
@@ -59,11 +59,11 @@
 #' @keywords internal
 
 create.xt.func <- function(limits, linear, basistype, sind, integration,
-                           standardize, s.transform,# t.transform,
+                           standardize, #s.transform,# t.transform,
                            basisargs, method, eps) {
   
   # Initialize: no smooth object created yet
-  smooth = s0 <- NULL
+  smooth <- NULL
   
   # Process limits argument: create appropriate processing function
   if (!is.null(limits))
@@ -71,28 +71,14 @@ create.xt.func <- function(limits, linear, basistype, sind, integration,
     limits <- function(s,t) {s==s} # Will just spit out TRUE's
   smooth.flag <- !(is.null(limits) & linear) # No smooth if its a linear scalar
   
-  # Process optional s transformation
-  s.transform <- if (is.null(s.transform))
-    # Defaults to no transform
-    NULL
-  else if (is.character(s.transform)) {
-    if (s.transform=="s") NULL
-    else stop("Unrecognized s transformation")
-  } else if (!is.function(s.transform))
-    stop("Unrecognized s tranformation: must be a function or a
-         recognized transformation string")
-  else if (length(formals(s.transform))>1)
-    stop("s.transform can only have 1 argument for a non-time-varying term")
-  
   xt.func <- function(x) {
     if (smooth.flag) {
       # Smooth involved: call pcoxTerm
       pcoxTerm(x, limits=limits, linear=linear, tv=FALSE,
                basistype=basistype, sind=sind,
                integration=integration, standardize=standardize,
-               s.transform=s.transform, t.transform=NULL,
                basisargs=basisargs, method=method, eps=eps,
-               env=env, index=index, smooth=smooth, s0=s0)
+               env=env, index=index, smooth=smooth)
     } else {
       # No smooth involved: just return the data (glorified identity function)
       x
