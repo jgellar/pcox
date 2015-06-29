@@ -214,3 +214,4 @@ plotMe(coef(fit5.6), c(-6,6))
 plotMe(coef(fit5.7), c(-6,6))
 plotMe(coef(fit5.8), c(-6,6))
 
+
