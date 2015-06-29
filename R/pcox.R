@@ -165,7 +165,8 @@ pcox <- function(formula, data,
       # Evaluate term (which is a call to p() - directly or inderectly)
       terms[[i]]$method <- method
       terms[[i]]$eps <- eps
-      trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
+      trm <- eval(terms[[i]], envir=evalenv)
+      #trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
       
       # Extract, modify, and save transformation function
       is.tt <- if (!is.null(trm$tt)) TRUE else if (!is.null(trm$xt)) FALSE else

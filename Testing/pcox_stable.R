@@ -44,6 +44,10 @@ pre1.1a <- predict(fit1.1)
 pre1.1b <- predict(fit1.1, newdata=dat1.1)
 range(pre1.1a - pre1.1b)
 
+time1 <- dat1.1$time
+evnt1 <- dat1.1$event
+fit1.2 <- pcox(Surv(time1, evnt1) ~ x + male, data=dat1.1)
+
 
 ##################
 # Smooth scalars #
@@ -71,7 +75,7 @@ dat2.2 <- simTVSurv(eta2.2, data.frame(x=z, male=male))
 fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
                  male, data=dat2.2)
 est2.2a <- coef(fit2.2)
-est2.2b <- PredictMat(fit2.2$pcox$smooth[[1]],
+est2.2b <- mgcv::PredictMat(fit2.2$pcox$smooth[[1]],
                       data=data.frame(t=est2.2a$t, x=1)) %*% 
   fit2.2$coefficients[1:10]
 ggplot(est2.2a, aes(t, value)) + geom_line(colour="red", size=2) +
@@ -108,7 +112,7 @@ dat3.1$male <- male
 fit3.1 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", sind=sind) + male,
                data=dat3.1)
 est3.1a <- coef(fit3.1)
-est3.1b <- PredictMat(fit3.1$pcox$smooth[[1]],
+est3.1b <- mgcv::PredictMat(fit3.1$pcox$smooth[[1]],
                       data=data.frame(myX.smat=est3.1a$s, myX.LX=1)) %*% 
   fit3.1$coefficients[1:10]
 ggplot(est3.1a, aes(s, value)) + geom_line(colour="red", size=2) +
@@ -140,7 +144,7 @@ fit4.2 <- pcox(Surv(time,event) ~ male + cf(myX, tv=TRUE,
                                             sind = (1:ncol(dat4.2$myX))),
                data=dat4.2)
 est4.2a <- coef(fit4.2)
-est4.2b <- PredictMat(fit4.2$pcox$smooth[[1]],
+est4.2b <- mgcv::PredictMat(fit4.2$pcox$smooth[[1]],
                       data=data.frame(t=est4.2a$t, myX.t=1)) %*% 
   fit4.2$coefficients[2:11]
 ggplot(est4.2a, aes(t, value)) + geom_line(colour="red", size=2) +
