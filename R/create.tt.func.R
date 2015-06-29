@@ -27,11 +27,6 @@
 #' @param integration method for numerical integration.
 #' @param standardize if \code{TRUE}, the term is "standardized" by dividing
 #'   by the width of integration.
-#' @param s.transform optional transformation function for the first variable
-#'   of the smooth. For functional/historical predictors, this is the variable
-#'   over which the integration takes place.
-#' @param t.transform optional transformation function for the time variable,
-#'   if it is one of the indices of the smooth
 #' @param basisargs arguments for the function specified by \code{basistype},
 #'   used to set up the basis and penalization
 #' @param method method of optimization of the smoothing parameter, for
@@ -68,11 +63,10 @@
 #' @keywords internal
 
 create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
-                           standardize, s.transform, t.transform,
-                           basisargs, method, eps, map) {
+                           standardize, basisargs, method, eps, map) {
   
   # Initialize: no smooth object created yet
-  smooth = s0 = t0 <- NULL
+  smooth <- NULL
   
   # Process limits argument: create appropriate processing function
   conc.fcn <- NULL
@@ -104,62 +98,6 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
   } else if (!is.function(limits) & !is.null(limits)) {
     stop("Unrecognized input for limits argument")
   }
-  
-  # Process optional t transformation
-  t.transform <- if (is.null(t.transform)) {
-    if (!is.null(s.transform) & basistype=="s") {
-      if (s.transform %in% c("s/t", "range")) # Defaults to "tmaxmin"
-        function(t) (t-min(t0, na.rm=T))/(max(t0, na.rm=T)-min(t0, na.rm=T))
-      else NULL            # Defaults to no transform
-    } else NULL            # Defaults to no transform
-  } else if (is.character(t.transform)) {
-    if (t.transform=="t") NULL
-    else if (t.transform=="tmax") function(t) t/max(t0, na.rm=T)
-    else if (t.transform=="tmaxmin") function(t)
-      (t-min(t, na.rm=T))/(max(t0, na.rm=T)-min(t0, na.rm=T))
-    else if (t.transform=="ecdf") function(t) {
-      y <- ecdf(t0)(t)
-      if (is.matrix(t)) matrix(y, nrow=nrow(t), ncol=ncol(t))
-      else y
-    }
-    else if (t.transform=="ecdf2") function(t) {
-      stop("not implemented yet")
-      y <- ecdf(t0)(t)
-      y <- (y-min(y))/(max(y)-min(y))
-      if (is.matrix(t)) matrix(y, nrow=nrow(t), ncol=ncol(t))
-      else y
-    }
-    else stop("Unrecognized t transformation")
-  } else if (!is.function(t.transform))
-    stop("Unrecognized t tranformation: must be a function or a
-         recognized transformation string")
-  else if (length(formals(t.transform))>2 )
-    stop("t.transform can only have 1 or 2 arguments")
-  
-  # Process optional s transformation
-  s.transform <- if (is.null(s.transform))
-    # Defaults to no transform
-    NULL
-  else if (is.character(s.transform)) {
-    if (s.transform=="s") NULL
-    else if (s.transform=="s-t") function(s,t) s-t
-    else if (s.transform=="s/t") function(s,t) {
-      smin <- min(s0, na.rm=TRUE)
-      ifelse(t==smin, 0.5, (s-smin)/(t-smin))} 
-    else if (s.transform=="range") function(s,t) {
-      smt <- s-t
-      t(apply(smt, 1, function(x) {
-        y <- x[!is.na(x)]
-        x[!is.na(x)] <- if (length(y)==1) 0.5 else (y-min(y))/(max(y)-min(y))
-        x
-      }))
-    }
-    else stop("Unrecognized s transformation")
-  } else if (!is.function(s.transform))
-    stop("Unrecognized s tranformation: must be a function or a
-         recognized transformation string")
-  else if (length(formals(s.transform))>2 | length(formals(s.transform))<1)
-    stop("s.transform must have 1 or 2 arguments")
   
   tt.func <- function(x, t, ...) {
     
@@ -200,9 +138,7 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
     } else {
       # Create and return pcoxTerm
       pcoxTerm(data, limits, linear, tv, basistype, sind, integration,
-               standardize, s.transform, t.transform,
-               basisargs, method, eps, env, index,
-               smooth, s0, t0, t)
+               standardize, basisargs, method, eps, env, index, smooth, t)
     }
   }
   # Return

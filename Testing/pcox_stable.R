@@ -96,7 +96,6 @@ p  <- arrangeGrob(p1,p2,nrow=1)
 p
 
 
-
 ##################################
 # Baseline Functional Predictors #
 ##################################
@@ -164,37 +163,50 @@ pre4.3b <- predict(fit4.3, newdata=dat4.3, stimes=dat4.3$time)
 range(pre4.3a - pre4.3b, na.rm=T) # Should be 0
 
 
-
 ###################
 # Historical TVCs #
 ###################
-beta <- makeBetaMat(K, genBeta1)
 
+plotMe <- function(est, lims=range(est$value)) {
+  ggplot(est, aes(s, t)) + 
+    geom_tile(aes(fill=value, colour=value)) +
+    theme_bw() +
+    scale_fill_gradientn(name="", limits=lims,
+                         colours=rev(brewer.pal(11,"Spectral"))) +
+    scale_colour_gradientn(name="", limits=lims,
+                           colours=rev(brewer.pal(11,"Spectral"))) +
+    scale_y_continuous(expand = c(0,0)) +
+    scale_x_continuous(expand = c(0,0))
+}
+
+beta <- makeBetaMat(K, genBeta1)
 eta5.1  <- sapply(1:K, function(k) {
   .75*male + (Z[,1:k,drop=F] %*% beta[k,1:k])/k
 })
 dat5.1 <- simTVSurv(eta5.1, data.frame(myX=I(Z), male=male))
-fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = (1:ncol(dat5.1$myX))),
-               data=dat5.1)
-pre5.1a <- predict(fit5.1)
-pre5.1b <- predict(fit5.1, newdata=dat5.1, stimes=dat5.1$time)
-range(pre5.1a - pre5.1b, na.rm=T) # Should be 0 - confirms correct predictions for training data
-est5.1 <- coef(fit5.1)
-est5.1_old <- getHCEst(fit5.1$pcox$smooth[[1]], 1:K,
-                       coefs = fit5.1$coefficients[-1])
-lims <- range(est5.1$value)
-ggplot(est5.1, aes(s, t)) + 
-  geom_tile(aes(fill=value, colour=value)) +
-  theme_bw() +
-  scale_fill_gradientn(name="", limits=lims,
-                       colours=rev(brewer.pal(11,"Spectral"))) +
-  scale_colour_gradientn(name="", limits=lims,
-                         colours=rev(brewer.pal(11,"Spectral"))) +
-  scale_y_continuous(expand = c(0,0)) +
-  scale_x_continuous(expand = c(0,0))
+sinds <- 1:ncol(dat5.1$myX)
 
-library(fields)
-par(mfrow=c(1,2))
-image.plot(t(beta), zlim=c(-6,6))
-image.plot(t(est5.1_old), zlim=c(-6,6))
+fit5.1 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds), data=dat5.1)
+fit5.2 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds, basistype="te",
+                                            bs="ps"), data=dat5.1)
+fit5.3 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds,
+                                            transform="lagged"), data=dat5.1)
+fit5.4 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds,
+                                            transform="standardized"), data=dat5.1)
+fit5.5 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds, transform="standardized",
+                                            basistype = "te", bs="ps"), data=dat5.1)
+fit5.6 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds, transform="linear",
+                                            bs="ps"), data=dat5.1)
+fit5.7 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds, transform="quadratic",
+                                            bs="ps"), data=dat5.1)
+fit5.8 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds, transform="noInteraction",
+                                            bs="ps"), data=dat5.1)
+plotMe(coef(fit5.1), c(-6,6))
+plotMe(coef(fit5.2), c(-6,6))
+plotMe(coef(fit5.3), c(-6,6))
+plotMe(coef(fit5.4), c(-6,6))
+plotMe(coef(fit5.5), c(-6,6))
+plotMe(coef(fit5.6), c(-6,6))
+plotMe(coef(fit5.7), c(-6,6))
+plotMe(coef(fit5.8), c(-6,6))
 

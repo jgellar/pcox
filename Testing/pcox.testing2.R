@@ -63,6 +63,8 @@ pre4.2c <- predict(fit4.2, newdata = dat4.2[-4], stimes=dat4.2$time)
 ###################
 # Historical TVCs #
 ###################
+
+
 pre5.1c <- predict(fit5.1, newdata=dat5.1[-4],
                    stimes=dat5.1$time) # Should throw an error
 

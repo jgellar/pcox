@@ -201,6 +201,8 @@ addCovData <- function (data, J, n, Xdat) {
       }))))
     } else return(x)
   }, simplify=FALSE))
+  for (i in 1:length(Xdat))
+    if (class(Xdat[[i]])=="AsIs") class(Xdat[[i]]) <- NULL
   data <- cbind(data, Xdat)
   return(data)
 }

@@ -28,6 +28,9 @@
 #'   dimensions as \code{X} (for covariates measured on unequal grids).
 #' @param integration method for numerical integration over \code{sind}
 #' @param standardize standardize term by dividing by the integration width?
+#' @param transform character string indicating an optional basis transformation;
+#'    see Details for options.
+#' 
 #' 
 #' @details Historical functional effects involve time-varying covariates.
 #'   They differ from concurrent effects in that for a historical effect,
@@ -59,7 +62,7 @@
 hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
                basistype = c("s", "te", "t2"), sind=NULL,
                integration=c("riemann", "trapezoidal", "simpson"),
-               standardize = TRUE, s.transform = NULL, t.transform = NULL) {
+               standardize = TRUE, transform = NULL) {
   basistype <- match.arg(basistype)
   integration <- match.arg(integration)
   #domain <- match.arg(domain)
@@ -71,9 +74,41 @@ hf <- function(..., limits = "s<=t", linear = TRUE, tv = TRUE,
     sind <- 1:ncol(dots[[mat1]])
   }
   
-  p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
-    integration=integration, standardize=standardize,
-    s.transform=s.transform, t.transform=t.transform)
+  # Process transformation
+  if (!is.null(transform)) {
+    # Set up new call to p, with bs and xt updated
+    localP <- function(..., bs=NULL, xt=NULL, mp=NULL) {
+      # Set up xt info for "dt" basis
+      newxt <- switch(transform,
+                      lagged = list(tf=list("s-t"), bs=bs, xt=xt),
+                      standardized = list(tf=list("s/t", "linear01"), bs=bs, xt=xt),
+                      noInteraction = list(tf="s/t", bs="pi",
+                                           xt=list(g="none", bs=bs, xt=xt)),
+                      linear = list(tf=list("s/t", "linear01"), bs="pi",
+                                    xt=list(g="linear", bs=bs, xt=xt, mp=mp)),
+                      quadratic = list(tf=list("s/t", "linear01"), bs="pi",
+                                       xt=list(g="quadratic", bs=bs, xt=xt, mp=mp))
+      )
+      newxt$basistype <- basistype
+      newxt <- rmNullObs(newxt)
+      
+      p(..., limits=limits, linear=linear, tv=tv, basistype="s", sind=sind,
+        integration=integration, standardize=standardize,
+        bs="dt", xt=newxt)
+    }
+    localP(...)
+  } else {
+    # Call p directly
+    p(..., limits=limits, linear=linear, tv=tv, basistype=basistype, sind=sind,
+      integration=integration, standardize=standardize)
+  }
 }
 
+is.NullOb <- function(x) is.null(x) | all(sapply(x, is.null))
+
+## Recursively step down into list, removing all such objects 
+rmNullObs <- function(x) {
+  x <- Filter(Negate(is.NullOb), x)
+  lapply(x, function(x) if (is.list(x)) rmNullObs(x) else x)
+}
 

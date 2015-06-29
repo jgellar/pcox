@@ -46,6 +46,8 @@ over which the integration takes place.}
 
 \item{t.transform}{optional transformation function for the time variable,
   if it is one of the indices of the smooth}
+
+\item{transform}{optional transformation functions; see Details.}
 }
 \value{
 The return object is a list with two components. The first is the
