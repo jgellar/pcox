@@ -89,7 +89,7 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   #domain <- match.arg(domain)
   
   # Extract basis options
-  frmls <- formals(match.fun(basistype))
+  frmls <- formals(get(basistype, envir = environment(gam)))
   dots <- list(...)
   args <- if(is.null(names(dots)))
     rep(FALSE, length(dots))

@@ -56,11 +56,11 @@ fit1.2 <- pcox(Surv(time1, evnt1) ~ x + male, data=dat1.1)
 # STANDARD MODEL, i.e. ~ \beta(x)
 eta2.1 <- matrix(sin(x) + .75*male, nrow=N, ncol=J)
 dat2.1 <- simTVSurv(eta2.1, data.frame(x=x, male=male))
-fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE) +
+fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, k=8) +
                  male, data=dat2.1)
 est2.1a <- coef(fit2.1)
 est2.1b <- drop(fit2.1$pcox$t.funcs[[1]](est2.1a["x"]) %*%
-                  fit2.1$coefficients[1:9])
+                  fit2.1$coefficients[1:7])
 ggplot(est2.1a, aes(x, value)) + geom_line(colour="red", size=2) +
   geom_line(aes(y=sin(x)), size=2) +
   geom_line(aes(y=est2.1b), colour="blue", linetype="dashed", size=2)

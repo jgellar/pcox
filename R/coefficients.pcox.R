@@ -1,7 +1,7 @@
 #' Extract coefficients from a fitted pcox model
 #' 
 #' This method is used to extract coefficients from a fitted `pcox` model, in
-#' particular functional coefficients resulting from including smooth effects
+#' particular smooth functions resulting from including smooth effects
 #' of scalar covariates, time-varying effects, functional predictors, or
 #' historical effects.
 #' 
@@ -18,14 +18,17 @@
 #'   estimates of the pointwise standard error are returned, based on the two
 #'   estimates of the covariance matrix produced by \code{coxph}; see
 #'   \code{\link[survival]{coxph}} for details.
-#' @param limit if \code{TRUE}, checks the \code{limits} function that was
-#'   used to create the term and applies it to filter out some of the
-#'   coordinates. Most relevant for variable-domain and historical functional
-#'   terms.
 #' @param seWtihMean if \code{TRUE} the component smooths are shown with
 #'   confidence intervals that include the uncertainty about the overall mean;
 #'   if \code{FALSE}, then the uncertainty relates purely to the centered
 #'   smooth itself.
+#' @param exclude if \code{TRUE}, excludes reporting of the estimate at coordinates that are
+#'   "too far" from data used to fit the model, as determined by
+#'   \code{mgcv::plot.mgcv.smooth}, by setting the estimate to \code{NA}.
+#' @param limit if \code{TRUE}, checks the \code{limits} function that was
+#'   used to create the term and applies it to filter out some of the
+#'   coordinates. Most relevant for variable-domain and historical functional
+#'   terms.
 #' @param ... other parameters to pass to the plotting function (either 
 #'   \code{mgcv:::plot.mgcv.smooth} or \code{mgcv:::plot.random.effect}.
 #' 
@@ -47,10 +50,9 @@
 #' @export
 
 coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
-                              #inds=NULL,
-                              se=TRUE,
-                              limit=TRUE, untransform=TRUE,
-                              seWithMean=TRUE, ...) {
+                              se=TRUE, seWithMean=TRUE, exclude=FALSE,
+                              limit=TRUE, ...) {
+  
   if (is.null(object$pcox$smooth) & !raw) {
     #warning("No smooth objects, returning raw coefficients")
     raw <- TRUE
@@ -94,7 +96,8 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
       coef.i$value <- drop(plotdata$X %*% object$coefficients[first:last])
       
       # ctrl-c-v from plot.mgcv.smooth :
-      if (!is.null(plotdata$exclude)) coef.i$value[plotdata$exclude] <- NA
+      if (exclude & !is.null(plotdata$exclude))
+        coef.i$value[plotdata$exclude] <- NA
       if (se && plotdata$se) { ## get standard errors for fit
         ## test whether mean variability to be added to variability (only for centred terms)
         if (seWithMean && attr(smooth.i, "nCons") > 0) {
@@ -120,7 +123,7 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
             coef.i$se2 <- sqrt(pmax(0, rowSums((plotdata$X %*% 
               object$var2[first:last, first:last, drop=FALSE]) * plotdata$X)))
         }
-        if (!is.null(plotdata$exclude)) {
+        if (exclude & !is.null(plotdata$exclude)) {
           coef.i$se[ plotdata$exclude] <- NA
           if (!is.null(object$var2)) coef.i$se2[plotdata$exclude] <- NA
         }
