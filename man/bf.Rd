@@ -5,8 +5,7 @@
 \title{Define baseline functional terms in a pcox formula}
 \usage{
 bf(..., linear = TRUE, tv = FALSE, basistype = c("s", "te", "t2"),
-  sind = NULL, integration = c("riemann", "trapezoidal", "simpson"),
-  vd = FALSE)
+  sind = NULL, integration = c("riemann", "trapezoidal", "simpson"))
 }
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as well

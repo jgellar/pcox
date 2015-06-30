@@ -89,7 +89,7 @@ create.tt.func <- function(limits, linear, tv, basistype, sind, integration,
       stop("limits must be non-negative if using it to specify lagged 
            time-varying covariates")
     lag <- limits
-    conc.fcn <- function(t, s) {
+    conc.fcn <- function(s, t) {
       targ <- t-lag
       ifelse(targ<min(s), NA, which.min(abs(s-targ)))
     }

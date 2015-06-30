@@ -6,6 +6,13 @@
 \usage{
 makeBetaMat(J = 101, bfunc = genBeta1, ...)
 }
+\arguments{
+\item{J}{Width of function}
+
+\item{bfunc}{the function defining the bivariate coefficient function}
+
+\item{...}{other arguments to pass to \code{bfunc}}
+}
 \description{
 Functions for simulating beta coefficient matrices
 }

@@ -11,6 +11,11 @@ pcox(formula, data, method = c("aic", "caic", "epic"), eps = 1e-06,
 \item{formula}{a formula with special terms as for \code{\link[mgcv]{gam}},
 with additional special terms allowed. See Details.}
 
+\item{data}{an optional data frame containing the variables in the model. If
+not found in \code{data}, the variables are taken from
+\code{environment(formula)}, typcially he environment from which
+\code{pcox} is called.}
+
 \item{method}{method used to optimize the smoothing parameter(s). See
 Details.}
 
@@ -93,12 +98,12 @@ eta2 <- matrix(sin(x) + .75*male, nrow=N, ncol=J)
 dat2 <- simTVSurv(eta2, data.frame(x=x, male=male))
 fit2 <- pcox(Surv(time, event) ~ p(x, linear=FALSE) + male, data=dat2)
 est2 <- coef(fit2)
-plot(value ~ x, data=est2.1, type="l", lwd=1.5, ylim=1.25*range(value))
-lines(sin(seq(0,2*pi,by=.1)) ~ seq(0,2*pi,by=.1), col="red")
-lines(value + 1.96*se ~ x, data=est2.1, lty=2)
-lines(value - 1.96*se ~ x, data=est2.1, lty=2)
-legend("topright", c("Estimate", "CI", "Truth"),
-       lty=c(1,2,1), col=c(1,1,2))
+#plot(value ~ x, data=est2, type="l", lwd=1.5, ylim=1.25*range(est2$value))
+#lines(sin(seq(0,2*pi,by=.1)) ~ seq(0,2*pi,by=.1), col="red")
+#lines(value + 1.96*se ~ x, data=est2, lty=2)
+#lines(value - 1.96*se ~ x, data=est2, lty=2)
+#legend("topright", c("Estimate", "CI", "Truth"),
+#       lty=c(1,2,1), col=c(1,1,2))
 
 # See help files for p, cf, bf, and hf for more examples
 }
