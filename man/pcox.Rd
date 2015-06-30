@@ -74,6 +74,23 @@ This routine is a wrapper for either \code{\link[survival]{coxph}}
   densely-measured time-varying covariate. These types of covariates require
   special attention....
 }
+\examples{
+N <- 500
+J <- 200
+x <- runif(N, 0, 2*pi)
+male <- rbinom(N, size = 1, prob=.5)
+eta2.1 <- matrix(sin(x) + .75*male, nrow=N, ncol=J)
+dat2.1 <- simTVSurv(eta2.1, data.frame(x=x, male=male))
+fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE) + male, data=dat2.1)
+est2.1 <- coef(fit2.1)
+
+plot(value ~ x, data=est2.1, type="l", lwd=1.5, ylim=1.25*range(value))
+lines(sin(seq(0,2*pi,by=.1)) ~ seq(0,2*pi,by=.1), col="red")
+lines(value + 1.96*se ~ x, data=est2.1, lty=2)
+lines(value - 1.96*se ~ x, data=est2.1, lty=2)
+legend("topright", c("Estimate", "CI", "Truth"),
+       lty=c(1,2,1), col=c(1,1,2))
+}
 \author{
 Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
 }
