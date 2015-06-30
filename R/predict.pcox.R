@@ -215,7 +215,8 @@ predict.pcox <- function(object,
           stop("Not supported yet: need other changes outside of this block")
           sm.idx <- which(which(sm.terms)==i)
           # Below code doesn't refer to the right smooth element
-          PredictMat(environment(t.funcs[[i]])$smooth[[1]], newdata[mnames], n)
+          mgcv::PredictMat(environment(t.funcs[[i]])$smooth[[1]],
+                           newdata[mnames], n)
         } else {
           v.miss <- vnames[!(vnames %in% names(newdata))]
           stop(paste0("Variable", ifelse(length(v.miss)==1, " ", "s "),

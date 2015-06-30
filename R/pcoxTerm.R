@@ -147,7 +147,7 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
   if (is.null(smooth)) {
     # Createsmooth object
     newcall <- c(newcall, basisargs)
-    smooth <- smoothCon(eval(as.call(newcall)), data=evaldat, knots=NULL,
+    smooth <- mgcv::smoothCon(eval(as.call(newcall)), data=evaldat, knots=NULL,
                         absorb.cons=TRUE)
     if (length(smooth)>1) {
       # Can we turn these into a single smooth object (wider basis matrix, 
@@ -163,6 +163,6 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
     pterm(smooth[[1]], method=method, eps=eps)
   } else {
     # Return prediction matrix
-    PredictMat(smooth[[1]], data=evaldat)
+    mgcv::PredictMat(smooth[[1]], data=evaldat)
   }
 }

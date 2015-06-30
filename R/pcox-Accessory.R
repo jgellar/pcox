@@ -109,3 +109,29 @@ safeDeparse <- function (expr) {
   gsub("[[:space:]][[:space:]]+", " ", ret)
 }
 
+#' Convert a list to a data frame
+#' 
+#' This function was copied from the \code{refund} package.
+#' @keywords internal
+list2df <- function (l) {
+  nrows <- sapply(l, function(x) nrow(as.matrix(x)))
+  stopifnot(length(unique(nrows)) == 1)
+  ret <- data.frame(rep(NA, nrows[1]))
+  for (i in 1:length(l)) ret[[i]] <- l[[i]]
+  names(ret) <- names(l)
+  return(ret)
+}
+
+#' Expands a call
+#' 
+#' This function was copied from the \code{refund} package.
+#' @keywords internal
+expand.call <- function (definition = NULL, call = sys.call(sys.parent(1)), 
+          expand.dots = TRUE) {
+  call <- match.call(definition, call, expand.dots)
+  ans <- as.list(call)
+  frmls <- formals(safeDeparse(ans[[1]]))
+  frmls <- frmls[!sapply(frmls, is.symbol)]
+  add <- which(!(names(frmls) %in% names(ans)))
+  return(as.call(c(ans, frmls[add])))
+}

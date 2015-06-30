@@ -54,9 +54,9 @@
 #'   densely-measured time-varying covariate. These types of covariates require
 #'   special attention....
 #'   
-#' @import mgcv refund coxme survival
-# @importFrom mgcv gam gam.fit s te t2
-# @importFrom survival coxph Surv
+# @import mgcv refund coxme survival
+#' @importFrom mgcv gam gam.fit s te t2
+#' @importFrom survival coxph Surv
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu> and Fabian Scheipl
 #' @return a fitted \code{pcox} object. This is either a \code{coxph} or 
@@ -136,7 +136,8 @@ pcox <- function(formula, data,
   else NULL
   #else parent.frame() # IS THIS OK?
   
-  surv <- eval(responsename, envir = evalenv, enclos = frmlenv)
+  surv <- eval(responsename, envir = evalenv)
+  #surv <- eval(responsename, envir = evalenv, enclos = frmlenv)
   nobs <- nrow(surv)
   fitter <- as.symbol(fitter)
   if (is.call(responsename)) {
@@ -180,7 +181,8 @@ pcox <- function(formula, data,
       # Evaluate term (which is a call to p() - directly or inderectly)
       terms[[i]]$method <- method
       terms[[i]]$eps <- eps
-      trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
+      trm <- eval(terms[[i]], envir=evalenv)
+      #trm <- eval(terms[[i]], envir=evalenv, enclos=frmlenv)
       
       # Extract, modify, and save transformation function
       is.tt <- if (!is.null(trm$tt)) TRUE else if (!is.null(trm$xt)) FALSE else
