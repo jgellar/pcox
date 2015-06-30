@@ -12,8 +12,8 @@ library(gridExtra)
 library(RColorBrewer)
 
 # Take these out later?
-library(pryr)
-library(reshape2)
+#library(pryr)
+#library(reshape2)
 
 
 
@@ -214,4 +214,9 @@ plotMe(coef(fit5.6), c(-6,6))
 plotMe(coef(fit5.7), c(-6,6))
 plotMe(coef(fit5.8), c(-6,6))
 
-
+est5.1 <- coef(fit5.1)
+truebeta <- genBeta1(est5.1$s, est5.1$t)
+amse <- sapply(1:8, function(i) {
+  est <- coef(get(paste0("fit5.",i)))
+  mean((truebeta - est$value)^2)
+})

@@ -6,12 +6,12 @@
 \title{Extract coefficients from a fitted pcox model}
 \usage{
 \method{coefficients}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
-  n2 = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
-  seWithMean = TRUE, ...)
+  n2 = NULL, se = TRUE, seWithMean = TRUE, exclude = FALSE,
+  limit = TRUE, ...)
 
 \method{coef}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
-  n2 = NULL, se = TRUE, limit = TRUE, untransform = TRUE,
-  seWithMean = TRUE, ...)
+  n2 = NULL, se = TRUE, seWithMean = TRUE, exclude = FALSE,
+  limit = TRUE, ...)
 }
 \arguments{
 \item{object}{a fitted \code{pfr} object as produced by \code{\link{pfr}()}.}
@@ -32,6 +32,10 @@ function.}
 estimates of the pointwise standard error are returned, based on the two
 estimates of the covariance matrix produced by \code{coxph}; see
 \code{\link[survival]{coxph}} for details.}
+
+\item{exclude}{if \code{TRUE}, excludes reporting of the estimate at coordinates that are
+"too far" from data used to fit the model, as determined by
+\code{mgcv::plot.mgcv.smooth}, by setting the estimate to \code{NA}.}
 
 \item{limit}{if \code{TRUE}, checks the \code{limits} function that was
 used to create the term and applies it to filter out some of the
@@ -56,7 +60,7 @@ a data frame containing:
 }
 \description{
 This method is used to extract coefficients from a fitted `pcox` model, in
-particular functional coefficients resulting from including smooth effects
+particular smooth functions resulting from including smooth effects
 of scalar covariates, time-varying effects, functional predictors, or
 historical effects.
 }

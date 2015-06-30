@@ -75,21 +75,32 @@ This routine is a wrapper for either \code{\link[survival]{coxph}}
   special attention....
 }
 \examples{
+# Generate some data
 N <- 500
 J <- 200
 x <- runif(N, 0, 2*pi)
 male <- rbinom(N, size = 1, prob=.5)
-eta2.1 <- matrix(sin(x) + .75*male, nrow=N, ncol=J)
-dat2.1 <- simTVSurv(eta2.1, data.frame(x=x, male=male))
-fit2.1 <- pcox(Surv(time, event) ~ p(x, linear=FALSE) + male, data=dat2.1)
-est2.1 <- coef(fit2.1)
 
+# Simple linear terms (can be done with coxph)
+eta1 <- matrix(.6*x + .75*male, nrow=N, ncol=J)
+dat1 <- simTVSurv(eta1, data.frame(x=x, male=male))
+fit1 <- pcox(Surv(time, event) ~ x + male, data=dat1)
+fit1b<- survival::coxph(survival::Surv(time,event) ~ x + male, data=dat1)
+all.equal(fit1$coefficients, fit1b$coefficients)
+
+# Smooth function of scalar x
+eta2 <- matrix(sin(x) + .75*male, nrow=N, ncol=J)
+dat2 <- simTVSurv(eta2, data.frame(x=x, male=male))
+fit2 <- pcox(Surv(time, event) ~ p(x, linear=FALSE) + male, data=dat2)
+est2 <- coef(fit2)
 plot(value ~ x, data=est2.1, type="l", lwd=1.5, ylim=1.25*range(value))
 lines(sin(seq(0,2*pi,by=.1)) ~ seq(0,2*pi,by=.1), col="red")
 lines(value + 1.96*se ~ x, data=est2.1, lty=2)
 lines(value - 1.96*se ~ x, data=est2.1, lty=2)
 legend("topright", c("Estimate", "CI", "Truth"),
        lty=c(1,2,1), col=c(1,1,2))
+
+# See help files for p, cf, bf, and hf for more examples
 }
 \author{
 Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
