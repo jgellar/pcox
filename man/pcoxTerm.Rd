@@ -5,8 +5,7 @@
 \title{Create a smooth and coxph.penalty object for use in a pcox formula}
 \usage{
 pcoxTerm(data, limits, linear, tv, basistype, sind, integration, standardize,
-  s.transform, t.transform, basisargs, method, eps, env, index, smooth, s0,
-  t0 = NULL, t = NULL)
+  basisargs, method, eps, env, index, smooth, t = NULL)
 }
 \arguments{
 \item{data}{data frame needed to set up the smooth term or prediction matrix}
@@ -37,13 +36,6 @@ unequal grids).}
 \item{standardize}{if \code{TRUE}, the term is "standardized" by dividing
 by the width of integration.}
 
-\item{s.transform}{optional transformation function for the first variable
-of the smooth. For functional/historical predictors, this is the variable
-over which the integration takes place.}
-
-\item{t.transform}{optional transformation function for the time variable,
-if it is one of the indices of the smooth}
-
 \item{basisargs}{arguments for the function specified by \code{basistype},
 used to set up the basis and penalization}
 
@@ -65,14 +57,6 @@ should be stored}
 \item{smooth}{an optional supplied \code{mgcv}-style smooth object. If it
 is present, then that object is used to generate a prediction matrix for
 the new \code{data}. If \code{NULL}, a new smooth object is created.}
-
-\item{s0}{the orginal \eqn{s} indices used when the \code{smooth} object
-was/is created. This is used by \code{s.transform}, to make transformation
-functions using fixed points (e.g., \eqn{min} or \code{max}) defined by
-the original \code{s} data; see \code{\link{p}}.}
-
-\item{t0}{the original \eqn{t} indices used when the \code{smooth} object
-was/is created, see above.}
 
 \item{t}{time points for time-varying terms}
 }

@@ -5,7 +5,7 @@
 \title{Create \code{tt} function for a time-varying term}
 \usage{
 create.tt.func(limits, linear, tv, basistype, sind, integration, standardize,
-  s.transform, t.transform, basisargs, method, eps, map)
+  basisargs, method, eps, map)
 }
 \arguments{
 \item{limits}{specifies the term as either a term involving scalar
@@ -34,13 +34,6 @@ unequal grids).}
 
 \item{standardize}{if \code{TRUE}, the term is "standardized" by dividing
 by the width of integration.}
-
-\item{s.transform}{optional transformation function for the first variable
-of the smooth. For functional/historical predictors, this is the variable
-over which the integration takes place.}
-
-\item{t.transform}{optional transformation function for the time variable,
-if it is one of the indices of the smooth}
 
 \item{basisargs}{arguments for the function specified by \code{basistype},
 used to set up the basis and penalization}

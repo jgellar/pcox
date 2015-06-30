@@ -6,7 +6,7 @@
 \usage{
 p(..., limits = NULL, linear = TRUE, tv = FALSE, basistype = c("s",
   "te", "t2"), sind = NULL, integration = c("riemann", "trapezoidal",
-  "simpson"), standardize = FALSE, s.transform = NULL, t.transform = NULL)
+  "simpson"), standardize = FALSE)
 }
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as
@@ -38,16 +38,7 @@ unequal grids).}
 \item{integration}{method for numerical integration.}
 
 \item{standardize}{if \code{TRUE}, the term is "standardized" by dividing
-by the width of integration.}
-
-\item{s.transform}{optional transformation function for the first variable
-of the smooth. For functional/historical predictors, this is the variable
-over which the integration takes place.}
-
-\item{t.transform}{optional transformation function for the time variable,
-  if it is one of the indices of the smooth}
-
-\item{transform}{optional transformation functions; see Details.}
+  by the width of integration.}
 }
 \value{
 The return object is a list with two components. The first is the

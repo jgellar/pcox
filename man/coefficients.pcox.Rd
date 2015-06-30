@@ -38,9 +38,6 @@ used to create the term and applies it to filter out some of the
 coordinates. Most relevant for variable-domain and historical functional
 terms.}
 
-\item{untransform}{if \code{TRUE}, checks if a transformation function
-was applied to the data, and if so, untransforms per that funtion}
-
 \item{...}{other parameters to pass to the plotting function (either
   \code{mgcv:::plot.mgcv.smooth} or \code{mgcv:::plot.random.effect}.}
 

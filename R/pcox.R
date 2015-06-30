@@ -57,6 +57,7 @@
 # @import mgcv refund coxme survival
 #' @importFrom mgcv gam gam.fit s te t2
 #' @importFrom survival coxph Surv
+#' @importFrom pryr modify_call
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu> and Fabian Scheipl
 #' @return a fitted \code{pcox} object. This is either a \code{coxph} or 

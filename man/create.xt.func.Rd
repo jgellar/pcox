@@ -5,7 +5,7 @@
 \title{Create x-transform function for non-time-varying terms}
 \usage{
 create.xt.func(limits, linear, basistype, sind, integration, standardize,
-  s.transform, basisargs, method, eps)
+  basisargs, method, eps)
 }
 \arguments{
 \item{limits}{specifies the term as either a term involving scalar
@@ -30,10 +30,6 @@ dimensions as \code{X} (for covariates measured on unequal grids).}
 
 \item{standardize}{if \code{TRUE}, the term is "standardized" by dividing
 by the width of integration.}
-
-\item{s.transform}{optional transformation function for the first variable
-of the smooth. For functional/historical predictors, this is the variable
-over which the integration takes place.}
 
 \item{basisargs}{arguments for the function specified by \code{basistype},
 used to set up the basis and penalization}
