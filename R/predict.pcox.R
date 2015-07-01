@@ -13,6 +13,7 @@
 #' @param n number of observations in new data
 #' @param se.fit A flag indicating if (model-based) standard errors are to be
 #'   returned
+#' @param ... extra arguments (unused)
 #' 
 #' @details These are the details
 #'   
@@ -26,7 +27,7 @@
 predict.pcox <- function(object,
                          type=c("lp", "risk", "terms", "lpmatrix"),
                          newdata=NULL, indices=NULL, ptimes=NULL, stimes=NULL,
-                         n=NULL, se.fit=c("none", "var", "var2")) {
+                         n=NULL, se.fit=c("none", "var", "var2"), ...) {
   type <- match.arg(type)
   se.fit <- if (is.logical(se.fit)) {
     ifelse(se.fit, "var", "none")
@@ -103,7 +104,8 @@ predict.pcox <- function(object,
   } else {
     # newdata or new ptimes are supplied - need to make new predictions
     if (is.null(newdata)) {
-      newdata <- original.data # need this from pcox object?
+      stop("need original data?")
+      #newdata <- original.data # need this from pcox object?
     }
     if (any.tt) {
       # This is a time-varying model: calculate at specific ptimes
@@ -135,7 +137,7 @@ predict.pcox <- function(object,
               if (is.matrix(var.i)) {
                 idx.i <- if (!is.null(indices[[vn.i]]))
                   vn.i
-                else something # get from tt function? ugh
+                else stop("something") # get from tt function? ugh
               }
             })
             

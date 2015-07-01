@@ -12,10 +12,13 @@ Description: This package fits Cox regression models with penalized
     (for functional predictors). Models are fit using either the survival
     or coxme packages, depending on the fitting method.
 License: GPL-2
+Depends:
+    survival
 Imports: 
+    stats,
+    risksetROC,
     mgcv,
-    survival,
-    coxme,
     pryr,
     reshape2
 Suggests: testthat
+LazyData: true

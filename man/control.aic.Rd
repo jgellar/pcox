@@ -14,7 +14,7 @@ Control function for aic, caic, or epic-based optimization of a
 \references{
 Therneau, T. M. and Grambsch, P. M. (1998). Penalized Cox models and Frailty.
 Technical report, Division of Biostatistics. Mayo Clinic; Rochester, MN,
-pages 1–58. Available at
+pages 1-58. Available at
 http://www.mayo.edu/research/documents/frailtypdf/doc-10027273.
 }
 \keyword{internal}

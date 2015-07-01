@@ -5,7 +5,7 @@
 #' of scalar covariates, time-varying effects, functional predictors, or
 #' historical effects.
 #' 
-#' @param object a fitted \code{pfr} object as produced by \code{\link{pfr}()}.
+#' @param object a fitted \code{pcox} object as produced by \code{\link{pcox}()}.
 #' @param raw if \code{TRUE}, returns the parameters used in the fitting of the
 #'   model. This would be the actual spline coefficients for smooth terms.
 #' @param term integer to indicate the desired smooth term, according to its order
@@ -18,7 +18,7 @@
 #'   estimates of the pointwise standard error are returned, based on the two
 #'   estimates of the covariance matrix produced by \code{coxph}; see
 #'   \code{\link[survival]{coxph}} for details.
-#' @param seWtihMean if \code{TRUE} the component smooths are shown with
+#' @param seWithMean if \code{TRUE} the component smooths are shown with
 #'   confidence intervals that include the uncertainty about the overall mean;
 #'   if \code{FALSE}, then the uncertainty relates purely to the centered
 #'   smooth itself.
@@ -46,8 +46,9 @@
 #'   it returns it. Much of the code and ideas behind this method were taken
 #'   from \code{refund::coefficients.pfr}.
 #' @author Jonathan Gellar <jgellar1@@jhu.edu> and Fabian Scheipl
-#' @seealso \code{\link[mgcv]{plot.gam}}, \code{\link[refund]{coefficients.pfr}}
+#' @seealso \code{\link[mgcv]{plot.gam}}, \code{refund::coefficients.pfr}
 #' @export
+#' @importFrom stats coefficients
 
 coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
                               se=TRUE, seWithMean=TRUE, exclude=FALSE,

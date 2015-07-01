@@ -175,7 +175,7 @@ smooth.construct.pi.smooth.spec <- function(object, data, knots) {
   ## ctrl-c-v from smooth.construct.tp.smooth.spec:
   if (!is.null(sm$drop.null)) {
     if (sm$drop.null > 0) {
-      M <- null.space.dimension(sm$dim, sm$p.order[1])
+      M <- mgcv::null.space.dimension(sm$dim, sm$p.order[1])
       ind <- 1:(sm$bs.dim - sm$null.space.dim)
       if (FALSE) { ## nat param version
         np <- nat.param(sm$X, sm$S[[1]], rank=sm$bs.dim - sm$null.space.dim,

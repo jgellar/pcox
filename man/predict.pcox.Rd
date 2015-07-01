@@ -6,7 +6,7 @@
 \usage{
 \method{predict}{pcox}(object, type = c("lp", "risk", "terms", "lpmatrix"),
   newdata = NULL, indices = NULL, ptimes = NULL, stimes = NULL,
-  n = NULL, se.fit = c("none", "var", "var2"))
+  n = NULL, se.fit = c("none", "var", "var2"), ...)
 }
 \arguments{
 \item{object}{Object of class \code{"pcox"}}
@@ -26,7 +26,9 @@ terms of the linear predictor (\code{"terms"})}
 \item{n}{number of observations in new data}
 
 \item{se.fit}{A flag indicating if (model-based) standard errors are to be
-  returned}
+returned}
+
+\item{...}{extra arguments (unused)}
 }
 \value{
 Details about return object

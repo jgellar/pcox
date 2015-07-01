@@ -10,4 +10,5 @@ getROC(fit, utime = NULL, evaltimes = NULL, plot = FALSE, K = NULL,
 \description{
 Generate Time-Varying ROC Curve
 }
+\keyword{internal}
 

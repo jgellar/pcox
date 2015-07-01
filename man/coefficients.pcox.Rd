@@ -14,7 +14,7 @@
   limit = TRUE, ...)
 }
 \arguments{
-\item{object}{a fitted \code{pfr} object as produced by \code{\link{pfr}()}.}
+\item{object}{a fitted \code{pcox} object as produced by \code{\link{pcox}()}.}
 
 \item{raw}{if \code{TRUE}, returns the parameters used in the fitting of the
 model. This would be the actual spline coefficients for smooth terms.}
@@ -33,6 +33,11 @@ estimates of the pointwise standard error are returned, based on the two
 estimates of the covariance matrix produced by \code{coxph}; see
 \code{\link[survival]{coxph}} for details.}
 
+\item{seWithMean}{if \code{TRUE} the component smooths are shown with
+confidence intervals that include the uncertainty about the overall mean;
+if \code{FALSE}, then the uncertainty relates purely to the centered
+smooth itself.}
+
 \item{exclude}{if \code{TRUE}, excludes reporting of the estimate at coordinates that are
 "too far" from data used to fit the model, as determined by
 \code{mgcv::plot.mgcv.smooth}, by setting the estimate to \code{NA}.}
@@ -44,11 +49,6 @@ terms.}
 
 \item{...}{other parameters to pass to the plotting function (either
   \code{mgcv:::plot.mgcv.smooth} or \code{mgcv:::plot.random.effect}.}
-
-\item{seWtihMean}{if \code{TRUE} the component smooths are shown with
-confidence intervals that include the uncertainty about the overall mean;
-if \code{FALSE}, then the uncertainty relates purely to the centered
-smooth itself.}
 }
 \value{
 a data frame containing:
@@ -75,6 +75,6 @@ This function calls either \code{mgcv:::plot.mgcv.smooth} or
 Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
 }
 \seealso{
-\code{\link[mgcv]{plot.gam}}, \code{\link[refund]{coefficients.pfr}}
+\code{\link[mgcv]{plot.gam}}, \code{refund::coefficients.pfr}
 }
 

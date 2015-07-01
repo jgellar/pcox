@@ -49,8 +49,9 @@
 #' 
 
 bf <- function(..., linear = TRUE, tv = FALSE, basistype = c("s", "te", "t2"),
-               sind=NULL, integration=c("riemann", "trapezoidal", "simpson"),
-               vd=FALSE) {
+               sind=NULL, integration=c("riemann", "trapezoidal", "simpson")#,
+               #vd=FALSE
+               ) {
   
   # Check basistype against the number of arguemnts of the smooth?
   basistype <- match.arg(basistype)
