@@ -152,14 +152,15 @@ coefficients.pcox <- function(object, raw=FALSE, term=NULL, n=NULL, n2=NULL,
         limits.i <- tf.env$limits
         if (is.function(limits.i)) {
           # Apply limits function
-          if (smooth.i$dim==2 & "s" %in% names(coef.i) & "t" %in% names(coef.i))
-            coef.i <- coef.i[limits.i(coef.i$s, coef.i$t), ]
-          else if (smooth.i$dim==1 & "s" %in% names(coef.i))
-            coef.i <- coef.i[limits.i(coef.i$s), ]
-          else
-            stop("limits option not yet supported for this term")
+          if (smooth.i$dim==2) {
+            coef.i <- coef.i[limits.i(coef.i[[modify_st(plotdata$xlab)]],
+                                      coef.i[[modify_st(plotdata$ylab)]]), ]
+          } else if (smooth.i$dim==1) {
+            coef.i <- coef.i[limits.i(coef.i[[modify_st(plotdata$xlab)]]), ]
+          } else {
+            stop("limit option only supported for 1-D and 2-D smooths")
+          }
         }
-        
       }
       coef.i
     })
