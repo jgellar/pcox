@@ -1,3 +1,4 @@
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("env", "index"))
 #' Create \code{tt} function for a time-varying term
 #' 
 #' A time-transform (\code{tt}) function is used by \code{survival::coxph} to

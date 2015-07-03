@@ -64,12 +64,11 @@
 #' 
 #' @author Fabian Scheipl and Jonathan Gellar, adapted from
 #'   \code{refund::coefficients.pfr}
-#' @importFrom stats coefficients
 # @examples 
 # #TODO: see ?pfr 
 #' @export
 
-coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
+coefficients.pcox2 <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
                                n=NULL, n2=NULL,
                                exclude=FALSE, limit=TRUE, plotMe=FALSE, ...) {
   
@@ -168,20 +167,6 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
     coef
   }
 }
+# @rdname coefficients.pfr
+#coef.pfr <- coefficients.pfr
 
-
-#' @rdname coefficients.pcox
-coef.pcox <- coefficients.pcox
-
-modify_st <- function(x) {
-  ifelse(grepl("\\.tmat", x), "t", ifelse(grepl("\\.smat", x), "s", x))
-}
-
-ndefault <- function(x) {
-  x <- unique(as.vector(x))
-  x <- x[order(x)]
-  if (length(unique(diff(x)))==1)
-    length(x)
-  else
-    101
-}

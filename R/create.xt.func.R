@@ -1,3 +1,4 @@
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("env", "index"))
 #' Create x-transform function for non-time-varying terms
 #' 
 #' The \code{xt} function processes data that does not involve time

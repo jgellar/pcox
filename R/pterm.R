@@ -1,3 +1,4 @@
+if(getRversion() >= "2.15.1")  utils::globalVariables("theta")
 #' Create a \code{coxph.penalty} object from an \code{mgcv}-style smooth
 #' object
 #' 
@@ -48,7 +49,7 @@ pterm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=1e-6) 
   temp <- switch(method, 
                  fixed = list(pfun=pfun.lFunc, cfun=function(parms, ...) {list(theta=parms$theta, done=TRUE)},
                               diag=FALSE, pparm=D, cparm=list(theta=theta)),
-                 df    = list(pfun=pfun.lFunc, cfun=survival:::frailty.controldf,
+                 df    = list(pfun=pfun.lFunc, cfun=frailty.controldf,
                               diag=FALSE, pparm=D),
                  aic   = list(pfun=pfun.lFunc, cfun=control.aic,
                               cparm = list(eps=eps, init=c(0.5, 0.95), lower=0, upper=1, type="aic"),
@@ -123,7 +124,7 @@ control.aic <- function (parms, iter, old, n, df, loglik) {
   x <- history[, 1]
   if (x[iter] == max(aic) && x[iter] == max(x)) 
     newtheta <- 2 * max(x)
-  else newtheta <- survival:::frailty.brent(x, aic, lower = parms$lower, 
+  else newtheta <- frailty.brent(x, aic, lower = parms$lower, 
                                             upper = parms$upper)
   if (length(parms$trace) && parms$trace) {
     print(history)

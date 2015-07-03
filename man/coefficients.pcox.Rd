@@ -3,78 +3,92 @@
 \name{coefficients.pcox}
 \alias{coef.pcox}
 \alias{coefficients.pcox}
-\title{Extract coefficients from a fitted pcox model}
+\title{Extract coefficient functions from a fitted pcox-object}
 \usage{
-\method{coefficients}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
-  n2 = NULL, se = TRUE, seWithMean = TRUE, exclude = FALSE,
-  limit = TRUE, ...)
+\method{coefficients}{pcox}(object, select = NULL, se = TRUE,
+  use.var2 = FALSE, n = NULL, n2 = NULL, exclude = FALSE,
+  limit = TRUE, plotMe = FALSE, ...)
 
-\method{coef}{pcox}(object, raw = FALSE, term = NULL, n = NULL,
-  n2 = NULL, se = TRUE, seWithMean = TRUE, exclude = FALSE,
-  limit = TRUE, ...)
+\method{coef}{pcox}(object, select = NULL, se = TRUE, use.var2 = FALSE,
+  n = NULL, n2 = NULL, exclude = FALSE, limit = TRUE, plotMe = FALSE,
+  ...)
 }
 \arguments{
-\item{object}{a fitted \code{pcox} object as produced by \code{\link{pcox}()}.}
+\item{object}{return object from \code{\link{pcox}}}
 
-\item{raw}{if \code{TRUE}, returns the parameters used in the fitting of the
-model. This would be the actual spline coefficients for smooth terms.}
+\item{select}{integer vector indicating the index of the desired smooth term
+in \code{object$pcox$smooth}. If \code{NULL}, returns all smooth terms.}
 
-\item{term}{integer to indicate the desired smooth term, according to its order
-in \code{object$pcox$smooth}. A vector of term indices may be supplied.}
+\item{se}{if \code{TRUE}, returns pointwise standard error estimates. If
+numeric, the standard error will be multiplied by that number (e.g., 2
+to make it easier to plot confidence intervals).}
+
+\item{use.var2}{if \code{TRUE}, uses \code{object$var2} as the covariance
+matrix for standard error estimation; otherwise uses \code{object$var}.}
 
 \item{n}{number of estimation points for each 1-dimensional coefficient
-function.}
+function. If estimating more than one coefficient, can be entered
+as a vector of length equal to the number of coefficients. Default
+is the number of unique observation points.}
 
 \item{n2}{Square root of the number of points used to grid estimates of
-2-dimensinoal functions for contouring}
+2-dimensinoal functions for contouring.
+If estimating more than one coefficient, can be entered
+as a vector of length equal to the number of coefficients.}
 
-\item{se}{if \code{TRUE}, returns pointwise standard error estimates. Two
-estimates of the pointwise standard error are returned, based on the two
-estimates of the covariance matrix produced by \code{coxph}; see
-\code{\link[survival]{coxph}} for details.}
+\item{exclude}{if \code{TRUE}, excludes reporting of the estimate at
+coordinates that are "too far" from data used to fit the model, as
+determined by \code{mgcv::plot.mgcv.smooth}. Excluding these values sets
+them to \code{NA} in the return object.}
 
-\item{seWithMean}{if \code{TRUE} the component smooths are shown with
-confidence intervals that include the uncertainty about the overall mean;
-if \code{FALSE}, then the uncertainty relates purely to the centered
-smooth itself.}
+\item{limit}{if \code{TRUE}, checks if a \code{limits} function was
+used to generate the term, and if so, applies the function to the
+output to only produce estimates over regions that were within "limits".}
 
-\item{exclude}{if \code{TRUE}, excludes reporting of the estimate at coordinates that are
-"too far" from data used to fit the model, as determined by
-\code{mgcv::plot.mgcv.smooth}, by setting the estimate to \code{NA}.}
+\item{plotMe}{if \code{TRUE}, also plots the coefficient(s)}
 
-\item{limit}{if \code{TRUE}, checks the \code{limits} function that was
-used to create the term and applies it to filter out some of the
-coordinates. Most relevant for variable-domain and historical functional
-terms.}
-
-\item{...}{other parameters to pass to the plotting function (either
-  \code{mgcv:::plot.mgcv.smooth} or \code{mgcv:::plot.random.effect}.}
+\item{...}{further arguments passed on to \pkg{mgcv}'s \code{plot.gam}; see
+  Details.}
 }
 \value{
-a data frame containing:
-  \itemize{
-    \item The coordinates where the coefficient is estimated
-    \item The estimated coefficient at those coordinates (\code{value})
-    \item The standard error estimate(s) at those coordinates, if requested
-  }
+a list of data.frames containing the evaluation points,
+   coefficient function values and optionally their se's for each term in \code{select}.
+   If only one term is selected, the one data frame is unlisted and the return
+   object will be the single data frame.
 }
 \description{
-This method is used to extract coefficients from a fitted `pcox` model, in
+This function is used to extract coefficients from a fitted `pcox` model, in
 particular smooth functions resulting from including smooth effects
 of scalar covariates, time-varying effects, functional predictors, or
-historical effects.
+historical effects. The function calls \code{mgcv::plot.gam} to generate
+the smooth functions.
 }
 \details{
-This function calls either \code{mgcv:::plot.mgcv.smooth} or
-  \code{mgcv:::plot.random.effect} to get the data that would be used
-  to create an \code{mgcv}-style plot, but instead of plotting the data,
-  it returns it. Much of the code and ideas behind this method were taken
-  from \code{refund::coefficients.pfr}.
+The smooth coefficients are generated by \code{mgcv::plot.gam}. The
+  following are common arguments of \code{plot.gam} that can be
+  specified in the function call to \code{coefficients.pcox}:
+  \describe{
+    \item{select}{integer vector indicating the index of the desired smooth
+    term in \code{object$pcox$smooth}. If \code{NULL} (the default), returns
+    all smooth terms.}
+    \item{se}{if \code{TRUE} (the default), returns pointwise standard error
+    estimates. The covariance matrix to use (either \code{var} or
+    \code{var2}) is specified by \code{use.var2}.}
+    \item{n}{number of evaluation points for each 1-D plot. Only equally-spaced
+    grids are possible.}
+    \item{n2}{Square root of the number of points used to grid estimates of
+    2-D functions.}
+  }
+  See \code{\link[mgcv]{plot.gam}} for a full list of possible arguments.
+  Note that many of these have to do with plotting, and will thus not affect
+  the resultant coefficient function.
+
+  This function currently does not work to extract coefficient involving
+  smooths over 3 or more variables. To extract these coefficients, you
+  must do so manually, see \code{\link[mgcv]{PredictMat}}.
 }
 \author{
-Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
-}
-\seealso{
-\code{\link[mgcv]{plot.gam}}, \code{refund::coefficients.pfr}
+Fabian Scheipl and Jonathan Gellar, adapted from
+  \code{refund::coefficients.pfr}
 }
 
