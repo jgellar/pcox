@@ -220,3 +220,4 @@ amse <- sapply(1:8, function(i) {
   est <- coef(get(paste0("fit5.",i)))
   mean((truebeta - est$value)^2)
 })
+amse

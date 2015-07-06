@@ -74,13 +74,12 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
                                exclude=FALSE, limit=TRUE, plotMe=FALSE, ...) {
   
   # Create fakegam object
-  fakegam <- list(coefficients=object$coefficients, cmX=object$means,
-                  smooth=object$pcox$smooth, model=object$pcox$smoothdata[[1]])
+  fakegam <- list(coefficients=object$coefficients, cmX=object$means)
   if (se)
     fakegam$Vp <- if (use.var2) object$var2 else object$var
   
   # Function to strip some items out of dots (...)
-  localplot <- function(..., residuals=NULL, all.terms=NULL, too.far=0.1) {
+  localplot <- function(..., obj, residuals=NULL, all.terms=NULL, too.far=0.1) {
     if (all(!is.null(residuals), residuals))
       warning("residuals option not allowed for coefficients.pfr; removing")
     if (all(!is.null(all.terms), all.terms))
@@ -91,12 +90,12 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
       ## dump plots to file since can't pass type = "n" to plot.gam
       tfile <- tempfile()
       pdf(tfile)
-      plotdata <- mgcv::plot.gam(fakegam, too.far=too.far, ...)
+      plotdata <- mgcv::plot.gam(obj, too.far=too.far, ...)
       dev.off()
       if (file.exists(tfile))
         file.remove(tfile)
     } else
-      plotdata <- mgcv::plot.gam(fakegam, too.far=too.far, ...)
+      plotdata <- mgcv::plot.gam(obj, too.far=too.far, ...)
     
     plotdata
   }
@@ -115,18 +114,20 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
     # Set values of n and n2 (if not supplied)
     sdat.i <- object$pcox$smoothdata[[i]]
     smooth.i <- object$pcox$smooth[[i]]
-    n.i  <- ifelse(is.null(n[i]),  ndefault(sdat.i[[smooth.i$term[[1]]]]), n[i])
+    n.i  <- ifelse(is.null(n[i]),  ndefault(sdat.i[[smooth.i$term[1]]]), n[i])
     n2.i <- ifelse(is.null(n2[i]), n.i, n2[i])
     
-    pd <- localplot(..., n=n.i, n2=n2.i, select=i, se=se)[[1]]
+    fakegam$model  <- sdat.i
+    fakegam$smooth <- list(smooth.i)
+    pd <- localplot(..., obj=fakegam, n=n.i, n2=n2.i, select=i, se=se)[[1]]
     
     # Create coef.i with coordinates
-    is.re <- "random.effect" %in% class(fakegam$smooth[[i]])
-    if(is.re) pd$x <- levels(fakegam$model[[fakegam$smooth[[i]]$term]])
+    is.re <- "random.effect" %in% class(smooth.i)
+    if(is.re) pd$x <- levels(fakegam$model[[smooth.i$term]])
     
-    coef.i <- if(fakegam$smooth[[i]]$dim == 1) {
+    coef.i <- if(smooth.i$dim == 1) {
       setNames(data.frame(pd$x),
-               ifelse(is.re, fakegam$smooth[[i]]$term, modify_st(pd$xlab)))
+               ifelse(is.re, smooth.i$term, modify_st(pd$xlab)))
     } else {
       grid <- expand.grid(x=pd$x, y=pd$y)
       setNames(data.frame(grid$x, grid$y),
