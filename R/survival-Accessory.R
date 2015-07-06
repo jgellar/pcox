@@ -1,5 +1,5 @@
 # These functions are taken directly from the survival package, with
-# permission from Terry Therneau.
+# permission from Terry Therneau. Copied @ 2015-07-06 from survival 2.38-2.
 
 frailty.brent <- function (x, y, lower, upper) {
   n <- length(x)
