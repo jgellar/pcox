@@ -159,6 +159,8 @@ fit3.4 <- pcox(Surv(time,event) ~ bf(myX, sind=sind,
                                      linear=FALSE, tv=TRUE) + male,
                data=dat3.4)
 est3.4 <- coef(fit3.4)
+est3.4 <- mycoef(fit3.4)
+
 names(est3.4)[2] <- "t"
 p3.4a <- plotMe(beta3.4, c(-30,30))
 p3.4b <- plotMe(est3.4,  c(-30,30))
