@@ -172,6 +172,7 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
 
 
 #' @rdname coefficients.pcox
+#' @export
 coef.pcox <- coefficients.pcox
 
 modify_st <- function(x) {
