@@ -98,5 +98,73 @@ time5.2 <- system.time(fit5.2 <- pcox(Surv(time,event) ~ male + hf(myX, sind = s
                                       data=data5))
 
 
+# TIME-VARYING BASELINE FUNCTION
+# \beta(s,t) = 5*sin(2*pi*s + pi*t/100)
+# \eta_i(t) = \int X_i(s)\beta(s,t)ds + .75*male_i
+
+beta3.2 <- expand.grid(s=sind, t=(0:L))
+beta3.2$value <- 5*sin(2*pi*beta3.2$s + pi*beta3.2$t/100)
+#*cos(2*pi*beta3.2$t/100)
+beta3.2mat <- acast(beta3.2, t ~ s)
+eta3.2 <- t(apply(X, 1, function(x.i) {
+  x.i %*% t(beta3.2mat)/J
+})) + .75*matrix(male, nrow=N, ncol=(L+1))
+dat3.2 <- simTVSurv(eta3.2)
+dat3.2$myX <- X
+dat3.2$male <- male
+fit3.2 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", basistype="te", sind=sind,
+                                     tv=TRUE) + male, data=dat3.2)
+est3.2 <- coef(fit3.2)
+p3.2a <- plotMe(beta3.2, c(-6,6))
+p3.2b <- plotMe(est3.2,  c(-6,6))
+p3.2c <- arrangeGrob(p3.2a, p3.2b, nrow=1)
+p3.2c
+
+
+# Additive Baseline (here I'm using t instead of x just so plotMe works)
+beta3.3 <- expand.grid(t=seq(min(X), max(X), length=J), s=sind)
+beta3.3$value <- 20*sin(2*pi*beta3.3$s + pi*beta3.3$t/20)
+beta3.3mat <- acast(beta3.3, t ~ s)
+eta3.3 <- apply(X, 1, function(x.i) {
+  mean(20*sin(2*pi*sind + pi*x.i/20))
+}) + .75*male
+dat3.3 <- simTVSurv(matrix(eta3.3, nrow=N, ncol=L))
+dat3.3$myX <- X
+dat3.3$male <- male
+fit3.3 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", basistype="te", sind=sind,
+                                     linear=FALSE) + male, data=dat3.3)
+est3.3 <- coef(fit3.3)
+names(est3.3)[2] <- "t"
+p3.3a <- plotMe(beta3.3, c(-30,30))
+p3.3b <- plotMe(est3.3,  c(-30,30))
+p3.3c <- arrangeGrob(p3.3a, p3.3b, nrow=1)
+p3.3c
+
+
+# Additive, Time-varying Baseline Function (TRIVARIATE!)
+# F(x,s,t) = sin(pi*x/20 + 2pi*s - pi*t/100)
+beta3.4 <- expand.grid(x=seq(min(X), max(X), length=50), s=sind,
+                       t=(0:L))
+beta3.4$value <- 20*sin(2*pi*beta3.4$s + pi*beta3.4$x/20 - pi*beta3.4$t/100)
+beta3.4mat <- acast(beta3.4, x ~ t ~ s)\
+eta3.4 <- sapply(0:L, function(l) {
+  apply(X, 1, function(x.i) {
+    mean(20*sin(2*pi*sind + pi*x.i/20 + pi*l/100))
+  }) + .75*male
+})
+dat3.4 <- simTVSurv(matrix(eta3.4, nrow=N, ncol=L))
+dat3.4$myX <- X
+dat3.4$male <- male
+fit3.4 <- pcox(Surv(time,event) ~ bf(myX, sind=sind,
+                                     linear=FALSE, tv=TRUE) + male,
+               data=dat3.4)
+est3.4 <- coef(fit3.4)
+names(est3.4)[2] <- "t"
+p3.4a <- plotMe(beta3.4, c(-30,30))
+p3.4b <- plotMe(est3.4,  c(-30,30))
+p3.4c <- arrangeGrob(p3.4a, p3.4b, nrow=1)
+p3.4c
+
+
 
 

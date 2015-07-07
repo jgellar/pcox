@@ -22,6 +22,10 @@
 #'   2-dimensinoal functions for contouring.
 #'   If estimating more than one coefficient, can be entered
 #'   as a vector of length equal to the number of coefficients.
+#' @param number of grid points to use for third and higher dimension of
+#'   coefficient function, if it is that big.
+#'   If estimating more than one coefficient, can be entered
+#'   as a vector of length equal to the number of coefficients.
 #' @param exclude if \code{TRUE}, excludes reporting of the estimate at
 #'   coordinates that are "too far" from data used to fit the model, as
 #'   determined by \code{mgcv::plot.mgcv.smooth}. Excluding these values sets
@@ -70,11 +74,12 @@
 #' @export
 
 coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
-                               n=NULL, n2=NULL,
+                               n=NULL, n2=NULL, n3=NULL,
                                exclude=FALSE, limit=TRUE, plotMe=FALSE, ...) {
   
   # Create fakegam object
   fakegam <- list(coefficients=object$coefficients, cmX=object$means)
+  fakegam$coefficients[is.na(fakegam$coefficients)] <- 0
   if (se)
     fakegam$Vp <- if (use.var2) object$var2 else object$var
   
@@ -109,6 +114,10 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
     if (length(n2)==1) n2 <- rep(n2, length(select)) else if (length(n2)!=length(select))
       stop("Mismatch between length of n2 and number of terms")
   }
+  if (!is.null(n3)) {
+    if (length(n3)==1) n3 <- rep(n3, length(select)) else if (length(n3)!=length(select))
+      stop("Mismatch between length of n3 and number of terms")
+  }
   
   coef <- lapply(select, function(i) {
     # Set values of n and n2 (if not supplied)
@@ -117,48 +126,59 @@ coefficients.pcox <- function(object, select=NULL, se=TRUE, use.var2=FALSE,
     n.i  <- ifelse(is.null(n[i]),  ndefault(sdat.i[[smooth.i$term[1]]]), n[i])
     n2.i <- ifelse(is.null(n2[i]), n.i, n2[i])
     
-    fakegam$model  <- sdat.i
-    fakegam$smooth <- list(smooth.i)
-    pd <- localplot(..., obj=fakegam, n=n.i, n2=n2.i, select=i, se=se)[[1]]
-    
-    # Create coef.i with coordinates
-    is.re <- "random.effect" %in% class(smooth.i)
-    if(is.re) pd$x <- levels(fakegam$model[[smooth.i$term]])
-    
-    coef.i <- if(smooth.i$dim == 1) {
-      setNames(data.frame(pd$x),
-               ifelse(is.re, smooth.i$term, modify_st(pd$xlab)))
-    } else {
-      grid <- expand.grid(x=pd$x, y=pd$y)
-      setNames(data.frame(grid$x, grid$y),
-               c(modify_st(pd$xlab), modify_st(pd$ylab)))
-    }
-    
-    # Add estimate & SE
-    coef.i$value <- pd$fit
-    if (is.numeric(pd$se))
-      coef.i$se  <- pd$se/pd$se.mult
-    
-    # Apply limits if requested
-    tf.env <- environment(object$pcox$t.funcs[[
-      which(sapply(object$pcox$smoothmap, function(x) i %in% x))
-      ]])
-    if (limit) {
-      # Check if limits function exists
-      limits.i <- tf.env$limits
-      if (is.function(limits.i)) {
-        # Apply limits function
-        if (smooth.i$dim==2) {
-          coef.i <- coef.i[limits.i(coef.i[[modify_st(pd$xlab)]],
-                                    coef.i[[modify_st(pd$ylab)]]), ]
-        } else if (smooth.i$dim==1) {
-          coef.i <- coef.i[limits.i(coef.i[[modify_st(pd$xlab)]]), ]
-        } else {
-          stop("limit option only supported for 1-D and 2-D smooths")
+    if (length(smooth.i$term) < 3) {
+      # Call plot.gam via localplot
+      
+      
+      fakegam$model  <- sdat.i
+      fakegam$smooth <- list(smooth.i)
+      pd <- localplot(..., obj=fakegam, n=n.i, n2=n2.i, select=i, se=se)[[1]]
+      
+      # Create coef.i with coordinates
+      is.re <- "random.effect" %in% class(smooth.i)
+      if(is.re) pd$x <- levels(fakegam$model[[smooth.i$term]])
+      
+      coef.i <- if(smooth.i$dim == 1) {
+        setNames(data.frame(pd$x),
+                 ifelse(is.re, smooth.i$term, modify_st(pd$xlab)))
+      } else {
+        grid <- expand.grid(x=pd$x, y=pd$y)
+        setNames(data.frame(grid$x, grid$y),
+                 c(modify_st(pd$xlab), modify_st(pd$ylab)))
+      }
+      
+      # Add estimate & SE
+      coef.i$value <- pd$fit
+      if (is.numeric(pd$se))
+        coef.i$se  <- pd$se/pd$se.mult
+      
+      # Apply limits if requested
+      tf.env <- environment(object$pcox$t.funcs[[
+        which(sapply(object$pcox$smoothmap, function(x) i %in% x))
+        ]])
+      if (limit) {
+        # Check if limits function exists
+        limits.i <- tf.env$limits
+        if (is.function(limits.i)) {
+          # Apply limits function
+          if (smooth.i$dim==2) {
+            coef.i <- coef.i[limits.i(coef.i[[modify_st(pd$xlab)]],
+                                      coef.i[[modify_st(pd$ylab)]]), ]
+          } else if (smooth.i$dim==1) {
+            coef.i <- coef.i[limits.i(coef.i[[modify_st(pd$xlab)]]), ]
+          } else {
+            stop("limit option only supported for 1-D and 2-D smooths")
+          }
         }
       }
+      coef.i
+    } else {
+      # Need to do "vis.pcox"; or "manually"
+      n3.i <- ifelse(is.null(n3[i]), 30, n3[i])
+      
+      cgrid <- expand.grid()
+      
     }
-    coef.i
   })
   
   # Unlist if coef is length 1
