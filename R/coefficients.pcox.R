@@ -29,6 +29,7 @@
 #' @param ... these arguments are ignored
 #'   
 #' @details
+#' Should add a description here about entering coordinates.
 #'   
 #' @return a data frame containing the evaluation points, 
 #'    coefficient function values and optionally the SE's for the term indicated

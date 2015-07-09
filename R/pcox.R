@@ -308,7 +308,7 @@ pcox <- function(formula, data,
       idxs <- res$assign2[[i]]
       start <- 1
       for (j in 1:length(smooth[[i]])) {
-        idxs.j <- idxs[start:(start+smooth[[i]][[j]]$bs.dim-1)]
+        idxs.j <- idxs[start:(start+ncol(smooth[[i]][[j]]$X)-1)]
         names(res$coefficients)[idxs.j] <- 
           paste(smooth[[i]][[j]]$label, 1:length(idxs.j), sep=".")
         smooth[[i]][[j]]$first.para <- min(idxs.j)
