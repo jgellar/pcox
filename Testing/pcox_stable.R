@@ -222,3 +222,47 @@ amse <- sapply(1:8, function(i) {
   mean((truebeta - est$value)^2)
 })
 amse
+plot(amse)
+
+
+
+# Special Terms from coxph
+
+# Strata and Cluster
+bladder1 <- bladder[bladder$enum < 5, ] 
+fit.S1 <- coxph(Surv(stop, event) ~ (rx + size + number) * strata(enum) + 
+                  cluster(id), bladder1)
+fit.S2 <- pcox( Surv(stop, event) ~ (rx + size + number) * strata(enum) + 
+                  cluster(id), bladder1)
+all.equal(coef(fit.S1), coef(fit.S2))
+
+# tt
+fit.tt1 <- coxph(Surv(time, status) ~ ph.ecog + tt(age), data=lung,
+                 tt=function(x,t,...) pspline(x + t/365.25))
+fit.tt2 <- pcox( Surv(time, status) ~ ph.ecog + tt(age), data=lung,
+                 tt=function(x,t,...) pspline(x + t/365.25))
+all.equal(coef(fit.tt1), coef(fit.tt2))
+
+# Multiple tt's (some from user, some from p())
+fit.tt3 <- pcox( Surv(time, status) ~ p(meal.cal, tv = TRUE) + sex + tt(age),
+                 data=lung, tt=function(x,t,...) pspline(x + t/365.25))
+fit.tt4 <- pcox( Surv(time, status) ~ tt(age) + p(meal.cal, tv = TRUE) + sex,
+                 data=lung, tt=function(x,t,...) pspline(x + t/365.25))
+all.equal(fit.tt3$coefficients,
+          fit.tt4$coefficients[names(fit.tt3$coefficients)])
+
+# coxph.penalty terms
+fit.ridge1 <- coxph(Surv(futime, fustat) ~ rx + ridge(age, ecog.ps, theta=1),
+                    ovarian)
+fit.ridge2 <- pcox( Surv(futime, fustat) ~ rx + ridge(age, ecog.ps, theta=1),
+                    ovarian)
+all.equal(fit.ridge1$coefficients, fit.ridge2$coefficients)
+
+fit.ps1 <- coxph(Surv(time, status) ~ ph.ecog + pspline(age,8), cancer)
+fit.ps2 <- pcox( Surv(time, status) ~ ph.ecog + pspline(age,8), cancer)
+all.equal(fit.ps1$coefficients, fit.ps2$coefficients)
+
+fit.frailty1 <- coxph(Surv(time, status) ~ age + frailty(inst, df=4), lung)
+fit.frailty2 <- pcox( Surv(time, status) ~ age + frailty(inst, df=4), lung)
+all.equal(fit.frailty1$coefficients, fit.frailty2$coefficients)
+

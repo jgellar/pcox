@@ -113,6 +113,7 @@ pcox <- function(formula, data,
   dots <- list(...)
   if (!("iter.max" %in% names(dots)))  dots$iter.max  <- 100
   if (!("outer.max" %in% names(dots))) dots$outer.max <- 50
+  dots$tt <- NULL
   fitter <- ifelse(method %in% c("reml","ml"), "coxme", "coxph")
   
   # Organize terms
@@ -166,7 +167,7 @@ pcox <- function(formula, data,
   
   # Set up variables for new formula and smooth objects
   newtrmstrings <- attr(tf, "term.labels")
-  t.funcs = varmap = paramap = smooth = smoothdata  <-
+  t.funcs = varmap = smooth = smoothdata  <-
     vector(mode = "list", length = length(trmstrings))
   t.types <- rep(NA, length=length(trmstrings))
   #smooth <- vector("list", length=length(newtrmstrings))
@@ -225,18 +226,7 @@ pcox <- function(formula, data,
   if (length(where.par)) {
     for (i in where.par) {
       term.i <- terms[i]
-      nms <- if (is.call(term.i[[1]])) {
-        sapply(as.list(term.i[[1]])[-1], function(cl) {
-          ifelse(is.name(cl), as.character(cl), NA)
-          #ifelse(exists(as.character(cl), where=evalenv), as.character(cl), NA)
-        })
-        # term is a call: extract variable names
-        #sapply(as.list(term.i[[1]])[-1], function(cl) as.character(cl) )
-      } else
-        # term is a name, just use it
-        as.character(term.i[[1]])
-      
-      nms <- nms[!is.na(nms)]
+      nms <- all.vars(term.i[[1]])
       varmap[[i]] <- nms
       sapply(nms, function(nm) {
         v <- eval(as.name(nm), envir = evalenv, enclos = frmlenv)
@@ -257,6 +247,7 @@ pcox <- function(formula, data,
             any(grepl(x, pattern="mf[[timetrans$var[i]]]", fixed=TRUE)))) + 1,
           print=FALSE,
           tracer = quote({
+            tmp <- attr(mf, "na.action")
             attr(mf, "na.action") <- NULL
             mf <- na.action(mf)
             omit <- attr(mf, "na.action")
@@ -270,6 +261,29 @@ pcox <- function(formula, data,
     suppressMessages(try(untrace(coxph), silent = TRUE))
   })
   
+  # Finish seting up tt functions
+  tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
+  if (length(tt.funcs)) {
+    where.tt <- specials$tt - 1
+    if (length(where.tt)) {
+      # Insert old tt's in correct place
+      old.tt <- list(...)$tt
+      if (is.function(old.tt))
+        old.tt <- list(old.tt)
+      tt.locs <- which(t.types=="tt")
+      # tt.locs should always be the same length as tt.funcs
+      for (i in 1:length(where.tt)) {
+        locs <- which(tt.locs < where.tt[i])
+        tt.funcs <- append(tt.funcs, old.tt[[i]], 
+                           ifelse(length(locs), max(locs), 0))
+        t.types[where.tt] <- "tt"
+        tt.locs <- which(t.types=="tt") # Adds new tt.location
+        #newtt.locs[newtt.locs>where.tt[i]] <-
+        #  newtt.locs[newtt.locs>where.tt[i]] + 1
+      }
+    }
+  }
+  
   # Setup call and fit model
   newfrml <- formula(paste(c(newfrml, paste(newtrmstrings, collapse="+"))))
   environment(newfrml) <- newfrmlenv
@@ -280,23 +294,7 @@ pcox <- function(formula, data,
     newcall$fitter <- newcall$method <- newcall$eps <- newcall$knots <- NULL
   newcall$formula <- newfrml
   newcall$x <- x
-  tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
-  if (length(tt.funcs)) {
-    where.tt <- specials$tt - 1
-    if (length(where.tt)) {
-      # Insert old tt's in correct place
-      old.tt <- list(...)$tt
-      newtt.locs <- which(t.types=="tt")
-      for (i in 1:length(where.tt)) {
-        tt.funcs <- append(tt.funcs, old.tt[[i]], 
-                           max(which(newtt.locs < where.tt[i])))
-        newtt.locs[newtt.locs>where.tt] <- newtt.locs[newtt.locs>where.tt] + 1
-      }
-    }
-    newcall$tt <- quote(tt.funcs)
-  }
-  # Check if already tt's!
-  
+  if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
   newcall$na.action <- na.omit_pcox
   newcall$data <- quote(pcoxdata)
   newcall <- modify_call(newcall, dots)
@@ -304,25 +302,19 @@ pcox <- function(formula, data,
   newcall[[1]] <- fitter
   res <- eval(newcall)
   
-  # Map paramters
-  first.para <- 1
+  # Map smooths
   for (i in 1:length(smooth)) {
     if (!is.null(smooth[[i]])) {
+      idxs <- res$assign2[[i]]
+      start <- 1
       for (j in 1:length(smooth[[i]])) {
-        nc <- ncol(smooth[[i]][[j]]$X)
-        last.para <- first.para + nc - 1
-        names(res$coefficients)[first.para:last.para] <- 
-          paste(smooth[[i]][[j]]$label, 1:nc, sep=".")
-        names(smooth[[i]][j]) <- smooth[[i]][[j]]$label
-        smooth[[i]][[j]]$first.para <- first.para
-        smooth[[i]][[j]]$last.para  <- last.para
-        first.para <- last.para + 1
+        idxs.j <- idxs[start:(start+smooth[[i]][[j]]$bs.dim-1)]
+        names(res$coefficients)[idxs.j] <- 
+          paste(smooth[[i]][[j]]$label, 1:length(idxs.j), sep=".")
+        smooth[[i]][[j]]$first.para <- min(idxs.j)
+        smooth[[i]][[j]]$last.para  <- max(idxs.j)
+        start <- start + length(idxs.j)
       }
-      paramap[[i]] <- do.call("c", lapply(smooth[[i]], function(sm)
-        sm$first.para:sm$last.para))
-    } else {
-      paramap[[i]] <- first.para
-      first.para <- first.para + 1
     }
   }
   
@@ -363,7 +355,7 @@ pcox <- function(formula, data,
   ret <- list(call=call, formula = formula, method = method,
               responsename = responsename, surv = surv,
               termtype=termtype, termmap = trmmap, labelmap = labelmap,
-              varmap = varmap, smoothmap = smoothmap, paramap = paramap,
+              varmap = varmap, smoothmap = smoothmap,
               t.funcs = t.funcs, t.types = t.types, smooth = smooth,
               smoothdata = smoothdata,
               datameans = datameans, terms=tf)
