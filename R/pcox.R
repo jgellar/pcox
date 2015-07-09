@@ -113,20 +113,13 @@ pcox <- function(formula, data,
   dots <- list(...)
   if (!("iter.max" %in% names(dots)))  dots$iter.max  <- 100
   if (!("outer.max" %in% names(dots))) dots$outer.max <- 50
-  
   fitter <- ifelse(method %in% c("reml","ml"), "coxme", "coxph")
-  #if (length(dots)) {
-  #  validDots <- ifelse(fitter=="coxme", names(formals(coxme)),
-  #                      names(formals(coxph)))
-  #  notUsed <- names(dots)[!(names(dots) %in% validDots)]
-  #  if (length(notUsed)) 
-  #    warning("Arguments <", paste(notUsed, collapse = ", "), 
-  #            "> supplied but not used.")
-  #}  
   
   # Organize terms
-  tf <- terms.formula(formula, specials = c("p", "bf", "hf", "cf",
-                                            "strata", "cluster", "frailty"))
+  tf <- terms.formula(formula, specials = c("p", "bf", "hf", "cf", "tt"))
+  
+  #tf <- terms.formula(formula, specials = c("p", "bf", "hf", "cf",
+  #                                          "strata", "cluster", "frailty"))
   trmstrings <- attr(tf, "term.labels")
   terms <- sapply(trmstrings, function(trm) as.call(parse(text = trm))[[1]], 
                   simplify = FALSE)
@@ -232,13 +225,18 @@ pcox <- function(formula, data,
   if (length(where.par)) {
     for (i in where.par) {
       term.i <- terms[i]
-      nms <- if (is.call(term.i[[1]]))
+      nms <- if (is.call(term.i[[1]])) {
+        sapply(as.list(term.i[[1]])[-1], function(cl) {
+          ifelse(is.name(cl), as.character(cl), NA)
+          #ifelse(exists(as.character(cl), where=evalenv), as.character(cl), NA)
+        })
         # term is a call: extract variable names
-        sapply(as.list(term.i[[1]])[-1], function(cl) as.character(cl) )
-      else
+        #sapply(as.list(term.i[[1]])[-1], function(cl) as.character(cl) )
+      } else
         # term is a name, just use it
         as.character(term.i[[1]])
-        
+      
+      nms <- nms[!is.na(nms)]
       varmap[[i]] <- nms
       sapply(nms, function(nm) {
         v <- eval(as.name(nm), envir = evalenv, enclos = frmlenv)
@@ -259,6 +257,7 @@ pcox <- function(formula, data,
             any(grepl(x, pattern="mf[[timetrans$var[i]]]", fixed=TRUE)))) + 1,
           print=FALSE,
           tracer = quote({
+            attr(mf, "na.action") <- NULL
             mf <- na.action(mf)
             omit <- attr(mf, "na.action")
             if (!is.null(omit)) {
@@ -282,7 +281,22 @@ pcox <- function(formula, data,
   newcall$formula <- newfrml
   newcall$x <- x
   tt.funcs <- t.funcs[t.types=="tt" & !is.na(t.types)]
-  if (length(tt.funcs)) newcall$tt <- quote(tt.funcs)
+  if (length(tt.funcs)) {
+    where.tt <- specials$tt - 1
+    if (length(where.tt)) {
+      # Insert old tt's in correct place
+      old.tt <- list(...)$tt
+      newtt.locs <- which(t.types=="tt")
+      for (i in 1:length(where.tt)) {
+        tt.funcs <- append(tt.funcs, old.tt[[i]], 
+                           max(which(newtt.locs < where.tt[i])))
+        newtt.locs[newtt.locs>where.tt] <- newtt.locs[newtt.locs>where.tt] + 1
+      }
+    }
+    newcall$tt <- quote(tt.funcs)
+  }
+  # Check if already tt's!
+  
   newcall$na.action <- na.omit_pcox
   newcall$data <- quote(pcoxdata)
   newcall <- modify_call(newcall, dots)

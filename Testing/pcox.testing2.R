@@ -21,6 +21,14 @@ fit2a <- coxph(Surv(los, death) ~ age*male + Charlson, data=sofa)
 # Smooth scalars #
 ##################
 
+
+# Random effect (frailty)
+fit2.4 <- pcox(Surv(time, event) ~ p(x, linear=FALSE, k=8) + male +
+                frailty(rep(1:4, N/4)),
+               data=dat2.1)
+
+
+
 fit2 <- pcox(Surv(los, death) ~ p(age, linear=FALSE) + male, data=sofa)
 pdata <- data.frame(age=seq(min(sofa$age), max(sofa$age), by=.5))
 fhat <- PredictMat(fit2$pcox$smooth[[1]], data=pdata) %*% fit2$coefficients[1:9]
@@ -35,6 +43,8 @@ pre2.2c <- predict(fit2.2, newdata=dat2.2[-3],
 # VARIABLE-COEFFICIENT SCALAR TERMS
 tmp <- pcox(Surv(time,event) ~ p(male, by=x, linear=TRUE, tv=FALSE),
             data=data2)
+
+
 
 
 ##################################
