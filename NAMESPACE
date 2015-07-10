@@ -3,6 +3,8 @@
 S3method(coef,pcox)
 S3method(coefficients,pcox)
 S3method(predict,pcox)
+S3method(print,pcox)
+S3method(summary,pcox)
 export(bf)
 export(cf)
 export(genX)

@@ -45,21 +45,46 @@ pterm <- function(sm, method=c("aic", "caic", "epic", "df", "fixed"), eps=1e-6) 
          first = lambda * D %*% coef,
          second = lambda * D, flag = FALSE)}
   
+  # Print function
+  printfun <- function(coef, var, var2, df, history, cbase) {
+    
+    cmat <- matrix(c(NA, NA, NA, NA, df, NA), nrow=1)
+    #cmat <- matrix(nrow=0, ncol=6)
+    nn <- nrow(history$history)
+    theta <- ifelse(length(nn), history$history[nn,1], history$theta)
+#     test1 <- coxph.wtest(var, coef)$test
+#     xmat <- cbind(1, cbase)
+#     xsig <- coxph.wtest(var, xmat)$solve
+#     cmat <- coxph.wtest(t(xmat) %*% xsig, t(xsig))$solve[2, ]
+#     linear <- sum(cmat * coef)
+#     lvar1 <- c(cmat %*% var %*% cmat)
+#     lvar2 <- c(cmat %*% var2 %*% cmat)
+#     test2 <- linear^2/lvar1
+#     cmat <- rbind(c(linear, sqrt(lvar1), sqrt(lvar2), test2, 1, 1 - pchisq(test2, 1)),
+#                   c(NA, NA, NA, test1 - test2, df - 1, 1 - pchisq(test1 - test2, max(0.5, df - 1))))
+#     dimnames(cmat) <- list(c("linear", "nonlin"), NULL)
+#     nn <- nrow(history$thetas)
+#     if (length(nn)) 
+#       theta <- history$thetas[nn, 1]
+#     else theta <- history$theta
+    list(coef = cmat, history = paste("Theta:", format(theta)))
+  }  
+  
   # Control function based on optimization method
   temp <- switch(method, 
                  fixed = list(pfun=pfun.lFunc, cfun=function(parms, ...) {list(theta=parms$theta, done=TRUE)},
-                              diag=FALSE, pparm=D, cparm=list(theta=theta)),
+                              diag=FALSE, pparm=D, cparm=list(theta=theta), printfun=printfun),
                  df    = list(pfun=pfun.lFunc, cfun=frailty.controldf,
-                              diag=FALSE, pparm=D),
+                              diag=FALSE, pparm=D, printfun=printfun),
                  aic   = list(pfun=pfun.lFunc, cfun=control.aic,
                               cparm = list(eps=eps, init=c(0.5, 0.95), lower=0, upper=1, type="aic"),
-                              diag=FALSE, pparm=D, cargs = c("neff", "df", "plik")),
+                              diag=FALSE, pparm=D, cargs = c("neff", "df", "plik"), printfun=printfun),
                  caic  = list(pfun=pfun.lFunc, cfun=control.aic,
                               cparm = list(eps=eps, init=c(0.5, 0.95), lower=0, upper=1, type="caic"),
-                              diag=FALSE, pparm=D, cargs = c("neff", "df", "plik")),
+                              diag=FALSE, pparm=D, cargs = c("neff", "df", "plik"), printfun=printfun),
                  epic  = list(pfun=pfun.lFunc, cfun=control.aic,
                               cparm = list(eps=eps, init=c(0.5, 0.95), lower=0, upper=1, type="epic"),
-                              diag=FALSE, pparm=D, cargs = c("neff", "df", "plik"))
+                              diag=FALSE, pparm=D, cargs = c("neff", "df", "plik"), printfun=printfun)
   )
   
   # Return
