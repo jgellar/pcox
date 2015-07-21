@@ -2,7 +2,7 @@
 
 
 library(devtools)
-dev_mode()
+#dev_mode()
 load_all()
 #library(survival)
 #library(mgcv)
@@ -120,7 +120,7 @@ p1 <- ggplot(est2.3a, aes(t, value)) + geom_line(colour="red", size=2) +
 p2 <- ggplot(est2.3b, aes(t, value)) + geom_line(colour="red", size=2) +
   geom_line(aes(y=cos(2*pi*t/J)), size=2) + ylim(c(-1.5,1.5))
 p  <- arrangeGrob(p1,p2,nrow=1)
-p
+plot(p)
 
 
 ##################################
@@ -148,10 +148,8 @@ range(pre3.1a - pre3.1b, na.rm=T) # Should be 0
 # TIME-VARYING BASELINE FUNCTION
 # \beta(s,t) = 5*sin(2*pi*s + pi*t/100)
 # \eta_i(t) = \int X_i(s)\beta(s,t)ds + .75*male_i
-
 beta3.2 <- expand.grid(s=sind, t=(0:L))
 beta3.2$value <- 5*sin(2*pi*beta3.2$s + pi*beta3.2$t/100)
-#*cos(2*pi*beta3.2$t/100)
 beta3.2mat <- acast(beta3.2, t ~ s)
 eta3.2 <- t(apply(X, 1, function(x.i) {
   x.i %*% t(beta3.2mat)/J
@@ -165,14 +163,14 @@ est3.2 <- coef(fit3.2)
 p3.2a <- plotMe(beta3.2, c(-6,6))
 p3.2b <- plotMe(est3.2,  c(-6,6))
 p3.2c <- arrangeGrob(p3.2a, p3.2b, nrow=1)
-p3.2c
+plot(p3.2c)
 
 # ADDITIVE BASELINE (here I'm using t instead of x just so plotMe works)
 beta3.3 <- expand.grid(t=seq(min(X), max(X), length=J), s=sind)
-beta3.3$value <- 20*sin(2*pi*beta3.3$s + pi*beta3.3$t/20)
+beta3.3$value <- 30*sin(2*pi*beta3.3$s + pi*beta3.3$t/20)
 beta3.3mat <- acast(beta3.3, t ~ s)
 eta3.3 <- apply(X, 1, function(x.i) {
-  mean(20*sin(2*pi*sind + pi*x.i/20))
+  mean(30*sin(2*pi*sind + pi*x.i/20))
 }) + .75*male
 dat3.3 <- simTVSurv(matrix(eta3.3, nrow=N, ncol=L))
 dat3.3$myX <- X
@@ -184,7 +182,7 @@ names(est3.3)[2] <- "t"
 p3.3a <- plotMe(beta3.3, c(-30,30))
 p3.3b <- plotMe(est3.3,  c(-30,30))
 p3.3c <- arrangeGrob(p3.3a, p3.3b, nrow=1)
-p3.3c
+plot(p3.3c)
 
 
 
@@ -223,7 +221,7 @@ ggplot(est4.2a, aes(t, value)) + geom_line(colour="red", size=2) +
   geom_line(aes(y=est4.2b), colour="blue", linetype="dashed", size=2)
 pre4.2a <- predict(fit4.2)
 pre4.2b <- predict(fit4.2, newdata = dat4.2, stimes=dat4.2$time)
-
+range(pre4.2a - pre4.2b, na.rm=TRUE)
 
 # Lagged concurrent TVC's
 lag=5
@@ -269,25 +267,30 @@ fit5.8 <- pcox(Surv(time,event) ~ male + hf(myX, sind = sinds, transform="noInte
                                             bs="ps"), data=dat5.1)
 fit5.1
 summary(fit5.1)
-plotMe(coef(fit5.1), c(-6,6))
-plotMe(coef(fit5.2), c(-6,6))
-plotMe(coef(fit5.3), c(-6,6))
-plotMe(coef(fit5.4), c(-6,6))
-plotMe(coef(fit5.5), c(-6,6))
-plotMe(coef(fit5.6), c(-6,6))
-plotMe(coef(fit5.7), c(-6,6))
-plotMe(coef(fit5.8), c(-6,6))
 
-est5.1 <- coef(fit5.1)
-truebeta <- genBeta1(est5.1$s, est5.1$t)
-amse <- sapply(1:8, function(i) {
-  est <- coef(get(paste0("fit5.",i)))
-  mean((truebeta - est$value)^2)
+ests <- lapply(1:8, function(i) {
+  coef(get(paste0("fit5.",i)))
 })
-amse
-plot(amse)
+plotMe(ests[[1]], c(-6,6))
+plotMe(ests[[2]], c(-6,6))
+plotMe(ests[[3]], c(-6,6))
+plotMe(ests[[4]], c(-6,6))
+plotMe(ests[[5]], c(-6,6))
+plotMe(ests[[6]], c(-6,6))
+plotMe(ests[[7]], c(-6,6))
+plotMe(ests[[8]], c(-6,6))
 
+truebeta <- genBeta1(est5.1$s, est5.1$t)
+amses <- sapply(1:8, function(i) {
+  mean((truebeta - ests[[i]]$value)^2)
+})
+concs <- sapply(1:8, function(i) {
+  summary(get(paste0("fit5.",i)))$concordance[1]
+})
 
+par(mfrow=c(1,2))
+plot(amses, log="y")
+plot(concs)
 
 # Special Terms from coxph
 
