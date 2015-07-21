@@ -116,9 +116,9 @@ summary(fit2.3)
 est2.3a <- coef(fit2.3)
 est2.3b <- coef(fit2.3, select=2)
 p1 <- ggplot(est2.3a, aes(t, value)) + geom_line(colour="red", size=2) +
-  geom_line(aes(y=sin(2*pi*t/J)), size=2) + ylim(c(-1.5,1.5))
+  geom_line(aes(y=sin(2*pi*t/J)), size=2) + ylim(c(-2,2))
 p2 <- ggplot(est2.3b, aes(t, value)) + geom_line(colour="red", size=2) +
-  geom_line(aes(y=cos(2*pi*t/J)), size=2) + ylim(c(-1.5,1.5))
+  geom_line(aes(y=cos(2*pi*t/J)), size=2) + ylim(c(-2,2))
 p  <- arrangeGrob(p1,p2,nrow=1)
 plot(p)
 
@@ -144,6 +144,8 @@ ggplot(est3.1a, aes(s, value)) + geom_line(colour="red", size=2) +
 pre3.1a <- predict(fit3.1)
 pre3.1b <- predict(fit3.1, newdata=dat3.1)
 range(pre3.1a - pre3.1b, na.rm=T) # Should be 0
+summary(fit3.1)
+
 
 # TIME-VARYING BASELINE FUNCTION
 # \beta(s,t) = 5*sin(2*pi*s + pi*t/100)
@@ -159,6 +161,7 @@ dat3.2$myX <- X
 dat3.2$male <- male
 fit3.2 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", basistype="te", sind=sind,
                                      tv=TRUE) + male, data=dat3.2)
+summary(fit3.2)
 est3.2 <- coef(fit3.2)
 p3.2a <- plotMe(beta3.2, c(-6,6))
 p3.2b <- plotMe(est3.2,  c(-6,6))

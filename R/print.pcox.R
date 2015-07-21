@@ -14,23 +14,35 @@ print.pcox <- function(x, ...) {
 #' @export
 summary.pcox <- function(object, ...) {
   object$call <- object$pcox$call
-  if (length(object$pcox$smoothmap)) {
+  any.smooth <- as.logical(length(object$pcox$smooth))
+  
+  if (any.smooth) {
     names(object$pterms)[!sapply(object$pcox$smoothmap, is.null)] <-
       sapply(object$pcox$smooth, function(sm) sm$label)
   }
   class(object) <- class(object)[-1]
-  summ <- summary(object, ...)
+  ret <- summary(object, ...)
   
   if (!is.null(object$pterms)) {
-    # Modify conf.int
+    # Modify conf.int to remove pterms
     idxs <- unlist(object$assign2[!object$pterms])
-    summ$conf.int <- summ$conf.int[idxs,,drop=FALSE]
+    ret$conf.int <- ret$conf.int[idxs,,drop=FALSE]
   }
   
-  
-  # Print summary
-  print(summ)
-  if (any(object$pterms==1))
-    cat("NOTE: smooth pcox coefficients and SEs may be extracted with coef()\n\n")
-  invisible(summ)
+  ret$any.smooth <- any.smooth
+  ret$class <- class(ret)
+  class(ret) <- "summary.pcox"
+  ret
 }
+
+
+#' @export
+print.summary.pcox <- function(x, ...) {
+  class(x) <- x$class
+  print(x, ...)
+  if ("summary.coxph.penal" %in% class(x) & x$any.smooth) {
+    cat("NOTE: smooth pcox coefficients and SEs may be extracted with coef()\n\n")
+  }
+}
+
+
