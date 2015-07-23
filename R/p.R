@@ -1,7 +1,8 @@
 #' Define penalized or time-varying terms in a pcox formula
 #' 
-#' Function used to set up special terms in a pcox formula. These terms include
-#' penalized terms and/or terms with time-varying coefficients or effects.
+#' Function used to set up penalized terms in a pcox formula. These terms include
+#' smooth effects of the covariates and/or terms with time-varying coefficients
+#' or effects.
 #' 
 #' @param ... a list of variables that are the covariates used in the term, as
 #'   well as possibly additional arguments that are passed onto the basis

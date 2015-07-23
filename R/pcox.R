@@ -2,20 +2,25 @@
 #' 
 #' This function fits a penalized Cox regression model using penalized splines 
 #' to model the smooth coefficients. It is a wrapper for \code{survival::coxph}
-#' and \code{coxme::coxme} to fit Cox models with smooth covariate effects for
+# and \code{coxme::coxme}
+#' to fit Cox models with smooth covariate effects for
 #' (possibly censored) time-to-event data, of the general form \eqn{log[h_i(t)]
 #' = log[h_0(t)] + f_1(z_i, t) + f_2(X_i(s), t)} where \eqn{h_i(t)} is the
 #' hazard function for subject i, \eqn{h_0(t)} is the baseline hazard function,
 #' \eqn{z_i} are scalar covariates, and \eqn{X_i(s)} are functional covariates.
+#' Penalized covariates are set up using functions from the \code{mgcv} package
+#' to define basis functions and penalization.
 #' 
-#' @param formula a formula with special terms as for \code{\link[mgcv]{gam}},
-#'   with additional special terms allowed. See Details.
+#' @param formula a formula, with special terms indicating penalized covariates;
+#'   see details.
 #' @param data an optional data frame containing the variables in the model. If
 #'   not found in \code{data}, the variables are taken from
 #'   \code{environment(formula)}, typcially he environment from which
 #'   \code{pcox} is called.
-#' @param method method used to optimize the smoothing parameter(s). See
-#'   Details.
+#' @param method method used to optimize the smoothing parameter(s). \code{"aic"}
+#'   is the Akaike Informaion Criterion, \code{"caic"} is the corrected AIC
+#'   of Hurvich, et al (1998), and \code{"epic"} is the EPIC criterion of
+#'   Shinohara, et al (2011).
 #' @param eps convergence level for the criterion indicated by \code{method}.
 #' @param knots optional list containing the user-specified knot values for
 #'   basis construction, as in \code{\link[mgcv]{gam}}.
@@ -23,58 +28,59 @@
 #'   Defaults to \code{TRUE}.
 #' @param ...   additional arguments for \code{\link[survival]{coxph}} or
 #'   \code{\link[coxme]{coxme}}.
-#' @details This routine is a wrapper for either \code{\link[survival]{coxph}}
-#'   or \code{\link[coxme]{coxme}}, which fit penalized survival models by
-#'   maximizing the penalized partial likelihood. The fitting routine is
-#'   dependent on the \code{method} chosen for optimizing the smoothing
-#'   parameter: ML or REML optimization is performing by \code{coxme}, whereas
-#'   likelihood-based criteria (AIC, AIC_c, or EPIC) are implemented by
-#'   \code{coxph}. \code{coxph} is also used to implement the penalized survival
-#'   model with fixed value of the smoothing parameter (\code{method}="fixed",
-#'   and a \code{theta} arguemnt is required) or degrees of freedom
-#'   (\code{method}="df", and a \code{df} argument is required).
 #'   
-#'   Smooth (penalized) terms are indicated in the model formula as follows: 
-#'   \enumerate{ \item Nonlinear (and possibly multivariate) effects of scalar
-#'   covariates that do not vary with the time index \eqn{t} (i.e., f(z_{i1}))
-#'   are specified using either \code{\link{s}}(), or \code{\link{te}}(), as in
-#'   \code{\link[mgcv]{gam}}. \item Nonlinear (and possibly multivariate)
-#'   effects of scalar covariates that vary with the time index \eqn{t} (i.e.,
-#'   f(z_{i1},t)) are specified using ???. \item Linear and nonlinear effects of
-#'   non-concurrent functional predictors that do not vary with the time index
-#'   \eqn{t} (i.e., \eqn{\int X_i(s)\beta(s)ds} or \eqn{\int\beta(X_i(s), s)
-#'   ds}) are specified using \code{\link[refund]{lf}}, 
-#'   \code{\link[refund]{af}}, or \code{lf.vd} from the package 
-#'   \code{refund}. \item Linear and nonlinear effects of non-concurrent
-#'   functional predictors that vary with the time index \eqn{t} are specified
-#'   using \code{\link[refund]{ff}} or \code{\link[refund]{sff}} from the
-#'   package \code{refund}, respectively. Note that the outcome "function" for
-#'   these "function-on-function" terms is the hazard function. \item Concurrent
-#'   effects of functional covariates are not yet allowed, but will be soon! }
-#'   
-#'   Note that we refer to a functional predictor as "concurrent" if it is
-#'   measured over the domain \eqn{t}, the same domain as the outcome event is
-#'   measured across. Another term for this type of predictor is a
-#'   densely-measured time-varying covariate. These types of covariates require
-#'   special attention....
-#'   
-# @import mgcv refund coxme survival
+#' @details
+#'  Penalized covariates are specified as special terms in the model formula.
+#'  The following terms are allowed:
+#'  \enumerate{
+#'  \item{\code{\link{p}()}: Specifies a generic penalized term. This is primarily
+#'    used for smooth functions of scalar covariates (e.g., \eqn{f(x_i)}) or
+#'    time-varying effects of scalar covariates (\eqn{\beta(t) x_i})}. However,
+#'    all penalized terms in \code{pcox} formula may be specified using \code{p}
+#'    with the appropriate \code{limits} argument. In fact, the other special
+#'    terms below are simply wrappers for \code{p}.
+#'  \item{\code{\link{cf}()}: Wrapper for \code{p} to specify a concurrent or
+#'    lagged effect of a time-varying covariate (concurrent functional
+#'    predictor), e.g. \eqn{\beta x_i(t)} or \eqn{\beta x_i(t-\delta_0)}.}
+#'  \item{\code{\link{bf}()}: Wrapper for \code{p} to specify a baseline
+#'    functional predictor, e.g. \eqn{\int X_i(s)\beta(s) ds}.}
+#'  \item{\code{\link{hf}()}: Wrapper for \code{p} to specify a historical
+#'    functional predictor, e.g. \eqn{\int_0^t X_i(s)\beta(s,t) ds}.}
+#'  }
+#'  See the help files for each of the above terms for details regarding usage.
+#'  In addition to these special terms, \code{\link{frailty}},
+#'  \code{\link{strata}}, \code{\link{cluster}}, and \code{\link{tt}} terms are
+#'  allowed, as in a \code{coxph} formula.
+#'  
 #' @importFrom mgcv gam gam.fit s te t2
 #' @importFrom survival coxph Surv
 #' @importFrom pryr modify_call
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu> and Fabian Scheipl
-#' @return a fitted \code{pcox} object. This is either a \code{coxph} or 
-#'   \code{coxme} object with   additional information in the \code{pcox} entry.
-#' @references Gellar, Jonathan E., Colantuoni, Elizabeth, Needham, Dale M., and
-#'   Crainiceanu, Ciprian M. (2014). "Cox Regression Models with Functional 
-#'   Covariates for Survival Data." Johns Hopkins University, Dept. of 
-#'   Biostatistics Working Papers. Working Paper 264. 
-#'   \url{http://biostats.bepress.com/jhubiostat/paper264}.
+#' 
+#' @return a fitted \code{pcox} object. This is a \code{coxph} object with
+#' additional information in the \code{pcox} entry.
+#'
+#' @references
+#' Gellar, Jonathan E., Elizabeth Colantuoni, Dale M. Needham, and Ciprian M.
+#' Crainiceanu (2015). Cox Regression Models with Functional Covariates for Survival
+#' Data. Statistical Modeling, 15 (3): 256-278.
+#' 
+#' Hurvich, C. M., Simonoff, J. S., and Tsai, C. L. (1998). Smoothing Parameter
+#' Selection in Nonparametric Regression Using an Improved Akaike Information
+#' Criterion. Journal of the Royal Statistical Society. Series B
+#' (Methodological): 60(2), 271-293.
+#' 
+#' Shinohara, R., Crainiceanu, C., Caffo, B., and Reich, D. (2011). Longitudinal
+#' Analysis of Spatiotemporal Processes : A Case Study of Dynamic Contrast-Enhanced
+#' Magnetic Resonance Imaging in Multiple Sclerosis. Retrieved from
+#' http://biostats.bepress.com/jhubiostat/paper231/.
+#' 
 #' @seealso \code{mgcv}'s \code{\link[mgcv]{smooth.terms}} for details of 
 #'   \code{mgcv} syntax and available spline bases and penalties; the related 
-#'   \code{\link[refund]{pffr}} and \code{\link[refund]{fgam}} from 
+#'   \code{\link[refund]{pfr}} and \code{\link[refund]{pffr}} from 
 #'   \code{refund}.
+#'   
 #' @examples
 #' # Generate some data
 #' N <- 500

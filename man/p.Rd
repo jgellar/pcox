@@ -57,8 +57,9 @@ The return object is a list with two components. The first is the
   setting up a basis matrix.
 }
 \description{
-Function used to set up special terms in a pcox formula. These terms include
-penalized terms and/or terms with time-varying coefficients or effects.
+Function used to set up penalized terms in a pcox formula. These terms include
+smooth effects of the covariates and/or terms with time-varying coefficients
+or effects.
 }
 \details{
 The \code{limits} argument defines the type of term. Options include:
