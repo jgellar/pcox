@@ -271,6 +271,7 @@ predict.pcox <- function(object,
       # Calculate X %*% \hat\beta
       lp <- pmat %*% object$coefficients - 
         as.numeric(object$means %*% object$coefficients)
+      if (type=="risk") lp <- exp(lp)
       
       if (any.tt) {
         # Put in matrix format based on expand.map

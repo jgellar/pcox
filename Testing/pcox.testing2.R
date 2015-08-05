@@ -135,5 +135,7 @@ p3.4b <- plotMe(est3.4,  c(-30,30))
 p3.4c <- arrangeGrob(p3.4a, p3.4b, nrow=1)
 p3.4c
 
+# Get basehaz working
+
 
 
