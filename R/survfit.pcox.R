@@ -9,7 +9,7 @@
 #' 
 #' @details Any details needed?
 #' 
-#' @author Jonathan Gellar <jgellar1@@jhu.edu>
+#' @author Jonathan Gellar <JGellar@@mathematica-mpr.com>
 #' @export
 #' @return An object of class \code{"survfit"}. See \code{\link[survival]{survfit.object}}
 #'   for details. Methods defined for \code{survfit} objects are \code{print},
@@ -109,6 +109,9 @@ survfit.pcox <- function(formula, newdata, se.fit = TRUE, conf.int = 0.95,
     if (is.null(offset)) 
       offset <- 0
   }
+  
+  
+  # Next goal: get RISK scores, for all subjects, for newdata
   
   
   

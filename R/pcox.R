@@ -56,7 +56,7 @@
 #' @importFrom survival coxph Surv
 #' @importFrom pryr modify_call
 #' @export
-#' @author Jonathan Gellar <jgellar1@@jhu.edu> and Fabian Scheipl
+#' @author Jonathan Gellar <JGellar@@mathematica-mpr.com> and Fabian Scheipl
 #' 
 #' @return a fitted \code{pcox} object. This is a \code{coxph} object with
 #' additional information in the \code{pcox} entry.
