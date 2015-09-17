@@ -28,7 +28,7 @@ terms of the linear predictor (\code{"terms"})}
 \item{se.fit}{A flag indicating if (model-based) standard errors are to be
 returned}
 
-\item{...}{extra arguments (unused)}
+\item{...}{extra arguments (currently unused)}
 }
 \value{
 Details about return object

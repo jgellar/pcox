@@ -13,7 +13,7 @@
 #' @param n number of observations in new data
 #' @param se.fit A flag indicating if (model-based) standard errors are to be
 #'   returned
-#' @param ... extra arguments (unused)
+#' @param ... extra arguments (currently unused)
 #' 
 #' @details These are the details
 #'   
@@ -144,8 +144,7 @@ predict.pcox <- function(object,
             vars <- newdata[[vnames]]
             maxt <- sapply(vars, function(v) {
               if (is.matrix(v)) {
-                idx.v <- 
-                apply(v, 1, function(x) max(which(!is.na(x))))
+                idx.v <- apply(v, 1, function(x) max(which(!is.na(x))))
               }
             })
             # do something where you go through vars, using indices, and calculate

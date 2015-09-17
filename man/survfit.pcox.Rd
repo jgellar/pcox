@@ -24,7 +24,7 @@ function is a modified version of \code{\link[survival]{survfit.coxph}}.
 Any details needed?
 }
 \author{
-Jonathan Gellar <jgellar1@jhu.edu>
+Jonathan Gellar <JGellar@mathematica-mpr.com>
 }
 \seealso{
 \code{\link[survival]{survfit}}, \code{\link[survival]{survfit.coxph}},

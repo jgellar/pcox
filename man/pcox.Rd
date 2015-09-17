@@ -99,7 +99,7 @@ est2 <- coef(fit2)
 # See help files for p, cf, bf, and hf for more examples
 }
 \author{
-Jonathan Gellar <jgellar1@jhu.edu> and Fabian Scheipl
+Jonathan Gellar <JGellar@mathematica-mpr.com> and Fabian Scheipl
 }
 \references{
 Gellar, Jonathan E., Elizabeth Colantuoni, Dale M. Needham, and Ciprian M.
