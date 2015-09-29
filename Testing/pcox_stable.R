@@ -32,7 +32,7 @@ Z <- genX(N, seq(0,1,length=K))
 L <- 100
 
 plotMe <- function(est, lims=range(est$value)) {
-  ggplot(est, aes(s, t)) + 
+  ggplot(est, aes(s, t)) +
     geom_tile(aes(fill=value, colour=value)) +
     theme_bw() +
     scale_fill_gradientn(name="", limits=lims,
@@ -94,7 +94,7 @@ fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
                  male, data=dat2.2)
 est2.2a <- coef(fit2.2)
 est2.2b <- mgcv::PredictMat(fit2.2$pcox$smooth[[1]],
-                      data=data.frame(t=est2.2a$t, x=1)) %*% 
+                      data=data.frame(t=est2.2a$t, x=1)) %*%
   fit2.2$coefficients[1:10]
 ggplot(est2.2a, aes(t, value)) + geom_line(colour="red", size=2) +
   geom_line(aes(y=sin(2*pi*t/J)), size=2) +
@@ -128,7 +128,7 @@ plot(p)
 ##################################
 
 beta <- sin(2*pi*sind)
-eta3.1 <- matrix((X%*%sin(2*pi*sind)/J + .75*male), nrow=N, ncol=200) 
+eta3.1 <- matrix((X%*%sin(2*pi*sind)/J + .75*male), nrow=N, ncol=200)
 dat3.1 <- simTVSurv(eta3.1)
 dat3.1$myX <- X
 dat3.1$male <- male
@@ -136,7 +136,7 @@ fit3.1 <- pcox(Surv(time,event) ~ bf(myX, bs="ps", sind=sind) + male,
                data=dat3.1)
 est3.1a <- coef(fit3.1)
 est3.1b <- mgcv::PredictMat(fit3.1$pcox$smooth[[1]],
-                      data=data.frame(myX.smat=est3.1a$s, myX.LX=1)) %*% 
+                      data=data.frame(myX.smat=est3.1a$s, myX.LX=1)) %*%
   fit3.1$coefficients[1:10]
 ggplot(est3.1a, aes(s, value)) + geom_line(colour="red", size=2) +
   geom_line(aes(y=sin(2*pi*s)), size=2) +
@@ -217,7 +217,7 @@ fit4.2
 summary(fit4.2)
 est4.2a <- coef(fit4.2)
 est4.2b <- mgcv::PredictMat(fit4.2$pcox$smooth[[1]],
-                      data=data.frame(t=est4.2a$t, myX.t=1)) %*% 
+                      data=data.frame(t=est4.2a$t, myX.t=1)) %*%
   fit4.2$coefficients[2:11]
 ggplot(est4.2a, aes(t, value)) + geom_line(colour="red", size=2) +
   geom_line(aes(y=sin(2*pi*t/J)), size=2) +
@@ -298,10 +298,10 @@ plot(concs)
 # Special Terms from coxph
 
 # Strata and Cluster
-bladder1 <- bladder[bladder$enum < 5, ] 
-fit.S1 <- coxph(Surv(stop, event) ~ (rx + size + number) * strata(enum) + 
+bladder1 <- bladder[bladder$enum < 5, ]
+fit.S1 <- coxph(Surv(stop, event) ~ (rx + size + number) * strata(enum) +
                   cluster(id), bladder1)
-fit.S2 <- pcox( Surv(stop, event) ~ (rx + size + number) * strata(enum) + 
+fit.S2 <- pcox( Surv(stop, event) ~ (rx + size + number) * strata(enum) +
                   cluster(id), bladder1)
 all.equal(coef(fit.S1), coef(fit.S2))
 

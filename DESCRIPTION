@@ -19,6 +19,7 @@ Imports:
     risksetROC,
     mgcv,
     pryr,
-    reshape2
+    reshape2,
+    ggplot2
 Suggests: testthat
 LazyData: true

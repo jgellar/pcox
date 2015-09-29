@@ -10,6 +10,8 @@
 #'   to be passed to \code{geom_ribbon} or \code{geom_line}
 #' @param bw if \code{TRUE}, uses \code{\link[ggplot2]{theme_bw()}}
 #' 
+#' @importFrom ggplot2 ggplot geom_line geom_ribbon aes_q theme_bw
+#' @export
 #' @examples
 #' # Put examples here
 #' 
