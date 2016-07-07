@@ -97,11 +97,27 @@ pcoxTerm <- function(data, limits, linear, tv, basistype, sind, integration,
       mask <- matrix(TRUE, nrow=n, ncol=J)
       tmat <- NULL
     }
-    L <- getL3(smat, integration, mask)
-    if (standardize)
-      L <- L / matrix(apply(smat*mask, 1, function(x) diff(range(x))),
-                      nrow=nrow(L), ncol=ncol(L))
+
+    if (min(rowSums(mask)) == 0 ) {
+      # There are subjects who have no data in the integration range - warning ok?
+      warning(paste0("Some subjects have no data within the range of integration",
+                     " at some time points.",
+                     " Perhaps your limits are too tight?",
+                     " Assuming no effect of the historical term,",
+                     " i.e., the integral evaluates to 0."))
+    }
     
+    L <- getL3(smat, integration, mask)
+    if (standardize) {
+      denom <- matrix(apply(smat*mask, 1, function(x) diff(range(x))),
+                      nrow=nrow(L), ncol=ncol(L))
+      
+      # If the denominator is 0, it means the integration width is 0.
+      # Replace L w/ a 1 for the single point, and a 0 for all other points,
+      # which is exactly equal to as.numeric(mask)
+      L <- ifelse(denom==0, as.numeric(mask), L/denom)
+    }
+
     # (Temporarily) replace masked out coordinates with NA
     smat[!mask] <- NA
     if (!is.null(t)) tmat[!mask] <- NA
