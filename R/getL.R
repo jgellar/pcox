@@ -1,8 +1,7 @@
 #' Get the weight matrix for a linear functional term
 #' 
 #' @keywords internal
-#' 
-
+#' @importFrom stats filter
 getL <- function(tind, integration, n.int=NULL) {
   nt <- ncol(tind)
   if (is.null(n.int)) {n.int=rep(nt,nrow(tind))}

@@ -48,13 +48,14 @@
 #'    functional predictor, e.g. \eqn{\int_0^t X_i(s)\beta(s,t) ds}.}
 #'  }
 #'  See the help files for each of the above terms for details regarding usage.
-#'  In addition to these special terms, \code{\link{frailty}},
-#'  \code{\link{strata}}, \code{\link{cluster}}, and \code{\link{tt}} terms are
-#'  allowed, as in a \code{coxph} formula.
+#'  In addition to these special terms, \code{\link[survival]{frailty}},
+#'  \code{\link[survival]{strata}}, \code{\link[survival]{cluster}}, and \code{tt} terms are
+#'  allowed, as in a \code{\link[survival]{coxph}} formula.
 #'  
 #' @importFrom mgcv gam gam.fit s te t2
 #' @importFrom survival coxph Surv
 #' @importFrom pryr modify_call
+#' @importFrom stats terms.formula
 #' @export
 #' @author Jonathan Gellar <JGellar@@mathematica-mpr.com> and Fabian Scheipl
 #' 
@@ -108,7 +109,6 @@
 #' #       lty=c(1,2,1), col=c(1,1,2))
 #' 
 #' # See help files for p, cf, bf, and hf for more examples
-
 pcox <- function(formula, data,
                  method=c("aic","caic","epic"),
                  #method=c("aic","caic","epic","reml", "ml", "fixed", "df"),

@@ -2,7 +2,7 @@
 #' 
 #' @keywords internal
 #' @importFrom risksetROC CoxWeights
-
+#' @importFrom graphics abline
 risksetROC2 <- function (Stime, entry = NULL, status, marker, predict.time, 
           span = NULL, order = 1, window = "asymmetric", 
           prop = 0.5, plot = TRUE, type = "l", xlab = "FP", ylab = "TP", 

@@ -22,6 +22,7 @@
 #' final dataset, and then simply ignore the sequence of indices after
 #' \code{X} is generated.
 #' 
+#' @importFrom stats rnorm
 #' @export
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
 #' @return An \code{N x J} matrix \code{X}

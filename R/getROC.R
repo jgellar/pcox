@@ -4,10 +4,9 @@
 #' @importFrom reshape2 melt
 #' @importFrom risksetROC CoxWeights IntegrateAUC
 #' @importFrom survival survConcordance.fit
-# @export
+#' @importFrom stats update predict
 #' @keywords internal
 #' 
-
 getROC <- function(fit, utime=NULL, evaltimes=NULL, plot=FALSE, K=NULL, data=NULL,
                    bhaz=c("none", "breslow"), St=NULL, tmax=NULL) {
   

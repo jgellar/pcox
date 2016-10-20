@@ -8,6 +8,7 @@ getCall.pcox <- function(x) x$pcox$call
 #' that contain matrix elements. \code{na.omit} will remove an observation
 #' if any of the elements in that row of the matrix are missing, whereas this
 #' function only removes the observation if the entire row is missing.
+#' @importFrom stats setNames
 #' @keywords internal
 na.omit_pcox <- function(object, ...) {
   n <- length(object)

@@ -202,6 +202,7 @@ smooth.construct.dt.smooth.spec <- function(object, data, knots) {
 
 if(getRversion() >= "2.15.1")  utils::globalVariables("x0")
 #' Get recognized transformation function
+#' @importFrom stats ecdf
 #' @keywords internal
 getTF <- function(fname, nterm) {
   # fname: transformation function identifier (character string)

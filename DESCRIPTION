@@ -14,12 +14,15 @@ Description: This package fits Cox regression models with penalized
 License: GPL-2
 Depends:
     survival
-Imports: 
-    stats,
-    risksetROC,
+Imports:
+    ggplot2,
     mgcv,
+    methods,
     pryr,
     reshape2,
-    ggplot2
-Suggests: testthat
+    risksetROC,
+    stats,
+Suggests:
+    testthat
 LazyData: true
+RoxygenNote: 5.0.1

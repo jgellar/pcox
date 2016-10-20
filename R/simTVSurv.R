@@ -75,6 +75,7 @@
 #' are expected. 
 #' 
 #' @export
+#' @importFrom methods is
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
 #' @return A data frame containing the simulated data, as well as
 #' any predictors supplied in \code{Xdat}. Time-varying covariates
