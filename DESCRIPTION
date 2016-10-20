@@ -23,6 +23,8 @@ Imports:
     risksetROC,
     stats,
 Suggests:
-    testthat
+    testthat,
+    gridExtra,
+    RColorBrewer
 LazyData: true
 RoxygenNote: 5.0.1
