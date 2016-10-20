@@ -61,11 +61,11 @@
 #' 
 #' \code{eventRandom} and \code{censorRandom} can each be specified as
 #' either a vector of non-negative integer values, or as a random
-#' generating function with argument \code{n}. In either case, the
+#' generating function with argument \code{N}. In either case, the
 #' values must be smaller or equal to \code{J}. Both
 #' default to Uniform[1,\code{J}].
 #' \code{groupByD} is an option that, when enabled, increases the
-#' compuational efficiency of the algorithm by replaceing the
+#' computational efficiency of the algorithm by replacing the
 #' individual assignment of event times and censoring times by
 #' grouped assignments. The side effect of this option is that it
 #' generates datasets that are, on average, slightly less consistent
@@ -105,7 +105,7 @@ simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,
   
   # Generate survival and censoring times
   if (is(eventRandom, "NULL")) 
-    eventRandom <- function(n) sample(J, N, replace = TRUE)
+    eventRandom <- function(N) sample(J, N, replace = TRUE)
   if (is(eventRandom, "function")) {
     survivalTime <- as.integer(eventRandom(N))
   } else if (is(eventRandom, "numeric")) {
@@ -115,7 +115,7 @@ simTVSurv <- function (etaMat, Xdat=NULL, timeIndex=NULL,
   } else stop("eventRandom is neither numeric nor function")
   
   if (is(censorRandom, "NULL")) 
-    censorRandom <- function(n) sample(J, n, replace = TRUE)
+    censorRandom <- function(N) sample(J, N, replace = TRUE)
   if (is(censorRandom, "function")) {
     censorTime <- as.integer(censorRandom(N))
   } else if (is(censorRandom, "numeric")) {

@@ -81,11 +81,11 @@ any values after the event/censoring time with \code{NA}.
 
 \code{eventRandom} and \code{censorRandom} can each be specified as
 either a vector of non-negative integer values, or as a random
-generating function with argument \code{n}. In either case, the
+generating function with argument \code{N}. In either case, the
 values must be smaller or equal to \code{J}. Both
 default to Uniform[1,\code{J}].
 \code{groupByD} is an option that, when enabled, increases the
-compuational efficiency of the algorithm by replaceing the
+computational efficiency of the algorithm by replacing the
 individual assignment of event times and censoring times by
 grouped assignments. The side effect of this option is that it
 generates datasets that are, on average, slightly less consistent
