@@ -12,15 +12,15 @@
 #' @param stimes survival times for input data
 #' @param n number of observations in new data
 #' @param se.fit A flag indicating if (model-based) standard errors are to be
-#'   returned
+#'   returned (NOT IMPLEMENTED YET)
 #' @param ... extra arguments (currently unused)
 #' 
-#' @details These are the details
+#' @details These are the MISSING details
 #'   
 #' @export
 #' @importFrom reshape2 dcast acast
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
-#' @return Details about return object
+#' @return MISSING
 #' @seealso \code{\link{pcox}}
 #'   
 
