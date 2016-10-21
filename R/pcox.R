@@ -294,7 +294,19 @@ pcox <- function(formula, data,
   newfrml <- formula(paste(c(newfrml, paste(newtrmstrings, collapse="+"))))
   environment(newfrml) <- newfrmlenv
   pcoxdata <- list2df(as.list(newfrmlenv))
-  datameans <- sapply(as.list(newfrmlenv), mean)
+  
+  
+  meanmode <- function(x) {
+    if (is.factor(x)) {
+      # preserve level information for factors: return factor with one entry
+      #  equal to mode
+      table_x <- table(x)
+      x[x == names(table_x)[which.max(table_x)]][1] 
+    } else {
+      mean(x, na.rm = TRUE)
+    }
+  }
+  datameans <- sapply(as.list(newfrmlenv), meanmode)
   newcall <- expand.call(pcox, call)
   newcall$fitter <- type <- newcall$bs.int <- newcall$bs.yindex <-
     newcall$fitter <- newcall$method <- newcall$eps <- newcall$knots <- NULL
