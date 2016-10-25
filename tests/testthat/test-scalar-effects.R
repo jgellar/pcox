@@ -73,13 +73,11 @@ test_that("smooth term works with NA", {
   eta <- matrix(sin(x), nrow=N, ncol=J)
   dat <- simTVSurv(eta, data.frame(x=x))
   dat$xna <- x; dat$xna[1:5] <- NA
-  fit <- pcox(Surv(time, event) ~ p(x, linear=FALSE), data=dat)
   fit_na <- pcox(Surv(time, event) ~ p(xna, linear=FALSE), data=dat)
-  expect_gt(cor(coef(fit)$value, sin(coef(fit_na))$x), .99)
+  expect_gt(cor(coef(fit_na)$value, sin(coef(fit_na))$x), .99)
   
   # failing:
   # expect_equal(predict(fit_na)[1:5], 1*rep(NA, 5))  # !!
-  
 })  
 
 # ------------------------------------------------------------------------------
@@ -97,39 +95,41 @@ test_that("linear time-varying effect of scalar works", {
   expect_gt(cor(est$value, sin(2 * pi* est$t / J)), 0.94)
   expect_equal(predict(fit), predict(fit, newdata=dat, stimes = dat$time))
   expect_equal(est$value, est_manual)
-  # failing:
-  #fit <- pcox(Surv(time, event) ~ p(fmale, linear=TRUE, tv=T), data=dat)
+  expect_error(pcox(Surv(time, event) ~ p(fmale, linear=TRUE, tv=T), data=dat), 
+    "factor variables")
+})  
+test_that("linear time-varying effect of scalar works with NAs", {
+  set.seed(121212)
+  eta <- matrix(sin(2 * pi*(1:J)/J) %x% male, nrow=N, ncol=J)
+  dat <- simTVSurv(eta, data.frame(z=z, male = male))
+  dat$malena <- dat$male; dat$malena[1:5] <- NA
+  fitna <- pcox(Surv(time, event) ~ p(malena, linear=TRUE, tv=T), data=dat)
+  expect_gt(cor(coef(fit_na)$value, sin(coef(fit_na)$xna)), .99)
 })  
 
-# LINEAR, TIME-VARYING MODEL, i.e. ~ \beta(t)*z
-eta2.2 <- matrix(sin(2*pi*(1:J)/J) %x% z, nrow=N, ncol=J) +
-  matrix(0.75*male, nrow=N, ncol=J)
-dat2.2 <- simTVSurv(eta2.2, data.frame(x=z, male=male))
-fit2.2 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
-    male, data=dat2.2)
-est2.2a <- coef(fit2.2)
-est2.2b <- mgcv::PredictMat(fit2.2$pcox$smooth[[1]],
-  data=data.frame(t=est2.2a$t, x=1)) %*%
-  fit2.2$coefficients[1:10]
-ggplot(est2.2a, aes(t, value)) + geom_line(colour="red", size=2) +
-  geom_line(aes(y=sin(2*pi*t/J)), size=2) +
-  geom_line(aes(y=est2.2b), colour="blue", linetype="dashed", size=2)
-pre2.2a <- predict(fit2.2)
-pre2.2b <- predict(fit2.2, newdata=dat2.2, stimes=dat2.2$time)
-range(pre2.2a - pre2.2b, na.rm=T) # Should be 0
-fit2.2
-summary(fit2.2)
+test_that("multiple time-varying effects of scalars work", {
+  set.seed(121212)
+  eta <- matrix(sin(2*pi*(1:J)/J) %x% z, nrow=N, ncol=J) +
+    matrix(cos(2*pi*(1:J)/J) %x% male, nrow=N, ncol=J)
+  dat <- simTVSurv(eta, data.frame(z=z, male = male))
+  fit <- pcox(Surv(time, event) ~ p(z, linear=TRUE, tv=TRUE) +
+      p(male, linear=TRUE, tv=TRUE), data=dat)
+})  
 
-
-summary(fit2.1)
-est2.1a <- coef(fit2.1)
-est2.1b <- drop(fit2.1$pcox$t.funcs[[1]](est2.1a["x"]) %*%
-    fit2.1$coefficients[1:7])
-ggplot(est2.1a, aes(x, value)) + geom_line(colour="red", size=2) +
-  geom_line(aes(y=sin(x)), size=2) +
-  geom_line(aes(y=est2.1b), colour="blue", linetype="dashed", size=2)
-pre2.1a <- predict(fit2.1)
-pre2.1b <- predict(fit2.1, newdata=dat2.1)
-range(pre2.1a - pre2.1b, na.rm=T)
-
-
+  
+# Two time-varying terms
+eta2.3 <- matrix(sin(2*pi*(1:J)/J) %x% z, nrow=N, ncol=J) +
+  matrix(cos(2*pi*(1:J)/J) %x% male, nrow=N, ncol=J)
+dat2.3 <- simTVSurv(eta2.3, data.frame(x=z, male=male))
+fit2.3 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
+    p(male, linear=T, tv=T), data=dat2.3)
+fit2.3
+summary(fit2.3)
+est2.3a <- coef(fit2.3)
+est2.3b <- coef(fit2.3, select=2)
+p1 <- ggplot(est2.3a, aes(t, value)) + geom_line(colour="red", size=2) +
+  geom_line(aes(y=sin(2*pi*t/J)), size=2) + ylim(c(-2,2))
+p2 <- ggplot(est2.3b, aes(t, value)) + geom_line(colour="red", size=2) +
+  geom_line(aes(y=cos(2*pi*t/J)), size=2) + ylim(c(-2,2))
+p  <- arrangeGrob(p1,p2,nrow=1)
+plot(p)
