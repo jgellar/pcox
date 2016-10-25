@@ -1,17 +1,3 @@
-# Set up variables
-set.seed(12354)
-N <- 500
-J <- 200
-x <- runif(N, 0, 2*pi)
-z <- rnorm(N)
-male <- rbinom(N, size = 1, prob=.5)
-somefactor <- factor(sample(1:3, N, replace = TRUE))
-sind <- seq(0,1,length=J)
-X <- genX(N, sind)
-K <- 100
-Z <- genX(N, seq(0,1,length=K))
-L <- 100
-
 # plot function for estimated coefficient surfaces:
 library(ggplot2)
 library(gridExtra)

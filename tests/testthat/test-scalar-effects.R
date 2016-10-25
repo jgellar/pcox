@@ -1,8 +1,21 @@
 library(pcox)
-source(system.file("tests/setup-testthat.R", package = "pcox"))
+
+set.seed(12354)
+N <- 500
+J <- 200
+x <- runif(N, 0, 2*pi)
+z <- rnorm(N)
+male <- rbinom(N, size = 1, prob=.5)
+somefactor <- factor(sample(1:3, N, replace = TRUE))
+sind <- seq(0,1,length=J)
+X <- genX(N, sind)
+K <- 100
+Z <- genX(N, seq(0,1,length=K))
+L <- 100
+
 
 # ------------------------------------------------------------------------------
-context("basic functionality for parametric effects")
+context("estimate scalar parametric effects")
 # h(x) = .6*x + .75*male 
 
 test_that("parametric model works", {
@@ -12,8 +25,8 @@ test_that("parametric model works", {
   fit <- pcox(Surv(time, event) ~ x + male, data=dat)
   fit_coxph <- survival::coxph(Surv(time, event) ~ x + male, data=dat)
   expect_equivalent(coef(fit), coef(fit_coxph))
-  expect_equivalent(predict(fit),  predict(fit_coxph))
-  expect_equivalent(predict(fit),  predict(fit, newdata=dat))
+  expect_equivalent(predict(fit), predict(fit_coxph))
+  expect_equivalent(predict(fit), predict(fit, newdata=dat))
 })
 test_that("parametric model works with factors", {
   set.seed(121212)
@@ -42,7 +55,7 @@ test_that("parametric model works with NAs", {
 })
 
 # ------------------------------------------------------------------------------
-context("basic functionality for nonlinear timeconstant effects")
+context("estimate nonlinear timeconstant scalar effects")
 # h(x) = sin(x) + .75*male 
 
 test_that("smooth term works with mgcv options", {
@@ -81,7 +94,7 @@ test_that("smooth term works with NA", {
 })  
 
 # ------------------------------------------------------------------------------
-context("basic functionality for timevarying effects of scalars")
+context("estimate timevarying scalar effects")
 # h(t) = z * sin(t)
 
 test_that("linear time-varying effect of scalar works", {
@@ -97,39 +110,50 @@ test_that("linear time-varying effect of scalar works", {
   expect_equal(est$value, est_manual)
   expect_error(pcox(Surv(time, event) ~ p(fmale, linear=TRUE, tv=T), data=dat), 
     "factor variables")
-})  
+})
+
 test_that("linear time-varying effect of scalar works with NAs", {
   set.seed(121212)
   eta <- matrix(sin(2 * pi*(1:J)/J) %x% male, nrow=N, ncol=J)
   dat <- simTVSurv(eta, data.frame(z=z, male = male))
   dat$malena <- dat$male; dat$malena[1:5] <- NA
-  fitna <- pcox(Surv(time, event) ~ p(malena, linear=TRUE, tv=T), data=dat)
-  expect_gt(cor(coef(fit_na)$value, sin(coef(fit_na)$xna)), .99)
+  fit_na <- pcox(Surv(time, event) ~ p(malena, linear=TRUE, tv=T), data=dat)
+  expect_gt(cor(coef(fit_na)$value, sin(2*pi*(coef(fit_na)$t/J))), .94)
 })  
 
-test_that("multiple time-varying effects of scalars work", {
+test_that("multiple linear time-varying effects of scalars work", {
   set.seed(121212)
   eta <- matrix(sin(2*pi*(1:J)/J) %x% z, nrow=N, ncol=J) +
     matrix(cos(2*pi*(1:J)/J) %x% male, nrow=N, ncol=J)
   dat <- simTVSurv(eta, data.frame(z=z, male = male))
   fit <- pcox(Surv(time, event) ~ p(z, linear=TRUE, tv=TRUE) +
       p(male, linear=TRUE, tv=TRUE), data=dat)
+  est_z <- coef(fit, 1)
+  est_male <- coef(fit, 2)
+  expect_gt(cor(est_z$value, sin(2 * pi * est_z$t/J)), .84)
+  expect_gt(cor(est_male$value, cos(2 * pi * est_male$t/J)), .94)
+  expect_equal(predict(fit), predict(fit, newdata=dat, stimes = dat$time))
+  expect_gt(cor(as.vector(predict(fit)), 
+    as.vector(eta[, sort(unique(Surv(dat$time, dat$event)[dat$event == 1]))]), 
+    use = "pairwise"), .96)
 })  
 
+if(FALSE) {
+# do these actually work... ? throw rank deficient X warning regardless of "k",
+# estimates are quite bad (cor(pred, eta) is .2 for N=500, .45 for N=5000, 
+#  ranges are very different), see #43
+  # ------------------------------------------------------------------------------
+  context("estimate nonlinear time-varying scalar effects")
   
-# Two time-varying terms
-eta2.3 <- matrix(sin(2*pi*(1:J)/J) %x% z, nrow=N, ncol=J) +
-  matrix(cos(2*pi*(1:J)/J) %x% male, nrow=N, ncol=J)
-dat2.3 <- simTVSurv(eta2.3, data.frame(x=z, male=male))
-fit2.3 <- pcox(Surv(time, event) ~ p(x, linear=TRUE, tv=T) +
-    p(male, linear=T, tv=T), data=dat2.3)
-fit2.3
-summary(fit2.3)
-est2.3a <- coef(fit2.3)
-est2.3b <- coef(fit2.3, select=2)
-p1 <- ggplot(est2.3a, aes(t, value)) + geom_line(colour="red", size=2) +
-  geom_line(aes(y=sin(2*pi*t/J)), size=2) + ylim(c(-2,2))
-p2 <- ggplot(est2.3b, aes(t, value)) + geom_line(colour="red", size=2) +
-  geom_line(aes(y=cos(2*pi*t/J)), size=2) + ylim(c(-2,2))
-p  <- arrangeGrob(p1,p2,nrow=1)
-plot(p)
+  test_that("nonlinear time-varying effect of scalar works", {
+    set.seed(121212)
+    eta <- matrix(sin(2 * pi*(1:J)/J) %x% (pnorm(z) - .5), nrow=N, ncol=J)
+    dat <- simTVSurv(eta, data.frame(z=z, male = male, fmale=factor(male)))
+    fit <- pcox(Surv(time, event) ~ p(z, linear=FALSE, tv=T), data=dat)
+    est <- coef(fit)
+    pred <- predict(fit)
+    expect_gt(cor(as.vector(pred),
+      as.vector(eta[, sort(unique(Surv(dat$time, dat$event)[dat$event == 1]))]),
+      use = "pairwise"),  .9)
+  })
+}
