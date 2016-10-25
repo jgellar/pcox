@@ -1,6 +1,6 @@
 #' Predictions for a \code{pcox} model
 #' 
-#' This function calculates predictios for a pcox model
+#' This function calculates predictions for a pcox model
 #' 
 #' @param object Object of class \code{"pcox"}
 #' @param type type of prediction. Choices are the linear predictor
@@ -32,7 +32,9 @@ predict.pcox <- function(object,
   se.fit <- if (is.logical(se.fit)) {
     ifelse(se.fit, "var", "none")
   } else match.arg(se.fit)
-  
+  if(!se.fit == "none") {
+    warning("se.fit argument not implemented yet for predict.pcox")
+  }
   se <- NULL
   
   # newdata checks
