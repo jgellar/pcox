@@ -6,7 +6,8 @@
 #' 
 #' @param ... a list of variables that are the covariates used in the term, as
 #'   well as possibly additional arguments that are passed onto the basis
-#'   constructor defined by \code{basistype}.
+#'   constructor defined by \code{basistype}. 
+#'   Factor variables are not implemented yet.
 #' @param limits specifies the term as either a term involving scalar
 #'   covariates, a concurrent effect of a time-varying covariate, a baseline
 #'   functional covariate, or a historical effect of a time-varying covariate.
@@ -105,6 +106,10 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   vars <- !args & !(names(dots) %in% c("method", "eps"))
   data      <- as.data.frame(lapply(dots[vars], I))
   names(data) <- as.list(substitute(list(...)))[-1][vars]
+  if(any(factors <- sapply(data, is.factor))){
+    stop("factor variables (", paste(colnames(data)[factors], collapse=", "),
+      ") supplied to p(), that's not implemented yet, sorry... :(")
+  }
   
   # Determine if the term is time-varying or time-static, based on limits/tv
   tt <- if (is.null(limits)) {
