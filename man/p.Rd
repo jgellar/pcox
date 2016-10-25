@@ -11,7 +11,8 @@ p(..., limits = NULL, linear = TRUE, tv = FALSE, basistype = c("s",
 \arguments{
 \item{...}{a list of variables that are the covariates used in the term, as
 well as possibly additional arguments that are passed onto the basis
-constructor defined by \code{basistype}.}
+constructor defined by \code{basistype}. 
+Factor variables are not implemented yet.}
 
 \item{limits}{specifies the term as either a term involving scalar
 covariates, a concurrent effect of a time-varying covariate, a baseline

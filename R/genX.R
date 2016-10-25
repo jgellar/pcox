@@ -27,7 +27,6 @@
 #' @author Jonathan Gellar <jgellar1@@jhu.edu>
 #' @return An \code{N x J} matrix \code{X}
 #' @seealso \code{\link{simTVSurv}}
-#' 
 genX <- function(N, s=NULL) {
   if (is.null(s)) {
     s  <- (0:100)/100

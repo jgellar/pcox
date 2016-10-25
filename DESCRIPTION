@@ -15,7 +15,6 @@ License: GPL-2
 Depends:
     survival
 Imports:
-    ggplot2,
     mgcv,
     methods,
     pryr,

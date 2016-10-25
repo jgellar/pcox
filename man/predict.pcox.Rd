@@ -26,18 +26,18 @@ terms of the linear predictor (\code{"terms"})}
 \item{n}{number of observations in new data}
 
 \item{se.fit}{A flag indicating if (model-based) standard errors are to be
-returned}
+returned (NOT IMPLEMENTED YET)}
 
 \item{...}{extra arguments (currently unused)}
 }
 \value{
-Details about return object
+MISSING
 }
 \description{
-This function calculates predictios for a pcox model
+This function calculates predictions for a pcox model
 }
 \details{
-These are the details
+These are the MISSING details
 }
 \author{
 Jonathan Gellar <jgellar1@jhu.edu>
