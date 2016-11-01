@@ -98,6 +98,10 @@ p <- function(..., limits=NULL, linear = TRUE, tv = FALSE,
   else  names(dots) %in% names(frmls)
   basisargs <- dots[args]
   
+  if(!linear & tv){
+    stop("non-linear time-varying terms not implemented yet, sorry... :(")
+  }
+  
   # Extract method and eps
   method <- dots$method
   eps <- dots$eps
